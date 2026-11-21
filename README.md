@@ -15,7 +15,9 @@ Guardrail is a Solana program that becomes the delegate of a Velocity perps acco
 it, every order is checked on chain against limits the owner set, and a refused order never reaches Velocity.
 
 Live on Solana devnet: program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet),
-with guarded agents' accepted orders and refusals on chain: `notes/devnet-receipts.md`.
+with guarded agents' accepted orders and refusals on chain: `notes/devnet-receipts.md`. Live dashboard (reads the guard
+from devnet): [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app); watch the replay:
+[guardrail-perps.vercel.app/replay.html](https://guardrail-perps.vercel.app/replay.html).
 
 Caveat on this first screen: devnet only. Reviewed by an independent audit pass, not a professional firm. The owner
 can always trade directly or remove the delegate. No real users yet. The guard wraps Velocity's `place_perp_order` and
@@ -73,6 +75,7 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 | The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
 | A normal grid bot on 30 seeded random paths keeps the same median loss guarded and unguarded (1.1%), 22.6% vs 26.6% on the worst path, 0 breaches on every path; G5 binds on the 10 paths that fell 8% or more, G6 on all 30 (the bot's 3% window is wider than the 2% band) | `sweep_grid_agent_on_30_random_paths` | `tests-litesvm/tests/sweep.rs`, `notes/sweep.txt`, `notes/sweep.json` |
 | The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `docs/dashboard.png` |
+| The hosted dashboard reads the guard from devnet RPC (the language-model agent's guard, each order linked to its transaction) | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) | `dashboard/` (the site is a copy of it) |
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
 | Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
