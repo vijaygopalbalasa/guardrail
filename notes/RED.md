@@ -79,3 +79,25 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - Plants: 5 of 5 caught (notes/planted-bug-r5.txt); the stored max_ts plant is caught by the program unit test.
 - Devnet: upgraded in place (same id), deployed bytes match the build (sha256 in notes/devnet-guard-so.sha256);
   receipts rerun with a fresh runaway guard (notes/devnet-receipts.md).
+
+## Round 6 (Nov 21): G10 daily-loss brake, and orders Velocity does not store
+
+- Probe first (`probe_deposit_and_withdraw_totals`): Velocity's User keeps total_deposits at 4392 and total_withdraws
+  at 4400 in quote units (1e6 = 1 dUSDT); a 250 deposit and a 100 withdrawal moved them by exactly 250 and 100.
+- G10: the owner sets max_daily_loss (`set_daily_loss`, 0 = off). The day's first risk-increasing order that reaches
+  the check stores the baseline (equity = collateral + uPnL, and net deposits then), refused or not, so it never moves
+  within a day. Loss = baseline + (net deposits now - then) - equity. Over the cap, risk-increasing orders are
+  recorded refusals under rule 10 (own counter and last refusal); exits and cancels never reach the check.
+  Choice stated plainly: if the day's first calls are exits, the baseline is taken at the first risk-increasing order,
+  so a loss before that moment is not counted for that day.
+- The new fields are appended to the Guard account, so earlier offsets do not move; guards created before G10 still
+  decode in the dashboard (without G10) but cannot trade on the upgraded program.
+- Also: an order Velocity skips (a past max_ts with no lifetime cap) now fails the transaction instead of being counted
+  as accepted and charged to G3.
+- Red: 10 tests in tests-litesvm/tests/daily_loss.rs failed before the program change (notes/red-g10.txt).
+- Plants: 6 of 6 new ones caught (notes/planted-bug-r6.txt). Full run (notes/planted-bug-run.txt): 50 plants, 49
+  caught; the one not caught is still the post-CPI stored-order removal (unreachable behind the pre-check). The round 4
+  note said 40 plants; the script then held 39.
+- Replay: the headline guarded run now carries G10 at 50 dUSDT: refusals 55 G1, 30 G4, 20 G10; worst loss unchanged at
+  9.4% (the position was already capped at 10 SOL). With only G10 tight (20 dUSDT): 98 G10 refusals, 14.0% vs 41.2%.
+  The brake stops new risk; it does not close a held position.
