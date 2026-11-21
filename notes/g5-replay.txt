@@ -1,0 +1,15 @@
+G5 REPLAY guarded: worst loss 191.02 dUSDT, max position 22.38 SOL, max leverage 2.17x, accepted 10, refused {"G5 leverage": 97}, breaches 0; unguarded worst loss 412.44
+step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
+step  1 price $ 90.48 wants +   1.00 SOL, tries: 1ok                                          position   1.500 SOL equity    999.71 leverage  0.14x
+step  2 price $ 89.57 wants +   2.00 SOL, tries: 2ok                                          position   3.500 SOL equity    998.56 leverage  0.31x
+step  3 price $ 88.68 wants +   4.00 SOL, tries: 4ok                                          position   7.500 SOL equity    995.85 leverage  0.67x
+step  4 price $ 87.79 wants +   8.00 SOL, tries: 8ok                                          position  15.500 SOL equity    990.05 leverage  1.37x
+step  5 price $ 86.91 wants +  16.00 SOL, tries: 16xG5 8xG5 4ok 4xG5 2ok 2xG5 1xG5 0.5ok 0.5xG5 0.25ok 0.25xG5 0.125ok position  22.375 SOL equity    977.16 leverage  1.99x
+step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 0.25xG5 0.125xG5 position  22.375 SOL equity    957.71 leverage  2.01x
+step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 0.25xG5 0.125xG5 position  22.375 SOL equity    938.46 leverage  2.03x
+step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 0.25xG5 0.125xG5 position  22.375 SOL equity    919.40 leverage  2.05x
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG5 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 0.25xG5 0.125xG5 position  22.375 SOL equity    900.53 leverage  2.07x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG5 256xG5 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 0.25xG5 position  22.375 SOL equity    881.85 leverage  2.10x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG5 512xG5 256xG5 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 0.5xG5 position  22.375 SOL equity    863.36 leverage  2.12x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG5 1024xG5 512xG5 256xG5 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 1xG5 position  22.375 SOL equity    845.05 leverage  2.14x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG5 2048xG5 1024xG5 512xG5 256xG5 128xG5 64xG5 32xG5 16xG5 8xG5 4xG5 2xG5 position  22.375 SOL equity    826.92 leverage  2.17x

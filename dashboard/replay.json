@@ -1,0 +1,4340 @@
+{
+  "agent": "Every step the agent wants to add double the previous size, bidding 0.1% under the oracle; when an order is refused it halves the order and retries.",
+  "collateral": 999.999999,
+  "label": "REPLAY: Velocity's real devnet binary in LiteSVM, devnet state cloned Nov 21 2026, the SOL price written by the test ($91.39 falling 1% a step), real fills from a second account. Not live trading.",
+  "runs": [
+    {
+      "id": "unguarded",
+      "limits": "none (Velocity's own 5x margin check only)",
+      "steps": [
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            }
+          ],
+          "equity": 1000.054823,
+          "leverage": 0.0456,
+          "lossPct": -0.0054824000054824,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 0.5,
+          "price": 91.39,
+          "step": 0,
+          "upnl": 0.054824,
+          "wants": 0.5
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            }
+          ],
+          "equity": 999.705859,
+          "leverage": 0.1357,
+          "lossPct": 0.029414000029414,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 1.5,
+          "price": 90.4761,
+          "step": 1,
+          "upnl": -0.29414,
+          "wants": 1.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            }
+          ],
+          "equity": 998.563667,
+          "leverage": 0.3139,
+          "lossPct": 0.1436332001436332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 3.5,
+          "price": 89.571339,
+          "step": 2,
+          "upnl": -1.436332,
+          "wants": 2.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 995.854277,
+          "leverage": 0.6678,
+          "lossPct": 0.4145722004145722,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 7.5,
+          "price": 88.675625,
+          "step": 3,
+          "upnl": -4.145722,
+          "wants": 4.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 8.0,
+              "result": "accepted",
+              "size": 8.0
+            }
+          ],
+          "equity": 990.046305,
+          "leverage": 1.3744,
+          "lossPct": 0.9953694009953693,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 87.788868,
+          "step": 4,
+          "upnl": -9.953694,
+          "wants": 8.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 16.0,
+              "result": "accepted",
+              "size": 16.0
+            }
+          ],
+          "equity": 978.107565,
+          "leverage": 2.7989,
+          "lossPct": 2.1892434021892435,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 31.5,
+          "price": 86.910979,
+          "step": 5,
+          "upnl": -21.892434,
+          "wants": 16.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "filled": 16.0,
+              "result": "accepted",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            }
+          ],
+          "equity": 953.156742,
+          "leverage": 4.9648,
+          "lossPct": 4.684325704684325,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 86.041869,
+          "step": 6,
+          "upnl": -46.843257,
+          "wants": 32.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.25
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.125
+            }
+          ],
+          "equity": 905.833697,
+          "leverage": 5.172,
+          "lossPct": 9.416630209416631,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 85.18145,
+          "step": 7,
+          "upnl": -94.166302,
+          "wants": 64.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.25
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.125
+            }
+          ],
+          "equity": 858.983872,
+          "leverage": 5.3995,
+          "lossPct": 14.101612714101613,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 84.329635,
+          "step": 8,
+          "upnl": -141.016127,
+          "wants": 128.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 256.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.25
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.125
+            }
+          ],
+          "equity": 812.602537,
+          "leverage": 5.6506,
+          "lossPct": 18.739746218739747,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 83.486338,
+          "step": 9,
+          "upnl": -187.397462,
+          "wants": 256.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 512.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 256.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.25
+            }
+          ],
+          "equity": 766.685017,
+          "leverage": 5.9292,
+          "lossPct": 23.331498223331497,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 82.651474,
+          "step": 10,
+          "upnl": -233.314982,
+          "wants": 512.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1024.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 512.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 256.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 0.5
+            }
+          ],
+          "equity": 721.226692,
+          "leverage": 6.2398,
+          "lossPct": 27.877330727877332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 81.824959,
+          "step": 11,
+          "upnl": -278.773307,
+          "wants": 1024.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2048.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1024.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 512.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 256.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1.0
+            }
+          ],
+          "equity": 676.222942,
+          "leverage": 6.5886,
+          "lossPct": 32.377705732377706,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 81.006709,
+          "step": 12,
+          "upnl": -323.777057,
+          "wants": 2048.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4096.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2048.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 1024.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 512.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 256.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 128.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 64.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 32.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 16.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 8.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 4.0
+            },
+            {
+              "by": "Velocity margin check",
+              "reason": 6003,
+              "result": "velocity",
+              "size": 2.0
+            }
+          ],
+          "equity": 631.669202,
+          "leverage": 6.9827,
+          "lossPct": 36.83307973683308,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 55.0,
+          "price": 80.196641,
+          "step": 13,
+          "upnl": -368.330797,
+          "wants": 4096.0
+        }
+      ],
+      "summary": {
+        "accepted": 11,
+        "breaches": 0,
+        "maxLeverage": 6.9827,
+        "maxPosition": 55.0,
+        "refusedBy": {},
+        "velocityRefused": 88,
+        "worstLoss": 412.438982,
+        "worstLossPct": 41.2438982412439
+      },
+      "title": "Unguarded: the agent is Velocity's delegate"
+    },
+    {
+      "id": "guarded",
+      "limits": "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%",
+      "steps": [
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            }
+          ],
+          "equity": 1000.054823,
+          "leverage": 0.0456,
+          "lossPct": -0.0054824000054824,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 0.5,
+          "price": 91.39,
+          "step": 0,
+          "upnl": 0.054824,
+          "wants": 0.5
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            }
+          ],
+          "equity": 999.705859,
+          "leverage": 0.1357,
+          "lossPct": 0.029414000029414,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 1.5,
+          "price": 90.4761,
+          "step": 1,
+          "upnl": -0.29414,
+          "wants": 1.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            }
+          ],
+          "equity": 998.563667,
+          "leverage": 0.3139,
+          "lossPct": 0.1436332001436332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 3.5,
+          "price": 89.571339,
+          "step": 2,
+          "upnl": -1.436332,
+          "wants": 2.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 995.854277,
+          "leverage": 0.6678,
+          "lossPct": 0.4145722004145722,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 7.5,
+          "price": 88.675625,
+          "step": 3,
+          "upnl": -4.145722,
+          "wants": 4.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 11500000000.0
+            },
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 11500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 10500000000.0
+            },
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 989.466945,
+          "leverage": 0.8872,
+          "lossPct": 1.0533054010533054,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 87.788868,
+          "step": 4,
+          "upnl": -10.533054,
+          "wants": 8.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 980.688055,
+          "leverage": 0.8862,
+          "lossPct": 1.9311944019311946,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 86.910979,
+          "step": 5,
+          "upnl": -19.311944,
+          "wants": 16.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 971.996955,
+          "leverage": 0.8852,
+          "lossPct": 2.8003044028003043,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 86.041869,
+          "step": 6,
+          "upnl": -28.003044,
+          "wants": 32.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 963.392765,
+          "leverage": 0.8841,
+          "lossPct": 3.6607234036607235,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 85.18145,
+          "step": 7,
+          "upnl": -36.607234,
+          "wants": 64.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 954.874615,
+          "leverage": 0.8831,
+          "lossPct": 4.512538404512538,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 84.329635,
+          "step": 8,
+          "upnl": -45.125384,
+          "wants": 128.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.125,
+              "value": 10125000000.0
+            }
+          ],
+          "equity": 946.441645,
+          "leverage": 0.8821,
+          "lossPct": 5.355835405355835,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 83.486338,
+          "step": 9,
+          "upnl": -53.558354,
+          "wants": 256.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.25,
+              "value": 10250000000.0
+            }
+          ],
+          "equity": 938.093005,
+          "leverage": 0.881,
+          "lossPct": 6.190699406190699,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 82.651474,
+          "step": 10,
+          "upnl": -61.906994,
+          "wants": 512.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 0.5,
+              "value": 10500000000.0
+            }
+          ],
+          "equity": 929.827855,
+          "leverage": 0.88,
+          "lossPct": 7.017214407017214,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 81.824959,
+          "step": 11,
+          "upnl": -70.172144,
+          "wants": 1024.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 2048.0,
+              "value": 2048000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 1.0,
+              "value": 11000000000.0
+            }
+          ],
+          "equity": 921.645355,
+          "leverage": 0.8789,
+          "lossPct": 7.835464407835464,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 81.006709,
+          "step": 12,
+          "upnl": -78.354644,
+          "wants": 2048.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 4096.0,
+              "value": 4096000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 2048.0,
+              "value": 2048000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 4.0,
+              "value": 14000000000.0
+            },
+            {
+              "by": "G4 exposure",
+              "cap": 10000000000.0,
+              "reason": 6005,
+              "result": "refused",
+              "rule": 4,
+              "size": 2.0,
+              "value": 12000000000.0
+            }
+          ],
+          "equity": 913.544675,
+          "leverage": 0.8778,
+          "lossPct": 8.645532408645533,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 10.0,
+          "price": 80.196641,
+          "step": 13,
+          "upnl": -86.455324,
+          "wants": 4096.0
+        }
+      ],
+      "summary": {
+        "accepted": 6,
+        "breaches": 0,
+        "maxLeverage": 0.8872,
+        "maxPosition": 10.0,
+        "refusedBy": {
+          "G1 order size": 55,
+          "G4 exposure": 50
+        },
+        "velocityRefused": 0,
+        "worstLoss": 94.474994,
+        "worstLossPct": 9.447499409447499
+      },
+      "title": "Guarded"
+    },
+    {
+      "id": "guarded-g3",
+      "limits": "G4 100 SOL, the rest as guarded",
+      "steps": [
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            }
+          ],
+          "equity": 1000.054823,
+          "leverage": 0.0456,
+          "lossPct": -0.0054824000054824,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 0.5,
+          "price": 91.39,
+          "step": 0,
+          "upnl": 0.054824,
+          "wants": 0.5
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            }
+          ],
+          "equity": 999.705859,
+          "leverage": 0.1357,
+          "lossPct": 0.029414000029414,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 1.5,
+          "price": 90.4761,
+          "step": 1,
+          "upnl": -0.29414,
+          "wants": 1.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            }
+          ],
+          "equity": 998.563667,
+          "leverage": 0.3139,
+          "lossPct": 0.1436332001436332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 3.5,
+          "price": 89.571339,
+          "step": 2,
+          "upnl": -1.436332,
+          "wants": 2.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 995.854277,
+          "leverage": 0.6678,
+          "lossPct": 0.4145722004145722,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 7.5,
+          "price": 88.675625,
+          "step": 3,
+          "upnl": -4.145722,
+          "wants": 4.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            },
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 990.046304,
+          "leverage": 1.3744,
+          "lossPct": 0.9953695009953695,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 87.788868,
+          "step": 4,
+          "upnl": -9.953695,
+          "wants": 8.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1719971138.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1546149180.0
+            },
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1546149180.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1502693690.0
+            },
+            {
+              "filled": 0.25,
+              "result": "accepted",
+              "size": 0.25
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1502693689.0
+            },
+            {
+              "filled": 0.125,
+              "result": "accepted",
+              "size": 0.125
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.125,
+              "value": 1502693689.0
+            }
+          ],
+          "equity": 976.582413,
+          "leverage": 1.5017,
+          "lossPct": 2.3417586023417583,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 86.910979,
+          "step": 5,
+          "upnl": -23.417586,
+          "wants": 16.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1835997293.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1663913555.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1577871686.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1534850751.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1513340284.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.125,
+              "value": 1502585050.0
+            }
+          ],
+          "equity": 961.916182,
+          "leverage": 1.5094,
+          "lossPct": 3.808381703808382,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 86.041869,
+          "step": 6,
+          "upnl": -38.083817,
+          "wants": 32.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1832555617.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1662192717.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1577011267.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1534420542.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1513125179.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.125,
+              "value": 1502477498.0
+            }
+          ],
+          "equity": 947.396611,
+          "leverage": 1.5172,
+          "lossPct": 5.260338805260338,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 85.18145,
+          "step": 7,
+          "upnl": -52.603388,
+          "wants": 64.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1829148357.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1660489087.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1576159452.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1533994634.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1512912225.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.125,
+              "value": 1502371021.0
+            }
+          ],
+          "equity": 933.022233,
+          "leverage": 1.5252,
+          "lossPct": 6.697776606697777,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 84.329635,
+          "step": 8,
+          "upnl": -66.977766,
+          "wants": 128.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1825775169.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1658802493.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1575316155.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1533572986.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1512701401.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.125,
+              "value": 1502265609.0
+            }
+          ],
+          "equity": 918.791596,
+          "leverage": 1.5333,
+          "lossPct": 8.12084030812084,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 83.486338,
+          "step": 9,
+          "upnl": -81.208403,
+          "wants": 256.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1822435713.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1657132765.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1574481291.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1533155554.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.25,
+              "value": 1512492685.0
+            }
+          ],
+          "equity": 904.703266,
+          "leverage": 1.5416,
+          "lossPct": 9.529673309529674,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 82.651474,
+          "step": 10,
+          "upnl": -95.296733,
+          "wants": 512.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1819129653.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1655479735.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1573654776.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 0.5,
+              "value": 1532742296.0
+            }
+          ],
+          "equity": 890.755826,
+          "leverage": 1.5501,
+          "lossPct": 10.924417310924417,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 81.824959,
+          "step": 11,
+          "upnl": -109.244173,
+          "wants": 1024.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 2048.0,
+              "value": 2048000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1815856653.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1653843235.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 1.0,
+              "value": 1572836526.0
+            }
+          ],
+          "equity": 876.947857,
+          "leverage": 1.5588,
+          "lossPct": 12.305214212305215,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 81.006709,
+          "step": 12,
+          "upnl": -123.052142,
+          "wants": 2048.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 4096.0,
+              "value": 4096000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 2048.0,
+              "value": 2048000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 1024.0,
+              "value": 1024000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 512.0,
+              "value": 512000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 256.0,
+              "value": 256000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 128.0,
+              "value": 128000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 64.0,
+              "value": 64000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 32.0,
+              "value": 32000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 16.0,
+              "value": 16000000000.0
+            },
+            {
+              "by": "G1 order size",
+              "cap": 4000000000.0,
+              "reason": 6000,
+              "result": "refused",
+              "rule": 1,
+              "size": 8.0,
+              "value": 8000000000.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 4.0,
+              "value": 1812616381.0
+            },
+            {
+              "by": "G3 daily notional",
+              "cap": 1500000000.0,
+              "reason": 6004,
+              "result": "refused",
+              "rule": 3,
+              "size": 2.0,
+              "value": 1652223099.0
+            }
+          ],
+          "equity": 863.277959,
+          "leverage": 1.5676,
+          "lossPct": 13.672204013672204,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 16.875,
+          "price": 80.196641,
+          "step": 13,
+          "upnl": -136.72204,
+          "wants": 4096.0
+        }
+      ],
+      "summary": {
+        "accepted": 9,
+        "breaches": 0,
+        "maxLeverage": 1.5676,
+        "maxPosition": 16.875,
+        "refusedBy": {
+          "G1 order size": 55,
+          "G3 daily notional": 44
+        },
+        "velocityRefused": 0,
+        "worstLoss": 150.255233,
+        "worstLossPct": 15.025523315025524
+      },
+      "title": "Guarded, exposure cap loosened"
+    },
+    {
+      "id": "guarded-g5",
+      "limits": "G1, G3 and G4 loose; G5 2x",
+      "steps": [
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            }
+          ],
+          "equity": 1000.054823,
+          "leverage": 0.0456,
+          "lossPct": -0.0054824000054824,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 0.5,
+          "price": 91.39,
+          "step": 0,
+          "upnl": 0.054824,
+          "wants": 0.5
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            }
+          ],
+          "equity": 999.705859,
+          "leverage": 0.1357,
+          "lossPct": 0.029414000029414,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 1.5,
+          "price": 90.4761,
+          "step": 1,
+          "upnl": -0.29414,
+          "wants": 1.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            }
+          ],
+          "equity": 998.563667,
+          "leverage": 0.3139,
+          "lossPct": 0.1436332001436332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 3.5,
+          "price": 89.571339,
+          "step": 2,
+          "upnl": -1.436332,
+          "wants": 2.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 995.854277,
+          "leverage": 0.6678,
+          "lossPct": 0.4145722004145722,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 7.5,
+          "price": 88.675625,
+          "step": 3,
+          "upnl": -4.145722,
+          "wants": 4.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 8.0,
+              "result": "accepted",
+              "size": 8.0
+            }
+          ],
+          "equity": 990.046305,
+          "leverage": 1.3744,
+          "lossPct": 0.9953694009953693,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 87.788868,
+          "step": 4,
+          "upnl": -9.953694,
+          "wants": 8.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 28038.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 20917.0
+            },
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 20908.0
+            },
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 20904.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 20014.0
+            },
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 20013.0
+            },
+            {
+              "filled": 0.25,
+              "result": "accepted",
+              "size": 0.25
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 20013.0
+            },
+            {
+              "filled": 0.125,
+              "result": "accepted",
+              "size": 0.125
+            }
+          ],
+          "equity": 977.155975,
+          "leverage": 1.99,
+          "lossPct": 2.2844024022844023,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 86.910979,
+          "step": 5,
+          "upnl": -22.844024,
+          "wants": 16.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 48852.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 34477.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 27290.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 23696.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 21899.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 21001.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 20552.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 20327.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.125,
+              "value": 20215.0
+            }
+          ],
+          "equity": 957.709638,
+          "leverage": 2.0101,
+          "lossPct": 4.229036104229037,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 86.041869,
+          "step": 6,
+          "upnl": -42.290361,
+          "wants": 32.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 78401.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 49355.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 34833.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 27571.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 23940.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 22125.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 21217.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 20764.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 20537.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.125,
+              "value": 20423.0
+            }
+          ],
+          "equity": 938.457763,
+          "leverage": 2.0309,
+          "lossPct": 6.154223606154224,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 85.18145,
+          "step": 7,
+          "upnl": -61.542236,
+          "wants": 64.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 137928.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 79226.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 49875.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 35199.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 27861.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 24192.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 22358.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 21441.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 20982.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 20753.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.125,
+              "value": 20638.0
+            }
+          ],
+          "equity": 919.398403,
+          "leverage": 2.0522,
+          "lossPct": 8.06015960806016,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 84.329635,
+          "step": 8,
+          "upnl": -80.601596,
+          "wants": 128.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 256.0,
+              "value": 258077.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 139410.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 80077.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 50410.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 35577.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 28161.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 24452.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 22598.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 21671.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 21207.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 20976.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.125,
+              "value": 20860.0
+            }
+          ],
+          "equity": 900.529632,
+          "leverage": 2.0743,
+          "lossPct": 9.947036709947037,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 83.486338,
+          "step": 9,
+          "upnl": -99.470367,
+          "wants": 256.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 512.0,
+              "value": 500844.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 256.0,
+              "value": 260908.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 140940.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 80956.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 50964.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 35968.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 28470.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 24721.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 22846.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 21909.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 21440.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.25,
+              "value": 21206.0
+            }
+          ],
+          "equity": 881.84955,
+          "leverage": 2.0971,
+          "lossPct": 11.815044911815045,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 82.651474,
+          "step": 10,
+          "upnl": -118.150449,
+          "wants": 512.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1024.0,
+              "value": 991707.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 512.0,
+              "value": 506457.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 256.0,
+              "value": 263832.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 142519.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 81863.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 51535.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 36371.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 28789.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 24998.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 23102.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 22154.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 0.5,
+              "value": 21680.0
+            }
+          ],
+          "equity": 863.356277,
+          "leverage": 2.1206,
+          "lossPct": 13.664372213664372,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 81.824959,
+          "step": 11,
+          "upnl": -136.643722,
+          "wants": 1024.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2048.0,
+              "value": 1984672.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1024.0,
+              "value": 1003061.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 512.0,
+              "value": 512255.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 256.0,
+              "value": 266852.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 144151.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 82800.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 52125.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 36787.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 29118.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 25284.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 23366.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1.0,
+              "value": 22408.0
+            }
+          ],
+          "equity": 845.047933,
+          "leverage": 2.1448,
+          "lossPct": 15.495206615495208,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 81.006709,
+          "step": 12,
+          "upnl": -154.952066,
+          "wants": 2048.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4096.0,
+              "value": 3994084.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2048.0,
+              "value": 2007892.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 1024.0,
+              "value": 1014796.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 512.0,
+              "value": 518248.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 256.0,
+              "value": 269974.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 128.0,
+              "value": 145837.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 64.0,
+              "value": 83769.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 32.0,
+              "value": 52734.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 16.0,
+              "value": 37217.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 8.0,
+              "value": 29459.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 4.0,
+              "value": 25580.0
+            },
+            {
+              "by": "G5 leverage",
+              "cap": 20000.0,
+              "reason": 6006,
+              "result": "refused",
+              "rule": 5,
+              "size": 2.0,
+              "value": 23640.0
+            }
+          ],
+          "equity": 826.922662,
+          "leverage": 2.1699,
+          "lossPct": 17.307733717307734,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 22.375,
+          "price": 80.196641,
+          "step": 13,
+          "upnl": -173.077337,
+          "wants": 4096.0
+        }
+      ],
+      "summary": {
+        "accepted": 10,
+        "breaches": 0,
+        "maxLeverage": 2.1699,
+        "maxPosition": 22.375,
+        "refusedBy": {
+          "G5 leverage": 97
+        },
+        "velocityRefused": 0,
+        "worstLoss": 191.021349,
+        "worstLossPct": 19.102134919102134
+      },
+      "title": "Guarded, only leverage can bind"
+    }
+  ]
+}

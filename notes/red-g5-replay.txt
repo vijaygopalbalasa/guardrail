@@ -1,0 +1,2 @@
+thread 'replay_leverage_cap_binds_when_losses_shrink_equity' (133119692) panicked at tests/runaway.rs:146:21:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.13s

@@ -234,8 +234,31 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
     println!("{text}");
     { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
     std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/runaway-replay.txt"), &text).unwrap();
+    // Playback data for the dashboard: per-step state of each run (REPLAY, prices written by the test).
+    let g3 = run(true, leverage_limits());
+    let as_json = |id: &str, title: &str, limits: &str, r: &Run| serde_json::json!({
+        "id": id, "title": title, "limits": limits, "steps": r.steps,
+        "summary": {
+            "worstLoss": loss(r), "worstLossPct": loss(r) / (r.start_equity as f64 / 1e6) * 100.0,
+            "maxPosition": r.max_position as f64 / 1e9, "maxLeverage": r.max_leverage_bps as f64 / 1e4,
+            "accepted": r.accepted, "refusedBy": r.refused_by, "velocityRefused": r.velocity_refused, "breaches": r.breaches,
+        }
+    });
+    let replay = serde_json::json!({
+        "label": "REPLAY: Velocity's real devnet binary in LiteSVM, devnet state cloned Nov 21 2026, the SOL price written by the test ($91.39 falling 1% a step), real fills from a second account. Not live trading.",
+        "agent": "Every step the agent wants to add double the previous size, bidding 0.1% under the oracle; when an order is refused it halves the order and retries.",
+        "collateral": u.start_equity as f64 / 1e6,
+        "runs": [
+            as_json("unguarded", "Unguarded: the agent is Velocity's delegate", "none (Velocity's own 5x margin check only)", &u),
+            as_json("guarded", "Guarded", "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%", &g),
+            as_json("guarded-g3", "Guarded, exposure cap loosened", "G4 100 SOL, the rest as guarded", &g2),
+            as_json("guarded-g5", "Guarded, only leverage can bind", "G1, G3 and G4 loose; G5 2x", &g3),
+        ]
+    });
+    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/replay.json"), serde_json::to_string_pretty(&replay).unwrap()).unwrap();
     assert_eq!(g.breaches, 0, "zero breaches guarded");
     assert_eq!(g2.breaches, 0, "zero breaches guarded (second limit set)");
+    assert_eq!(g3.breaches, 0, "zero breaches guarded (leverage limit set)");
     assert!(loss(&g2) < loss(&u));
     assert!(loss(&g) < loss(&u), "guarded loses less");
 }
@@ -243,8 +266,8 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
 /// Limits where only leverage can bind: order size, exposure and daily notional are loose, G5 is 2x.
 fn leverage_limits() -> Limits {
     let mut l = guarded_limits();
-    l.max_order_base = 100 * BASE;
-    l.markets[0] = (0, 1_000 * BASE);
+    l.max_order_base = 100_000 * BASE;
+    l.markets[0] = (0, 100_000 * BASE);
     l.daily_notional_cap = 1_000_000_000_000;
     l.max_leverage_bps = 20_000;
     l
