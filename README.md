@@ -2,12 +2,20 @@
 
 **"My AI trading bot blew up my account overnight."**
 
-Guardrail: limits your AI trading agent cannot break. It is a Solana program that becomes the delegate of a Velocity
-perps account. The agent can trade only through it, every order is checked on chain against limits the owner froze,
-and the agent can never withdraw.
+![The same runaway agent, unguarded and guarded, on Velocity's real program](docs/replay.png)
+
+The same runaway agent on a 12% fall loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
+random price paths loses the same median (1.5%) either way, 27.3% vs 23.3% on its worst path, with **0 limit
+breaches** in every run.
+
+For anyone who lets an AI agent trade their perps account: set the limits once; the agent can trade, can never
+withdraw, and can never go past them.
+
+Guardrail is a Solana program that becomes the delegate of a Velocity perps account. The agent can trade only through
+it, every order is checked on chain against limits the owner set, and a refused order never reaches Velocity.
 
 Live on Solana devnet: program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet),
-with a guarded agent's accepted order and its refusals by G1, G3, G4 and G6 on chain: `notes/devnet-receipts.md`.
+with guarded agents' accepted orders and refusals on chain: `notes/devnet-receipts.md`.
 
 Caveat on this first screen: devnet and local only, no real users. The guard wraps Velocity's `place_perp_order` and
 `cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
@@ -34,6 +42,58 @@ accepted order that left order size, worst-case exposure, leverage or daily noti
 was accepted while the day's loss was over the G10 cap,
 measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`
 (recorded); step 3 below writes a fresh copy to `out/runaway-replay.txt`.
+
+## A normal agent: 30 random paths (REPLAY)
+
+Not every bot is a runaway. `tests-litesvm/tests/sweep.rs` runs a plain grid bot (2 SOL at each 1% level below the
+start, sell one level up, orders within 3% of the price, never doubles) on 30 seeded random paths of 60 steps (1.2% a
+step), unguarded and guarded, on Velocity's real binary with fills when the price passes through an order.
+
+| | Median worst loss | Worst path | Limit breaches |
+|---|---|---|---|
+| Unguarded | 1.5% | 27.3% (seed 18, SOL -20.5%) | n/a |
+| Guarded (G1 4 SOL, G4 30 SOL, G5 1.5x, G6 2%, G10 100 dUSDT a day) | 1.5% | 23.3% | **0** |
+
+On calm paths the guard changes nothing; it refused 314 orders by G6 (the bot asked for levels 2 to 3% away, on all
+30 paths) and 110 by G5 (leverage, on seeds 3, 4, 7, 8, 18, 19, 23, 25, 28 and 30, the paths that fell 8% or more).
+G10 did not bind: once the price was below the grid, the bot stopped buying on its own. Full table: `notes/sweep.txt`.
+
+## What is real, with receipts
+
+| Claim | Test | Where |
+|---|---|---|
+| A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
+| When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
+| The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
+| A normal grid bot on 30 seeded random paths keeps the same median loss guarded and unguarded (1.5%), 23.3% vs 27.3% on the worst path, 0 breaches on every path; G5 binds on the 10 paths that fell 8% or more, G6 on all 30 | `sweep_grid_agent_on_30_random_paths` | `tests-litesvm/tests/sweep.rs`, `notes/sweep.txt`, `notes/sweep.json` |
+| The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `notes/dashboard-devnet.png` |
+| The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
+| A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
+| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
+| Breaking any limit on purpose makes its own tests fail (50 planted bugs, 49 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
+| Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
+| The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
+| The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
+| The guard's code reaches only Velocity's place and cancel instructions | `g8_guard_source_reaches_only_place_and_cancel_on_velocity`, `g8_guard_has_no_withdraw_or_delegate_instruction` | `tests-litesvm/tests/limits.rs` |
+| A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
+| An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
+| The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
+| A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
+| With a softer instruction ("recover the loss before the close"), both models tested declined to add risk and exited instead; only the blunt mandate made them push, and that is when the guard refused | recorded transcripts | `notes/llm-agent.md` |
+| The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
+
+## Not claimed
+
+- Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
+- Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
+- The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
+- Fills and moving prices are shown in replays and on a local surfpool fork where a cheatcode moves the oracle, because Velocity's devnet oracle is stale. On the local validator the
+  cloned oracle is a frozen snapshot, so orders rest but do not fill there.
+- The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
+- The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
+  `place_and_take`.
+- Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
+- Daily-loss and open-order-count limits are not built.
 
 ## Try it in two minutes (the first build takes about 2 minutes more)
 
@@ -72,42 +132,6 @@ unrealized loss through MCP. It is a local fork with the price moved by the scri
 
 Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position held at 6 SOL, unrealized PnL
 -40.42 dUSDT on 1,000 collateral, 5 accepted, refused 33 by G4 and 21 by G1). Stop it with `./scripts/surfpool.sh stop`.
-
-## What is real, with receipts
-
-| Claim | Test | Where |
-|---|---|---|
-| A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
-| When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
-| The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
-| The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `notes/dashboard-devnet.png` |
-| The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
-| A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
-| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
-| Breaking any limit on purpose makes its own tests fail (50 planted bugs, 49 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
-| Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
-| The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
-| The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
-| The guard's code reaches only Velocity's place and cancel instructions | `g8_guard_source_reaches_only_place_and_cancel_on_velocity`, `g8_guard_has_no_withdraw_or_delegate_instruction` | `tests-litesvm/tests/limits.rs` |
-| A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
-| An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
-| The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
-| A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
-| With a softer instruction ("recover the loss before the close"), both models tested declined to add risk and exited instead; only the blunt mandate made them push, and that is when the guard refused | recorded transcripts | `notes/llm-agent.md` |
-| The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
-
-## Not claimed
-
-- Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
-- Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
-- The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
-- Fills and moving prices are shown in replays and on a local surfpool fork where a cheatcode moves the oracle, because Velocity's devnet oracle is stale. On the local validator the
-  cloned oracle is a frozen snapshot, so orders rest but do not fill there.
-- The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
-- The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
-  `place_and_take`.
-- Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
-- Daily-loss and open-order-count limits are not built.
 
 ## How it compares
 
