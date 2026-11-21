@@ -24,7 +24,8 @@ PY
   restore
 }
 plant "G1 off by one" $LIB "if p.base_asset_amount > l.max_order_base {" "if p.base_asset_amount > l.max_order_base + 1 {"
-plant "G2 market allowlist ignores the index" $LIB "m.max_exposure_base > 0 && m.market_index == p.market_index" "m.max_exposure_base > 0"
+plant "G2 market allowlist ignores the index" $LIB "let row = match l.markets.iter().find(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {" "let row = match l.markets.iter().find(|m| m.max_exposure_base > 0) {"
+plant "F2 exits skip the market allowlist" $LIB "        if !l.markets.iter().any(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {" "        if false {"
 plant "G2 order type check removed" $LIB "if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {" "if p.order_type > 7 {"
 plant "G2 builder check removed" $LIB "if p.builder_idx.is_some() || p.builder_fee_tenth_bps.is_some() {" "if false {"
 plant "G3 forgets the running total" $LIB "let used = if g.day == day { g.day_notional as i128 } else { 0 };" "let used: i128 = 0;"
