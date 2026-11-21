@@ -484,7 +484,7 @@ pub mod gerr {
     pub const BAD_MARKET_ACCOUNT: u32 = 6019;
     pub const MISSING_MARKET_ACCOUNT: u32 = 6020;
     pub const UNSUPPORTED_ORACLE: u32 = 6021;
-    pub const OTHER_SPOT_BORROW: u32 = 6022;
+    pub const OTHER_SPOT_BALANCE: u32 = 6022;
     pub const BAD_ORACLE_ACCOUNT: u32 = 6023;
     pub const NON_POSITIVE_EQUITY: u32 = 6024;
     pub const INVALID_LIMITS: u32 = 6025;
@@ -567,6 +567,19 @@ pub struct GuardState {
     pub paused: bool,
     pub day: i64,
     pub day_notional: u64,
+    pub accepted_count: u64,
+    /// refused[i] = orders refused by rule i (index 1..=7 used: G1..G7).
+    pub refused: [u64; 8],
+    pub last_refusal: LastRefusal,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LastRefusal {
+    pub rule: u8,
+    pub reason: u32,
+    pub value: i128,
+    pub cap: i128,
+    pub slot: u64,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -580,6 +593,8 @@ pub struct OrderEvent {
     pub reduce_only: bool,
     pub value: i128,
     pub cap: i128,
+    /// The guard error code naming the reason (0 when accepted).
+    pub reason: u32,
 }
 
 /// Decodes OrderChecked events from a transaction's logs (also present in failed transactions).
@@ -594,7 +609,7 @@ pub fn events(r: &TxResult) -> Vec<OrderEvent> {
     for l in logs {
         if let Some(b) = l.strip_prefix("Program data: ") {
             let d = base64::engine::general_purpose::STANDARD.decode(b).unwrap_or_default();
-            if d.len() >= 8 + 32 + 1 + 1 + 2 + 1 + 8 + 1 + 16 + 16 && d[..8] == d8 {
+            if d.len() >= 8 + 32 + 1 + 1 + 2 + 1 + 8 + 1 + 16 + 16 + 4 && d[..8] == d8 {
                 let mut o = 8;
                 let guard = Address::new_from_array(d[o..o + 32].try_into().unwrap());
                 o += 32;
@@ -606,7 +621,8 @@ pub fn events(r: &TxResult) -> Vec<OrderEvent> {
                 let reduce_only = d[o + 13] == 1;
                 let value = i128::from_le_bytes(d[o + 14..o + 30].try_into().unwrap());
                 let cap = i128::from_le_bytes(d[o + 30..o + 46].try_into().unwrap());
-                out.push(OrderEvent { guard, accepted, rule, market_index, direction, base, reduce_only, value, cap });
+                let reason = u32::from_le_bytes(d[o + 46..o + 50].try_into().unwrap());
+                out.push(OrderEvent { guard, accepted, rule, market_index, direction, base, reduce_only, value, cap, reason });
             }
         }
     }
@@ -629,6 +645,20 @@ pub fn code(r: &TxResult) -> u32 {
 #[track_caller]
 pub fn assert_code(r: &TxResult, c: u32) {
     assert_eq!(code(r), c, "wrong error code");
+}
+
+/// A recorded refusal: the transaction SUCCEEDS, Velocity is not called, and the event names the reason.
+#[track_caller]
+pub fn assert_refused(r: &TxResult, reason: u32) -> OrderEvent {
+    assert_ok(r);
+    let ev = events(r);
+    assert_eq!(ev.len(), 1, "one OrderChecked event");
+    assert!(!ev[0].accepted, "event says refused");
+    assert_eq!(ev[0].reason, reason, "refusal reason");
+    if let Ok(m) = r {
+        assert!(!m.logs.iter().any(|l| l.contains("Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P invoke")), "Velocity is not called on a refusal");
+    }
+    ev[0].clone()
 }
 
 #[track_caller]
@@ -745,13 +775,30 @@ impl Env {
         let key = |o: usize| Address::new_from_array(d[o..o + 32].try_into().unwrap());
         // 8 disc, owner 32, velocity_user 32, agent 32, paused 1, limits (8 + 8*10 + 1 + 8 + 4 + 4 + 8 = 113), day, day_notional
         let o = 8 + 96 + 1 + 113;
+        // then bump 1, accepted_count u64, refused_g1..g7 7 x u64, last_refusal {rule u8, reason u32, value i128, cap i128, slot u64}
+        let u64_at = |x: usize| u64::from_le_bytes(d[x..x + 8].try_into().unwrap());
+        let c = o + 16 + 1;
+        let mut refused = [0u64; 8];
+        for (i, r) in refused.iter_mut().enumerate().skip(1) {
+            *r = u64_at(c + 8 + (i - 1) * 8);
+        }
+        let lr = c + 8 + 7 * 8;
         GuardState {
             owner: key(8),
             velocity_user: key(40),
             agent: key(72),
             paused: d[104] == 1,
             day: i64::from_le_bytes(d[o..o + 8].try_into().unwrap()),
-            day_notional: u64::from_le_bytes(d[o + 8..o + 16].try_into().unwrap()),
+            day_notional: u64_at(o + 8),
+            accepted_count: u64_at(c),
+            refused,
+            last_refusal: LastRefusal {
+                rule: d[lr],
+                reason: u32::from_le_bytes(d[lr + 1..lr + 5].try_into().unwrap()),
+                value: i128::from_le_bytes(d[lr + 5..lr + 21].try_into().unwrap()),
+                cap: i128::from_le_bytes(d[lr + 21..lr + 37].try_into().unwrap()),
+                slot: u64_at(lr + 37),
+            },
         }
     }
 
@@ -816,5 +863,11 @@ impl Env {
         let mut accounts = vec![AccountMeta::new_readonly(STATE, false), AccountMeta::new(user_pda(&k.pubkey()), false), AccountMeta::new_readonly(k.pubkey(), true)];
         accounts.extend(Self::maps());
         self.send("cancel all (raw)", vec![Instruction { program_id: VELOCITY, accounts, data }], &[k])
+    }
+}
+
+impl Env {
+    pub fn slot_now(&self) -> u64 {
+        self.svm.get_sysvar::<Clock>().slot
     }
 }

@@ -50,11 +50,12 @@ fn worst(env: &Env, owner: &Address) -> i128 {
 fn name(code: u32) -> String {
     match code {
         6000 => "G1 order size",
-        6001 | 6002 | 6003 => "G2 allowlist",
+        6001 | 6002 | 6003 | 6013 | 6014 | 6015 | 6016 => "G2 allowlist",
         6004 => "G3 daily notional",
         6005 => "G4 exposure",
         6006 => "G5 leverage",
-        6007 | 6008 => "G6 price band / stale",
+        6007 => "G6 price band",
+        6022 | 6024 => "G5 balances / equity",
         6009 => "G7 paused",
         _ => "other",
     }
@@ -107,6 +108,16 @@ fn run(guarded: bool, limits: Limits) -> Run {
                 let agent = g.agent.insecure_clone();
                 env.send(&format!("step {step}: agent -> Velocity BUY {}", this as f64 / 1e9), vec![Instruction { program_id: VELOCITY, accounts, data }], &[&agent])
             };
+            let refused_reason = match &r {
+                Ok(_) => events(&r).first().filter(|e| !e.accepted).map(|e| e.reason),
+                Err(_) => None,
+            };
+            if let Some(c) = refused_reason {
+                *out.refused_by.entry(name(c)).or_default() += 1;
+                attempts.push(format!("{}x{}", this as f64 / 1e9, &name(c)[..2]));
+                chunk /= 2;
+                continue;
+            }
             match &r {
                 Ok(_) => {
                     out.accepted += 1;
@@ -125,13 +136,9 @@ fn run(guarded: bool, limits: Limits) -> Run {
                 }
                 Err(_) => {
                     let c = code(&r);
-                    if guarded && (6000..6100).contains(&c) {
-                        *out.refused_by.entry(name(c)).or_default() += 1;
-                        attempts.push(format!("{}x{}", this as f64 / 1e9, &name(c)[..2]));
-                    } else {
-                        out.velocity_refused += 1;
-                        attempts.push(format!("{}xV", this as f64 / 1e9));
-                    }
+                    assert!(!(guarded && (6000..6100).contains(&c)), "a guard error (not a refusal) in the replay: {c}");
+                    out.velocity_refused += 1;
+                    attempts.push(format!("{}xV", this as f64 / 1e9));
                     chunk /= 2;
                 }
             }

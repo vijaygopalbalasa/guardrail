@@ -32,16 +32,16 @@ fn accepted(env: &Env, g: &Guarded, r: &TxResult, o: &Order, rule_code: u8) {
     assert_eq!(ev[0].base, o.base);
 }
 
-/// Refused: the error code, no order on Velocity, and an event naming the rule with its value and cap.
+/// Refused: a successful transaction that records the refusal (event and the Guard's last_refusal name the rule,
+/// reason, value and cap), with no order on Velocity.
 #[track_caller]
 fn refused(env: &Env, g: &Guarded, r: &TxResult, o: &Order, c: u32, rule_code: u8) -> OrderEvent {
-    assert_code(r, c);
+    let ev = assert_refused(r, c);
     assert!(!env.has_open_order(&g.owner.pubkey(), o.base, o.price), "no order on Velocity");
-    let ev = events(r);
-    assert_eq!(ev.len(), 1, "one OrderChecked event in the failed transaction's logs");
-    assert!(!ev[0].accepted);
-    assert_eq!(ev[0].rule, rule_code);
-    ev[0].clone()
+    assert_eq!(ev.rule, rule_code);
+    let lr = env.guard_state(g).last_refusal;
+    assert_eq!((lr.rule, lr.reason, lr.value, lr.cap), (ev.rule, ev.reason, ev.value, ev.cap), "Guard records the last refusal");
+    ev
 }
 
 /// Gives the guarded account a long position of `size` through a real fill (agent bid crossed by a flow account).
@@ -134,7 +134,7 @@ fn order_shape_refusals_trigger_bitflags_spot_zero() {
     refused(&env, &g, &r, &s, gerr::NOT_PERP, rule::SHAPE);
     let z = Order::resting(0, 0, 91_000_000);
     let r = env.gplace("zero size", &g, z);
-    assert_code(&r, gerr::ZERO_SIZE);
+    assert_refused(&r, gerr::ZERO_SIZE);
     let good = Order::resting(0, BASE, 91_000_000);
     let r = env.gplace("plain limit", &g, good);
     accepted(&env, &g, &r, &good, rule::ACCEPTED);
@@ -379,8 +379,8 @@ fn g6_refuses_stale_oracle() {
     env.advance(11);
     let o = Order::resting(0, BASE, 91_000_000);
     let r = env.gplace("G6 oracle 11 slots old", &g, o);
-    let ev = refused(&env, &g, &r, &o, gerr::STALE_ORACLE, rule::G6);
-    assert_eq!((ev.value, ev.cap), (11, 10));
+    assert_code(&r, gerr::STALE_ORACLE); // a real error: the transaction fails
+    assert!(!env.has_open_order(&g.owner.pubkey(), o.base, o.price));
     env.step(1, P0);
     env.advance(10);
     let r = env.gplace("G6 oracle 10 slots old", &g, o);
@@ -399,7 +399,7 @@ fn g7_only_the_owner_sets_limits() {
     let owner = g.owner.insecure_clone();
     assert_ok(&env.set_limits("owner set_limits", &g, &owner, &l));
     let o = Order::resting(0, 5 * BASE + 100_000, 91_000_000);
-    assert_code(&env.gplace("new G1 limit applies", &g, o), gerr::ORDER_TOO_LARGE);
+    assert_refused(&env.gplace("new G1 limit applies", &g, o), gerr::ORDER_TOO_LARGE);
 }
 
 #[test]
@@ -498,7 +498,7 @@ fn tighten(env: &mut Env, g: &Guarded, f: impl Fn(&mut Limits)) {
 
 fn exit_is_allowed_where_new_order_is_refused(env: &mut Env, g: &Guarded, new_code: u32) {
     let new = Order::resting(0, 100_000_000, 91_000_000);
-    assert_code(&env.gplace("new risk refused", g, new), new_code);
+    assert_refused(&env.gplace("new risk refused", g, new), new_code);
     let mut exit = Order::resting(1, BASE, 91_500_000);
     exit.reduce_only = true;
     let r = env.gplace("reduce-only exit", g, exit);
@@ -527,7 +527,7 @@ fn g9_exit_allowed_when_leverage_is_over_cap() {
 }
 
 #[test]
-fn g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale() {
+fn g9_exit_allowed_when_paused_or_market_delisted() {
     let (mut env, g) = exit_setup();
     let owner = g.owner.insecure_clone();
     assert_ok(&env.set_paused("owner pauses", &g, &owner, true));
@@ -536,10 +536,21 @@ fn g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale() {
     assert_ok(&env.set_paused("owner unpauses", &g, &owner, false));
     tighten(&mut env, &g, |l| l.markets[0] = (5, BASE));
     exit_is_allowed_where_new_order_is_refused(&mut env, &g, gerr::MARKET_NOT_ALLOWED);
-    assert_ok(&env.gcancel("cancel the exit", &g, None));
-    tighten(&mut env, &g, |l| l.max_oracle_staleness_slots = 1);
-    env.advance(5);
-    exit_is_allowed_where_new_order_is_refused(&mut env, &g, gerr::STALE_ORACLE);
+}
+
+#[test]
+fn g9_exit_still_needs_a_fresh_oracle() {
+    let (mut env, g) = exit_setup();
+    tighten(&mut env, &g, |l| l.max_oracle_staleness_slots = 3);
+    env.step(1, P0);
+    env.advance(4);
+    let mut exit = Order::resting(1, BASE, 91_500_000);
+    exit.reduce_only = true;
+    assert_code(&env.gplace("exit with a 4-slot-old oracle", &g, exit), gerr::STALE_ORACLE);
+    env.step(1, P0);
+    env.advance(3);
+    let r = env.gplace("exit with a 3-slot-old oracle", &g, exit);
+    accepted(&env, &g, &r, &exit, rule::G9);
 }
 
 #[test]
@@ -564,13 +575,13 @@ fn g9_reduce_only_that_is_not_an_exit_goes_through_the_limits() {
     assert_ok(&env.set_paused("owner pauses", &g, &owner, true));
     let mut same_side = Order::resting(0, 500_000_000, 91_000_000);
     same_side.reduce_only = true;
-    assert_code(&env.gplace("reduce-only BUY while long", &g, same_side), gerr::PAUSED);
+    assert_refused(&env.gplace("reduce-only BUY while long", &g, same_side), gerr::PAUSED);
     let mut too_big = Order::resting(1, BASE + 100_000, 91_500_000);
     too_big.reduce_only = true;
-    assert_code(&env.gplace("reduce-only SELL larger than the position", &g, too_big), gerr::PAUSED);
+    assert_refused(&env.gplace("reduce-only SELL larger than the position", &g, too_big), gerr::PAUSED);
     let mut no_flag = Order::resting(1, BASE, 91_500_000);
     no_flag.reduce_only = false;
-    assert_code(&env.gplace("SELL without reduce_only", &g, no_flag), gerr::PAUSED);
+    assert_refused(&env.gplace("SELL without reduce_only", &g, no_flag), gerr::PAUSED);
 }
 
 // ------------------------------------------------------------------ G8 no withdraw, no other Velocity instruction
@@ -767,19 +778,108 @@ fn refuses_when_equity_is_not_positive() {
 }
 
 #[test]
-fn refuses_when_another_spot_market_holds_a_borrow() {
-    // A borrow outside the quote market would make the guard's collateral overstate equity, so it refuses.
+fn refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative() {
+    // Fail closed: the guard only values the quote deposit, so any other spot balance (deposit or borrow) or a negative
+    // quote balance blocks risk-increasing orders. Exits stay allowed.
+    let (mut env, g) = setup(Limits::loose());
+    open_long(&mut env, &g, BASE);
+    let o = Order::resting(0, 100_000_000, 91_000_000);
+    let set_slot1 = |env: &mut Env, scaled: u64, kind: u8| {
+        patch(env, g.user, |d| {
+            let s = 104 + 40; // spot slot 1, market 1
+            d[s..s + 8].copy_from_slice(&scaled.to_le_bytes());
+            d[s + 32..s + 34].copy_from_slice(&1u16.to_le_bytes());
+            d[s + 34] = kind;
+        })
+    };
+    set_slot1(&mut env, 1_000_000_000, 1);
+    let r = env.gplace("borrow in spot market 1", &g, o);
+    refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BALANCE, rule::G5);
+    set_slot1(&mut env, 1_000_000_000, 0);
+    let r = env.gplace("deposit in spot market 1", &g, o);
+    refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BALANCE, rule::G5);
+    // an exit still goes through (Velocity is given no spot market 1 account, so test only the guard's decision)
+    let mut exit = Order::resting(1, BASE, 91_500_000);
+    exit.reduce_only = true;
+    let r = env.gplace("exit while spot market 1 holds a balance", &g, exit);
+    let ev = events(&r);
+    assert!(ev.is_empty() || ev[0].accepted, "the guard does not refuse the exit");
+    set_slot1(&mut env, 0, 0);
+    let saved = env.svm.get_account(&g.user).unwrap();
+    patch(&mut env, g.user, |d| d[104 + 34] = 1); // quote position becomes a borrow
+    let r = env.gplace("negative quote balance", &g, o);
+    refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BALANCE, rule::G5);
+    env.svm.set_account(g.user, saved).unwrap();
+    let r = env.gplace("clean balances", &g, o);
+    accepted(&env, &g, &r, &o, rule::ACCEPTED);
+}
+
+// ------------------------------------------------------------------ refusals are recorded successes
+
+/// One refusal per rule: the transaction succeeds, Velocity's User account stays byte-identical, and exactly the
+/// matching counter in the Guard goes up by one.
+#[test]
+fn every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter() {
+    let mut l = Limits::loose();
+    l.max_order_base = 5 * BASE;
+    l.allowed_order_types = T_LIMIT | T_ORACLE;
+    l.daily_notional_cap = 300_000_000;
+    l.markets[0] = (0, 3 * BASE);
+    l.max_leverage_bps = 1_000;
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    let mut cases: Vec<(&str, Order, u8, u32)> = vec![];
+    cases.push(("G1", Order::resting(0, 6 * BASE, 91_000_000), rule::G1, gerr::ORDER_TOO_LARGE));
+    let mut m = Order::resting(0, BASE, 91_000_000);
+    m.market_index = 3;
+    cases.push(("G2", m, rule::G2, gerr::MARKET_NOT_ALLOWED));
+    cases.push(("G3", Order::resting(0, 4 * BASE, 91_000_000), rule::G3, gerr::DAILY_NOTIONAL_EXCEEDED));
+    cases.push(("G6", Order::resting(0, BASE, 80_000_000), rule::G6, gerr::PRICE_OUTSIDE_BAND));
+    cases.push(("G5", Order::resting(0, 2 * BASE, 91_000_000), rule::G5, gerr::LEVERAGE_EXCEEDED));
+    for (label, o, rule_code, reason) in cases {
+        let user_before = env.svm.get_account(&g.user).unwrap().data;
+        let before = env.guard_state(&g);
+        let r = env.gplace(&format!("{label} refusal"), &g, o);
+        assert_refused(&r, reason);
+        assert_eq!(env.svm.get_account(&g.user).unwrap().data, user_before, "{label}: Velocity User byte-identical");
+        let after = env.guard_state(&g);
+        for i in 1..8 {
+            let expect = before.refused[i] + if i == rule_code as usize { 1 } else { 0 };
+            assert_eq!(after.refused[i], expect, "{label}: counter for rule {i}");
+        }
+        assert_eq!(after.accepted_count, before.accepted_count);
+        assert_eq!(after.day_notional, before.day_notional, "{label}: a refusal does not spend notional");
+        assert_eq!((after.last_refusal.rule, after.last_refusal.reason), (rule_code, reason));
+        assert_eq!(after.last_refusal.slot, env.slot_now());
+    }
+    // G4 and G7 on their own guards' state
+    let owner = g.owner.insecure_clone();
+    let mut l2 = l;
+    l2.max_leverage_bps = 1_000_000;
+    l2.daily_notional_cap = u64::MAX / 4;
+    assert_ok(&env.set_limits("loosen G3 and G5", &g, &owner, &l2));
+    let before = env.guard_state(&g);
+    let user_before = env.svm.get_account(&g.user).unwrap().data;
+    assert_refused(&env.gplace("G4 refusal", &g, Order::resting(0, 4 * BASE, 91_000_000)), gerr::EXPOSURE_EXCEEDED);
+    assert_eq!(env.svm.get_account(&g.user).unwrap().data, user_before);
+    assert_eq!(env.guard_state(&g).refused[4], before.refused[4] + 1);
+    assert_ok(&env.set_paused("pause", &g, &owner, true));
+    let before = env.guard_state(&g);
+    assert_refused(&env.gplace("G7 refusal", &g, Order::resting(0, BASE, 91_000_000)), gerr::PAUSED);
+    assert_eq!(env.svm.get_account(&g.user).unwrap().data, user_before);
+    assert_eq!(env.guard_state(&g).refused[7], before.refused[7] + 1);
+}
+
+#[test]
+fn accepted_orders_and_exits_count_and_real_errors_record_nothing() {
     let (mut env, g) = setup(Limits::loose());
     let o = Order::resting(0, BASE, 91_000_000);
-    patch(&mut env, g.user, |d| {
-        let s = 104 + 40; // spot slot 1
-        d[s..s + 8].copy_from_slice(&1_000_000_000u64.to_le_bytes());
-        d[s + 32..s + 34].copy_from_slice(&1u16.to_le_bytes());
-        d[s + 34] = 1; // Borrow
-    });
-    let r = env.gplace("borrow in spot market 1", &g, o);
-    refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BORROW, rule::G5);
-    patch(&mut env, g.user, |d| d[104 + 40..104 + 48].copy_from_slice(&0u64.to_le_bytes())); // borrow repaid
-    let r = env.gplace("no borrow left", &g, o);
-    accepted(&env, &g, &r, &o, rule::ACCEPTED);
+    assert_ok(&env.gplace("accepted", &g, o));
+    assert_eq!(env.guard_state(&g).accepted_count, 1);
+    let before = env.guard_state(&g);
+    let stranger = Keypair::new();
+    env.svm.airdrop(&stranger.pubkey(), 1_000_000_000).unwrap();
+    assert_code(&env.gplace_as("not the agent", &g, &stranger, o, &[]), gerr::NOT_AGENT);
+    let after = env.guard_state(&g);
+    assert_eq!((after.accepted_count, after.refused), (before.accepted_count, before.refused), "a failed transaction records nothing");
 }
