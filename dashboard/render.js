@@ -104,7 +104,7 @@ export function renderRefusals(doc, box, refused) {
 }
 
 /** How close each limit is to binding now: a meter per limit, filled toward the cap. */
-export function renderHeadroom(doc, box, g, velocity, decisions, nowSec) {
+export function renderHeadroom(doc, box, g, velocity, decisions, nowSec, checkpoints) {
   const l = g.limits;
   const rows = [];
   const meter = (name, used, cap, text) => {
@@ -125,6 +125,12 @@ export function renderHeadroom(doc, box, g, velocity, decisions, nowSec) {
   if (lastAcc) meter("G5 leverage at the last accepted order", num(lastAcc.value), num(l.maxLeverageBps), `${(num(lastAcc.value) / 1e4).toFixed(2)}x of ${(num(l.maxLeverageBps) / 1e4).toFixed(2)}x`);
   const biggest = Math.max(0, ...decisions.filter((d) => d.accepted).map((d) => num(d.size)));
   meter("G1 largest accepted order", biggest, num(l.maxOrderBase), `${sol(biggest)} of ${sol(l.maxOrderBase)} SOL`);
+  if (g.dailyLoss && num(g.dailyLoss.max)) {
+    const last = (checkpoints ?? []).find((c) => c.blockTime);
+    const age = last ? num(nowSec) - num(last.blockTime) : null;
+    const when = last ? `${new Date(num(last.blockTime) * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC` : "none in the recent transactions";
+    rows.push(h(doc, "p", { className: age !== null && age <= 26 * 3600 ? "note" : "warn" }, `Keeper: last checkpoint ${when}${age === null || age > 26 * 3600 ? "; older than 26 h, so G10 is carrying the last high seen until a mark or the owner's reset" : ""}.`));
+  }
   if (g.dailyLoss && num(g.dailyLoss.max) && (!g.dailyLoss.keeper || g.dailyLoss.keeper === "11111111111111111111111111111111")) {
     rows.push(h(doc, "p", { className: "warn" }, "No keeper set: G10 needs one to mark each UTC day at midnight. The owner names one with set_keeper."));
   }
@@ -199,7 +205,8 @@ export function renderLimits(doc, box, g) {
     ...markets.map((m) => [`G4 ${marketName(m.marketIndex)}`, `${sol(m.maxExposureBase)} SOL worst case`]),
     ["G5 leverage", `${(num(l.maxLeverageBps) / 1e4).toFixed(2)}x worst case`],
     ["G6 price band", `${(num(l.priceBandBps) / 100).toFixed(2)}% of the oracle`],
-    ...(g.dailyLoss ? [["G10 daily loss", num(g.dailyLoss.max) ? `${usd(g.dailyLoss.max)} dUSDT a UTC day` : "off"]] : []),
+    ["G6 oracle freshness", num(l.maxOracleStalenessSlots) > 1_000_000 ? `${num(l.maxOracleStalenessSlots).toLocaleString("en-US")} slots: relaxed on devnet, where the oracle is weeks old` : `${num(l.maxOracleStalenessSlots).toLocaleString("en-US")} slots`],
+    ...(g.dailyLoss ? [["G10 daily loss brake", num(g.dailyLoss.max) ? `${usd(g.dailyLoss.max)} dUSDT a UTC day; stops new risk, does not close positions` : "off"]] : []),
     ["G9 exits", "always allowed inside the band"],
     ["Withdraw", "impossible for the agent"],
   ];

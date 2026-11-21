@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the README's "Try it in two minutes" steps 0 to 6 and 8, exactly as written there (step 7 needs an OpenRouter key), and reports each one.
+# Runs the build-and-test steps (docs/build-and-test.md) 0 to 6 and 8, exactly as written there (step 7 needs an OpenRouter key), and reports each one.
 cd "$(dirname "$0")/.."
 step() { echo; echo "===== STEP $1 ($(date +%T))"; }
 fail=0

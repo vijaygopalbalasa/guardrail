@@ -212,6 +212,7 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
   const velocity = checkedVelocityUser(await accountInfo(url, guard.velocityUser));
   const sigs = await rpc(url, "getSignaturesForAddress", [guardAddress, { limit, commitment: "confirmed" }]);
   const decisions = [];
+  const checkpoints = [];
   for (const s of sigs) {
     if (s.err) continue;
     if (!txCache.has(s.signature)) {
@@ -223,9 +224,14 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
       } catch {
         break;
       }
-      txCache.set(s.signature, decodeEvents(tx?.meta?.logMessages, guardAddress));
+      const logs = tx?.meta?.logMessages ?? [];
+      const events = decodeEvents(logs, guardAddress);
+      events.checkpoint = logs.some((l) => typeof l === "string" && l.startsWith("Program log: guard: checkpoint"));
+      txCache.set(s.signature, events);
     }
-    for (const e of txCache.get(s.signature)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
+    const cached = txCache.get(s.signature);
+    if (cached.checkpoint) checkpoints.push({ signature: s.signature, slot: s.slot, blockTime: s.blockTime });
+    for (const e of cached) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
   }
   let equity = null;
   if (guard.dailyLoss && guard.dailyLoss.max > 0n) {
@@ -234,5 +240,5 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
   velocity.equity = equity;
   let slot = null;
   try { slot = await rpc(url, "getSlot", [{ commitment: "confirmed" }]); } catch { /* shown without a slot */ }
-  return { guard, velocity, decisions, slot };
+  return { guard, velocity, decisions, slot, checkpoints };
 }

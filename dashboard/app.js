@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=26";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=26";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=27";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=27";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -9,7 +9,10 @@ const fetchJson = async (p) => { try { const r = await fetch(p); return r.ok ? a
 const PROGRAM = "BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy";
 
 themeToggle($("theme"));
-const [feed, headline, fills, snapshot] = await Promise.all([fetchJson("./agent-feed.json"), fetchJson("./headline.json"), fetchJson("./fills-run.json"), fetchJson("./snapshot.json")]);
+const [feed, headline, fills, snapshot, build] = await Promise.all([fetchJson("./agent-feed.json"), fetchJson("./headline.json"), fetchJson("./fills-run.json"), fetchJson("./snapshot.json"), fetchJson("./build.json")]);
+if (build && /^[0-9a-f]{7,40}$/.test(String(build.commit)) && /^[0-9a-f]{64}$/.test(String(build.sha256))) {
+  $("build").textContent = `The devnet program was built from commit ${build.commit}; the deployed bytes hash to sha256 ${String(build.sha256).slice(0, 16)}... (trailing zero padding stripped).`;
+}
 if (fills) {
   const refused = Object.values(fills.refused ?? {}).reduce((a, b) => a + Number(b), 0);
   $("hero").textContent = `The runaway agent kept doubling a losing long. Guardrail refused ${refused} of its orders and held it at ${Number(fills.position)} SOL, its ${Number(fills.capSol)} SOL cap, while SOL fell from $${Number(fills.start).toFixed(2)} to $${Number(fills.end).toFixed(2)}.`;
@@ -66,7 +69,7 @@ function verify(decisions) {
   $("verify").replaceChildren(...parts.map((x) => (typeof x === "string" ? document.createTextNode(x) : x)));
 }
 
-function render({ guard: g, velocity, decisions, slot, takenAt }) {
+function render({ guard: g, velocity, decisions, slot, takenAt, checkpoints }) {
   const now = Date.now() / 1000;
   const revoked = g.agent === "11111111111111111111111111111111";
   const last = decisions.find((d) => d.blockTime);
@@ -78,7 +81,7 @@ function render({ guard: g, velocity, decisions, slot, takenAt }) {
   verify(decisions);
   $("c-acc").textContent = String(Number(g.acceptedCount));
   $("c-ref").textContent = String(Object.values(g.refused).reduce((a, b) => a + Number(b), 0));
-  renderHeadroom(document, $("headroom"), g, velocity, decisions, now);
+  renderHeadroom(document, $("headroom"), g, velocity, decisions, now, checkpoints);
   renderRefusals(document, $("refusals"), g.refused);
   renderLastRefusal(document, $("last"), g.lastRefusal, decisions, CLUSTER);
   renderVelocity(document, $("velocity"), velocity);

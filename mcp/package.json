@@ -3,13 +3,17 @@
   "version": "0.1.0",
   "description": "MCP server that lets any AI agent trade Velocity perps only through the Guardrail program. It has no tool to change limits.",
   "type": "module",
-  "bin": { "guardrail-mcp": "server.mjs" },
-  "scripts": { "test": "node --test test/*.test.mjs" },
+  "bin": {
+    "guardrail-mcp": "server.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
   "dependencies": {
     "@guardrail/client": "file:../client",
     "@modelcontextprotocol/sdk": "1.32.2",
     "@solana/web3.js": "1.98.4",
-    "zod": "3.25.76"
+    "zod": "4.6.7"
   },
   "license": "Apache-2.0"
 }

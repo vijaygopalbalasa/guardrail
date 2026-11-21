@@ -2,187 +2,69 @@
 
 **"My AI trading bot blew up my account overnight."**
 
-![Equity lost by the same runaway agent on a falling SOL price: 41.2% unguarded, 9.4% through Guardrail (replay on Velocity's real program)](docs/replay.png)
+![REPLAY: equity lost by the same runaway agent on a falling SOL price, 41.2% unguarded and 9.4% through Guardrail](docs/replay.png)
 
-The same runaway agent on a 13% fall ($91.39 to $79.39) loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
-random price paths loses the same median (1.1%) either way, 26.6% vs 22.6% on its worst path, with **0 limit
-breaches** in every run.
+- **41.2% vs 9.4%**: the same runaway agent on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
+  limit breaches (a replay on Velocity's real program).
+- **54 orders refused**: on a local fork of devnet with real fills, the agent was held at its 6 SOL cap while SOL fell.
+- **1.1% median loss either way**: a normal grid bot on 30 random price paths is barely touched by the guard; its worst
+  path loses 22.6% guarded vs 26.6% unguarded.
 
-For anyone who lets an AI agent trade their perps account: set the limits once; the agent can trade, can never
-withdraw, and can never go past them.
+Guardrail is a Solana program that becomes the delegate of a Velocity perps account. The agent trades only through it,
+every order is checked on chain against limits the owner sets, and the agent can never place an order past them or
+withdraw. Leverage can still drift with price after an order is placed (2.17x against a 2.0x cap in the leverage-only
+replay). Velocity's 5x margin check is liquidation protection; Guardrail is the owner's risk budget.
 
-Guardrail is a Solana program that becomes the delegate of a Velocity perps account. The agent can trade only through
-it, every order is checked on chain against limits the owner set, and a refused order never reaches Velocity.
-
-Live on Solana devnet: program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet),
-with guarded agents' accepted orders and refusals on chain: `notes/devnet-receipts.md` (guards made before the current
-layout are labelled "history (old layout, not migrated)": their transactions stand, the guards no longer load). Live dashboard (reads the guard
-from devnet): [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app); watch the replay:
-[guardrail-perps.vercel.app/replay.html](https://guardrail-perps.vercel.app/replay.html).
-
-Caveat on this first screen: devnet only. Four internal review rounds; every finding and fix is in the repo (`audits/`). The owner
-can always trade directly or remove the delegate. No real users yet. The guard wraps Velocity's `place_perp_order` and
-`cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
-is a missing feature, not a bypass, because the agent's key has no direct path to the account.
-
-## Headline (REPLAY on Velocity's real program)
-
-The same runaway agent, the same falling market, run twice. The agent doubles a losing long every step and retries
-with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps, plus a final mark 1% lower ($79.39, a 13% fall), where the worst loss is measured. Collateral: 1,000 dUSDT. The
-unguarded run was stopped only by Velocity's own 5x margin check, after it had already reached 55 SOL.
-
-| | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
-|---|---|---|---|---|---|
-| Unguarded (agent is Velocity's delegate) | **412.44 dUSDT (41.2%)** | 55 SOL | 6.98x | Velocity's own 5x margin check (88 orders refused) | n/a |
-| Guarded | **94.47 dUSDT (9.4%)** | 10 SOL | 0.89x | the guard: 55 refused by G1, 30 by G4, 20 by G10 (daily loss) | **0** |
-
-"REPLAY" means: Velocity's real devnet binary running in LiteSVM, devnet state cloned on Nov 21 2026, the SOL price
-written by the test at each step, and real fills from a second account. It is not live trading. A second guarded run
-with a looser exposure cap lost 150.26 dUSDT (15.0%), refused by G1, G3 and G10, also with 0 breaches. With every
-limit loose except the daily-loss brake (G10 at 20 dUSDT a day), it lost 140.06 dUSDT (14.0%): 98 refusals by G10,
-0 breaches. The brake stops new risk once the day's loss passes the cap; it does not close a position, so a held
-position keeps losing as the price falls. The guarded run above carries G10 at 50 dUSDT a day. A breach means an
-accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, or
-was accepted while the day's loss was over the G10 cap,
-measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`
-(recorded); step 3 below writes a fresh copy to `out/runaway-replay.txt`.
-
-## A normal agent: 30 random paths (REPLAY)
-
-Not every bot is a runaway. `tests-litesvm/tests/sweep.rs` runs a plain grid bot (2 SOL at each 1% level below the
-start, sell one level up, orders within 3% of the price, never doubles) on 30 seeded random paths of 60 steps (1.2% a
-step), unguarded and guarded, on Velocity's real binary with fills when the price passes through an order.
-
-| | Median worst loss | Worst path | Limit breaches |
-|---|---|---|---|
-| Unguarded | 1.1% | 26.6% (seed 18, SOL -20.5%) | n/a |
-| Guarded (G1 4 SOL, G4 30 SOL, G5 1.5x, G6 2%, G10 100 dUSDT a day) | 1.1% | 22.6% | **0** |
-
-On calm paths the guard changes nothing, so the honest headline is the same median loss. It refused 493 orders by G6
-on all 30 paths, by construction: the bot keeps orders up to 3% away and the band is 2% (119 of those were sells). It
-refused 111 buys by G5 (leverage) on seeds 3, 4, 7, 8, 18, 19, 23, 25, 28 and 30, the paths that fell 8% or more; no
-sell was refused by G5. G10 did not bind: once the price was below the grid, the bot stopped buying on its own.
-
-When the limits fit the bot (the same paths with the G6 band at 4%, wider than its 3% window), it is refused only by
-G5, on the same 10 falling paths (181 of 743 orders it asked for), and never on the other 20. Median worst loss 1.1%,
-worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
-
-## What is real, with receipts
-
-| Claim | Test | Where |
+| Try it | Command | What you see |
 |---|---|---|
-| A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
-| When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
-| The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
-| A normal grid bot on 30 seeded random paths keeps the same median loss guarded and unguarded (1.1%), 22.6% vs 26.6% on the worst path, 0 breaches on every path; G5 binds on the 10 paths that fell 8% or more, G6 on all 30 (the bot's 3% window is wider than the 2% band) | `sweep_grid_agent_on_30_random_paths` | `tests-litesvm/tests/sweep.rs`, `notes/sweep.txt`, `notes/sweep.json` |
-| The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `docs/dashboard.png` |
-| The hosted dashboard reads the guard from devnet RPC (the language-model agent's guard, each order linked to its transaction) | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) | `dashboard/` (the site is a copy of it) |
-| The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
-| A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
-| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (47 tests in the file) | `tests-litesvm/tests/limits.rs` |
-| 70 of 71 planted bugs caught; the one not caught is a backup check (the post-CPI stored-order check) that the earlier checks make unreachable, see `notes/RED.md` | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
-| Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
-| The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
-| The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
-| The guard's code reaches only Velocity's place and cancel instructions | `g8_guard_source_reaches_only_place_and_cancel_on_velocity`, `g8_guard_has_no_withdraw_or_delegate_instruction` | `tests-litesvm/tests/limits.rs` |
-| A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
-| An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
-| The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
-| A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
-| With a softer instruction ("recover the loss before the close"), both models tested declined to add risk and exited instead; only the blunt mandate made them push, and that is when the guard refused | recorded transcripts | `notes/llm-agent.md` |
-| The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
+| 1. The agent's recorded devnet run (no key, no SOL, no install) | `node demo/replay-llm.mjs` | each turn: the model's own words, the order it asked for, the guard's verdict and the devnet transaction |
+| 2. Your own guard on devnet (Node and about 0.2 devnet SOL) | `npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && node demo/quickstart.mjs --keypair <devnet wallet.json>` | a Velocity account with test dUSDT, a guard with demo limits, a link to it on the dashboard, and the keeper command to run |
+| 3. The live dashboard | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) and [/replay.html](https://guardrail-perps.vercel.app/replay.html) | the fills run, the devnet guard read live, and the replay |
 
-## Not claimed
+Devnet only, no real users yet. Five internal review rounds; every finding and fix is in the repo (`audits/`). The owner
+can always trade directly or remove the delegate. The guard wraps Velocity's `place_perp_order` and `cancel_order`, not
+`place_and_take`, so the agent cannot take liquidity immediately; that is a missing feature, not a bypass.
 
-- Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
-- Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
-- The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
-- Fills and moving prices are shown in replays and on a local surfpool fork where a cheatcode moves the oracle, because Velocity's devnet oracle is stale. On the local validator the
-  cloned oracle is a frozen snapshot, so orders rest but do not fill there.
-- The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
-- The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
-  `place_and_take`.
-- Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
-- If the owner removes a market from the allowlist while a position is open, the agent can no longer exit it (exits keep
-  G2); the owner exits that position directly.
-- G10 values deposits and withdrawals at the quote oracle and counts collateral 1:1, so a deposit made while the
-  stablecoin is off $1 shows as a small gain or loss (a depeg caveat).
+## What the guard cannot do
 
-## Try it in two minutes (the first build takes about 2 minutes more)
+- **Close positions.** G10, the daily loss brake, stops new risk; it does not close anything. A held position keeps
+  losing if the price keeps falling.
+- **Bind the owner.** The owner can trade directly on Velocity or remove the delegate at any time. Only the agent is bound.
+- **Hold leverage under the cap as prices move.** Caps are checked when an order is placed; afterwards leverage moves
+  with the price.
+- **Outlive Velocity's changes.** Velocity is upgradeable; the guard depends on its account layouts and instructions.
+- **Value other collateral.** Only the quote deposit counts; any other spot balance blocks new risk.
+- **Run G10 unattended.** The daily loss brake needs a keeper at 00:00 UTC (`scripts/keeper.mjs`); without marks it acts
+  as a drawdown cap from the last high seen until the owner resets it.
 
-Row Q needs only Node 22 or newer and a devnet wallet keypair file with about 0.2 devnet SOL (faucet.solana.com).
-Steps 0 to 8 need Rust (step 7 also needs an OpenRouter key; CI skips it), solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and
-network access to Solana devnet. Run every command from the repository root.
+## More
 
-| Step | Command | What you should see |
-|---|---|---|
-| Q. Your own guard on devnet, Node only | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && node demo/quickstart.mjs --keypair <your devnet wallet.json>` | a Velocity account with 1,000 test dUSDT from Velocity's devnet faucet, a guard with the demo limits as its delegate, a fresh agent key, the cost (about 0.05 SOL, including 0.02 SOL for the agent's fees) and a link to your guard on the live dashboard |
-| 0. Local key and config | `./scripts/init-local.sh` | a throwaway key in `keys/dev.json` and `config.yml` (your own solana config is not touched) |
-| 1. Get Velocity's devnet binary | `solana -C config.yml program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so && (sha256sum fixtures/velocity-devnet.so 2>/dev/null || shasum -a 256 fixtures/velocity-devnet.so)` | the same hash as in `fixtures/velocity-devnet.so.sha256` |
-| 2. Build the guard | `./scripts/build.sh` | ends with `Finished`; `target/deploy/guard.so` exists |
-| 3. The headline replay | `(cd tests-litesvm && cargo test --release --test runaway -- --nocapture)` | both runs step by step, then the HEADLINE lines (41.2% vs 9.4%, breaches 0) |
-| 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `47 passed` for the limit tests, plus the audit, daily-loss, probe, replay and sweep tests |
-| 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
-| 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
-| 7. A language-model agent with a bad mandate | `OPENROUTER_API_KEY=... node demo/agent-llm.mjs runaway` (after step 6's setup) | each turn: the model's one-line reason, its tool call and the guard's verdict; logged to `out/llm-run-*.jsonl` |
-| 8. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision; `/replay.html` plays the unguarded and guarded replays side by side, step by step |
-
-If the hash in step 1 differs, Velocity has upgraded its devnet program since Nov 21 2026 and its account layouts may
-have moved; the committed hash is the version every test here was run against. Stop the validator with
-`./scripts/local-validator.sh stop`.
-
-Everything at once: `./scripts/test-all.sh`.
-
-### Live fills at moving prices (local surfpool fork)
-
-The local validator's oracle is frozen, so it shows refusals only. On a surfpool fork of devnet the SOL oracle can be
-moved with surfpool's `surfnet_setAccount` cheatcode, so the same runaway agent gets real Velocity fills and a real
-unrealized loss through MCP. It is a local fork with the price moved by the script, not live trading.
-
-| Step | Command | What you should see |
-|---|---|---|
-| A. Get surfpool | download `surfpool` v1.7.0 for your platform from github.com/solana-foundation/surfpool releases | `surfpool --version` prints 1.7.0 |
-| B. Fork devnet and deploy the guard | `SURFPOOL=/path/to/surfpool ./scripts/surfpool.sh start` | a Program Id line for the guard |
-| C. Runaway agent, live fills | `RPC_URL=http://127.0.0.1:8997 node demo/live.mjs` | each step: SOL price, the guarded position and its unrealized PnL; the agent is held at the 6 SOL exposure cap |
-
-Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position held at 6 SOL, unrealized PnL
--40.42 dUSDT on 1,000 collateral, 5 accepted, refused 33 by G4 and 21 by G1). Stop it with `./scripts/surfpool.sh stop`.
-
-## How it compares
-
-- **Xorr** enforces its daily cap and allowlist inside its own off-chain executor for spot buys, with only the total
-  spend enforced on chain by a token approval.
-- **CRESCO** is a generic on-chain mandate for token transfers.
-- **Velocity's equity floor** exists, but only Velocity's admin can set it; the account's owner and delegate cannot.
-- **Guardrail** is enforced on chain, by the program that holds the delegate role, on every perps order: order size,
-  markets, daily notional, worst-case exposure including open orders, leverage on unrealized PnL, and the price
-  band. The agent's key has no other path to the account.
+- [Proof](docs/proof.md): the headline replay table, the 30-path sweep, every claim with its test and receipt, and
+  what is not claimed.
+- [The limits in full](docs/limits.md): G0 to G10, the daily loss brake in detail, upgrades and migration.
+- [Build and test](docs/build-and-test.md): every step from a fresh clone (about 6 minutes cold), the local validator,
+  the surfpool fork with live fills and the CI job.
+- Devnet program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet)
+  and its receipts: `notes/devnet-receipts.md` (old-layout guards are labelled "history (old layout, not migrated)").
+- Review rounds: `audits/`; the fixes round by round: `notes/RED.md`.
 
 ## The limits
 
-| | Limit | In one line |
-|---|---|---|
-| G0 | Setup and agent | Only the Velocity account's owner can create its guard, and only the agent key the owner named can trade through it; a revoked or different key is rejected. |
-| G1 | Order size | No single order larger than the owner's maximum. |
-| G2 | Allowlists | Only the owner's markets and order types (Limit, Market, Oracle); no trigger orders, no builder fees, no odd order flags. |
-| G3 | Daily notional | Total order value per UTC day stays under the cap; a new day starts a new total. |
-| G4 | Worst-case exposure | Position plus every open order on one side plus this order stays under the cap for that market. A true exit (it opposes the position and, with every order already resting on that side, fits inside it) is not checked, so an order that only shrinks the position is never trapped; a flip past flat is checked. |
-| G5 | Leverage | Worst-case notional across the account, over collateral plus unrealized PnL, stays under the cap. Like G4 and G10, it waives only true exits. |
-| G6 | Price band | Every price on the order stays within a band around the market's own oracle, and the oracle must be fresh. |
-| G7 | Owner controls | Only the owner sets limits, rotates or revokes the agent, and pauses. |
-| G8 | No withdraw | The guard has no withdraw path and reaches only Velocity's place and cancel instructions. |
-| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position (counting only the guard's own resting exits) skips G1 to G5, G10 and the pause but stays inside the band and the order lifetime, and with a very stale oracle it may only be priced in the owner's favour. A reduce-only order beyond the position is refused. |
-| G10 | Daily loss | The owner sets the most the account may lose in one UTC day. The day's baseline (collateral plus unrealized PnL) is the higher of the equity at the guard's first call that UTC day and the last equity the guard saw (adjusted for deposits and withdrawals since), so waiting for a low does not help. Every guard call, cancels included, must bring the accounts that price the account (a missing one fails the call), so the agent cannot choose which calls are seen; only a stale oracle skips the reading. A cap needs a keeper (`set_keeper`; the owner's own key is fine): `node scripts/keeper.mjs --keypair <keeper.json> --owners <owner> --at-midnight` checkpoints just after each 00:00 UTC, which marks the day at the equity then (only the owner or its keeper gets that mark; anyone else's checkpoint uses the max rule). Without a midnight mark the baseline never falls: a new day starts at the highest equity known for the last day seen, so losses carry over until the keeper (or the owner) marks a day. A missing account fails a call; a stale or unsupported oracle only skips the reading, so cancels and exits still go through. Once the loss since then passes the cap, only exits and cancels go through until the next UTC day. Deposits and withdrawals in between are taken out (Velocity values them at the quote oracle, so to within the stablecoin's distance from $1), so neither hides nor fakes a loss. |
+| | Limit |
+|---|---|
+| G0 | Only the account's owner creates the guard; only the named agent trades through it. |
+| G1 | Order size. |
+| G2 | Allowed markets and order types; no trigger orders, builder fees or odd flags. |
+| G3 | Daily notional. |
+| G4 | Worst-case exposure per market, open orders included. |
+| G5 | Leverage on collateral plus unrealized PnL. |
+| G6 | Price band around the market's own oracle, with a fresh oracle. |
+| G7 | Only the owner sets limits, rotates or revokes the agent, and pauses. |
+| G8 | No withdraw: the guard reaches only Velocity's place and cancel. |
+| G9 | Exits that only shrink the position and cancels always go through, inside the band. |
+| G10 | Daily loss brake: stops new risk, does not close positions. |
 
-Upgrades: the Guard account has 128 reserved bytes for future fields. A guard made by an older program version (865, 950, 967 or 999 bytes) is
-grown with the owner-only `migrate_guard` (the owner pays the extra rent; a migrated guard that has a daily loss cap must
-then name a keeper with `set_keeper`, and the dashboard warns until it does); older guards close and start again; `close_guard` returns the rent and lets
-`init_guard` run again. Closing does not touch Velocity: the owner removes the guard as delegate with Velocity's
-`update_user_delegate` before trading directly.
-
-A refused order is a successful transaction that records the rule, the measured value and the owner's cap, and
-emits an `OrderChecked` event. Nothing reaches Velocity. Real errors (wrong agent, bad accounts, a stale oracle on a
-new order, Velocity's own errors) still fail.
+The full rules: [docs/limits.md](docs/limits.md).
 
 ## Use it from any agent framework (MCP)
 
@@ -209,6 +91,16 @@ withdraw.
 TypeScript: `@guardrail/client` (`client/`) has `placeOrder`, which returns `{ accepted, rule, value, cap, reason }`,
 plus `cancelOrder` and `getGuard`.
 
+## How it compares
+
+- **Xorr** enforces its daily cap and allowlist inside its own off-chain executor for spot buys, with only the total
+  spend enforced on chain by a token approval.
+- **CRESCO** is a generic on-chain mandate for token transfers.
+- **Velocity's equity floor** exists, but only Velocity's admin can set it; the account's owner and delegate cannot.
+- **Guardrail** is enforced on chain, by the program that holds the delegate role, on every perps order: order size,
+  markets, daily notional, worst-case exposure including open orders, leverage on unrealized PnL, and the price
+  band. The agent's key has no other path to the account.
+
 ## Architecture
 
 ```
@@ -216,7 +108,7 @@ owner --(once: init_guard, set_limits, set_agent, set_paused; Velocity update_us
                                                                                             v
 agent --> MCP server or @guardrail/client --> guard program --(CPI, PDA signs as the delegate)--> Velocity place_perp_order / cancel_order
                                                   |
-                                                  +- checks G0 to G9 before the CPI, reading the Velocity account, the market and its oracle
+                                                  +- checks G0 to G10 before the CPI, reading the Velocity account, the market and its oracle
                                                   +- refuses: records counters and last_refusal, emits OrderChecked, Velocity untouched
                                                   +- accepts: forwards the order, re-reads the account after the CPI and asserts the caps
 dashboard --> reads the Guard account and its OrderChecked events from the RPC

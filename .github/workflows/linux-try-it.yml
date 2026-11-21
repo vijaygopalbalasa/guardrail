@@ -23,5 +23,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: README steps 0 to 6 and 8
+      - name: build-and-test steps 0 to 6 and 8
         run: bash scripts/linux-try-it.sh
