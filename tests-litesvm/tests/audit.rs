@@ -231,5 +231,112 @@ fn info_last_refusal_is_also_kept_per_rule() {
     assert_eq!(st.last_refusal_by_rule[rule::G6 as usize].reason, gerr::PRICE_OUTSIDE_BAND);
 }
 
+
+// ------------------------------------------------------------------ R5 (review of e328f57): max_ts and the placed-id buffer
+
+/// What Velocity does with max_ts: 0 is stored as "no expiry" (so a guard that only bounds max_ts - now lets it through
+/// with no lifetime at all); a past or negative max_ts makes Velocity skip the order.
+#[test]
+fn r5_velocity_stores_max_ts_zero_as_no_expiry_and_skips_a_past_one() {
+    let (mut env, g) = setup(tight());
+    let owner_kp = g.owner.insecure_clone();
+    let owner = owner_kp.pubkey();
+    let now = env.now();
+    let mut o = Order::resting(0, BASE, 91_000_000);
+    o.max_ts = Some(0);
+    assert_ok(&env.place("owner: max_ts 0", &owner_kp, o));
+    let stored = raw_orders(&env, &owner);
+    assert_eq!(stored.len(), 1);
+    assert_eq!(stored[0].max_ts, 0, "stored with no expiry");
+    // A past or negative max_ts: Velocity logs "skipping order" and stores nothing (the transaction succeeds).
+    for (price, ts) in [(90_990_000, now - 10), (90_980_000, -5)] {
+        o.price = price;
+        o.max_ts = Some(ts);
+        let r = env.place("owner: max_ts in the past", &owner_kp, o);
+        assert_ok(&r);
+        assert!(r.unwrap().logs.iter().any(|l| l.contains("skipping order")));
+        assert_eq!(raw_orders(&env, &owner).len(), 1, "nothing new stored");
+    }
+}
+
+#[test]
+fn r5_lifetime_cap_refuses_zero_negative_and_past_max_ts() {
+    let mut l = tight();
+    l.max_order_lifetime_secs = 60;
+    let (mut env, g) = setup(l);
+    let now = env.now();
+    let mut o = Order::resting(0, BASE, 91_000_000);
+    for (label, ts) in [("max_ts 0 (never expires)", 0), ("negative max_ts", -5), ("max_ts now", now), ("max_ts 10 s ago", now - 10)] {
+        o.max_ts = Some(ts);
+        let ev = assert_refused(&env.gplace(label, &g, o), gerr::ORDER_LIFETIME_TOO_LONG);
+        assert_eq!(ev.cap, 60);
+        o.price -= 1_000;
+    }
+    // twin: 30 s out is inside the cap, and Velocity stores exactly that expiry
+    o.max_ts = Some(now + 30);
+    let r = env.gplace("max_ts 30 s out", &g, o);
+    assert!(events(&r)[0].accepted);
+    let id = env.last_guard_order(&g).unwrap();
+    let stored = raw_orders(&env, &g.owner.pubkey()).into_iter().find(|x| x.order_id == id).unwrap();
+    assert_eq!(stored.max_ts, now + 30);
+}
+
+#[test]
+fn r5_an_open_guard_order_stays_cancellable_after_32_more_placements() {
+    let (mut env, g) = setup(tight());
+    assert_ok(&env.gplace("order A rests", &g, Order::resting(0, BASE / 10, 91_000_000)));
+    let a = env.last_guard_order(&g).unwrap();
+    for k in 0..32u64 {
+        let r = env.gplace(&format!("order {k}"), &g, Order::resting(0, BASE / 10, 90_900_000 - k * 1_000));
+        assert!(events(&r)[0].accepted);
+        let id = env.last_guard_order(&g).unwrap();
+        assert_ne!(id, a);
+        assert_ok(&env.gcancel(&format!("cancel order {k}"), &g, Some(id)));
+        assert!(!raw_orders(&env, &g.owner.pubkey()).iter().any(|o| o.order_id == id));
+    }
+    let before = env.guard_state(&g).cancel_count;
+    assert_ok(&env.gcancel("agent cancels order A", &g, Some(a)));
+    assert!(!raw_orders(&env, &g.owner.pubkey()).iter().any(|o| o.order_id == a), "order A is cancelled");
+    assert_eq!(env.guard_state(&g).cancel_count, before + 1);
+}
+
+#[test]
+fn r5_with_32_guard_orders_open_the_next_is_refused_not_evicting_a_live_id() {
+    let (mut env, g) = setup(tight());
+    let mut ids = vec![];
+    for k in 0..32u64 {
+        let r = env.gplace(&format!("order {k}"), &g, Order::resting(0, BASE / 100, 90_900_000 - k * 1_000));
+        assert!(events(&r)[0].accepted, "order {k}");
+        ids.push(env.last_guard_order(&g).unwrap());
+    }
+    let ev = assert_refused(&env.gplace("order 33", &g, Order::resting(0, BASE / 100, 90_500_000)), gerr::TOO_MANY_OPEN_ORDERS);
+    assert_eq!((ev.value, ev.cap), (32, 32));
+    for id in &ids {
+        assert!(env.guard_state(&g).placed_order_ids.contains(id), "live id {id} kept");
+    }
+    // twin: cancel one, and the next order fits
+    assert_ok(&env.gcancel("cancel the first", &g, Some(ids[0])));
+    let r = env.gplace("order 33 again", &g, Order::resting(0, BASE / 100, 90_490_000));
+    assert!(events(&r)[0].accepted);
+    assert_ok(&env.gcancel("the oldest live one is still cancellable", &g, Some(ids[1])));
+    assert!(!raw_orders(&env, &g.owner.pubkey()).iter().any(|o| o.order_id == ids[1]));
+}
+
+#[test]
+fn r5_ids_the_owner_cancelled_directly_are_forgotten_so_new_orders_still_fit() {
+    let (mut env, g) = setup(tight());
+    for k in 0..32u64 {
+        let r = env.gplace(&format!("order {k}"), &g, Order::resting(0, BASE / 100, 90_900_000 - k * 1_000));
+        assert!(events(&r)[0].accepted, "order {k}");
+    }
+    let owner = g.owner.insecure_clone();
+    assert_ok(&env.gcancel_raw(&owner)); // the owner cancels everything on Velocity, not through the guard
+    assert!(raw_orders(&env, &owner.pubkey()).is_empty());
+    let r = env.gplace("the agent's next order", &g, Order::resting(0, BASE / 100, 90_500_000));
+    assert!(events(&r)[0].accepted, "stale ids were pruned, so the order fits");
+    let st = env.guard_state(&g);
+    assert_eq!(st.placed_order_ids.iter().filter(|x| **x != 0).count(), 1, "only the live id is remembered");
+}
+
 #[allow(dead_code)]
 fn _unused(_: Keypair) {}

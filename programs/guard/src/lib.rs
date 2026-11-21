@@ -91,7 +91,19 @@ pub mod guard {
         ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         params: OrderParams,
     ) -> Result<()> {
-        let outcome = check_order(&ctx, &params)?;
+        let before: Vec<u32> = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info())
+            .ok_or(GuardError::NotVelocityUser)?
+            .orders
+            .iter()
+            .map(|o| o.order_id)
+            .collect();
+        // Forget placed ids that are no longer open (filled, cancelled or expired). A live id is never overwritten.
+        prune_placed(&mut ctx.accounts.guard, &before);
+        let mut outcome = check_order(&ctx, &params)?;
+        if !matches!(outcome, Outcome::Refuse { .. }) && !ctx.accounts.guard.placed_order_ids.contains(&0) {
+            let n = ctx.accounts.guard.placed_order_ids.len() as i128;
+            outcome = Outcome::Refuse { rule: rule::G2_ALLOWLIST, value: n, cap: n, reason: GuardError::TooManyOpenOrders };
+        }
         if let Outcome::Refuse { rule: r, value, cap, reason } = outcome {
             // A limit refusal is a recorded success: Velocity is not called, the Guard counts it, the event says why.
             let slot = Clock::get()?.slot;
@@ -112,12 +124,6 @@ pub mod guard {
             emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
             return Ok(());
         }
-        let before: Vec<u32> = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info())
-            .ok_or(GuardError::NotVelocityUser)?
-            .orders
-            .iter()
-            .map(|o| o.order_id)
-            .collect();
         let mut data = velocity::IX_PLACE_PERP_ORDER.to_vec();
         params.serialize(&mut data)?;
         forward(&ctx, data)?;
@@ -132,13 +138,13 @@ pub mod guard {
                 g.day = d.day;
                 g.day_notional = d.day_notional_after;
                 g.accepted_count += 1;
-                record_placed(g, &placed);
+                record_placed(g, &placed)?;
                 emit_checked(g.key(), &params, true, rule::ACCEPTED, d.leverage_bps, g.limits.max_leverage_bps as i128, 0);
             }
             _ => {
                 let g = &mut ctx.accounts.guard;
                 g.accepted_count += 1;
-                record_placed(g, &placed);
+                record_placed(g, &placed)?;
                 emit_checked(g.key(), &params, true, rule::G9_EXIT, 0, 0, 0);
             }
         }
@@ -294,6 +300,11 @@ pub fn stored_breach(o: &velocity::OrderSlot, oracle: i64, limit_bps: u32) -> Op
     prices.into_iter().find(|&x| if o.direction == 0 { x > oracle as i128 + edge } else { x < oracle as i128 - edge })
 }
 
+/// With a lifetime cap set, a stored order must expire after now and within the cap (max_ts 0 never expires).
+pub fn stored_lifetime_breach(o: &velocity::OrderSlot, now: i64, cap_secs: u64) -> bool {
+    cap_secs > 0 && (o.max_ts <= now || o.max_ts as i128 - now as i128 > cap_secs as i128)
+}
+
 /// After the CPI: the orders Velocity stored for this call (ids not present before) must have a worst price inside
 /// the band on the owner-unfavourable side; for a very stale exit, on the owner-favourable side of the last price.
 fn stored_order_check(ctx: &Context<AgentTrade>, p: &OrderParams, outcome: &Outcome, before: &[u32]) -> Result<Vec<u32>> {
@@ -304,10 +315,15 @@ fn stored_order_check(ctx: &Context<AgentTrade>, p: &OrderParams, outcome: &Outc
         Outcome::Exit if age > l.exit_max_staleness_slots => 0,
         _ => l.price_band_bps,
     };
+    let now = Clock::get()?.unix_timestamp;
     let mut placed = vec![];
     for o in user.orders.iter().filter(|o| !before.contains(&o.order_id)) {
         if let Some(x) = stored_breach(o, oracle, limit) {
             msg!("guard POST-TRADE CHECK FAILED: stored order {} can execute at {} (oracle {}, limit {} bps)", o.order_id, x, oracle, limit);
+            return err!(GuardError::PostTradeCheckFailed);
+        }
+        if !matches!(outcome, Outcome::Exit) && stored_lifetime_breach(o, now, l.max_order_lifetime_secs) {
+            msg!("guard POST-TRADE CHECK FAILED: stored order {} has max_ts {} (now {}, lifetime cap {} s)", o.order_id, o.max_ts, now, l.max_order_lifetime_secs);
             return err!(GuardError::PostTradeCheckFailed);
         }
         placed.push(o.order_id);
@@ -315,13 +331,25 @@ fn stored_order_check(ctx: &Context<AgentTrade>, p: &OrderParams, outcome: &Outc
     Ok(placed)
 }
 
-/// Remembers order ids the guard placed (ring buffer of 32, the size of Velocity's order book per user).
-fn record_placed(g: &mut Guard, ids: &[u32]) {
-    for id in ids {
-        let i = (g.placed_cursor as usize) % g.placed_order_ids.len();
-        g.placed_order_ids[i] = *id;
-        g.placed_cursor = ((i + 1) % g.placed_order_ids.len()) as u8;
+/// Clears remembered ids that are no longer among the Velocity User's open orders.
+fn prune_placed(g: &mut Guard, open: &[u32]) {
+    for id in g.placed_order_ids.iter_mut() {
+        if *id != 0 && !open.contains(id) {
+            *id = 0;
+        }
     }
+}
+
+/// Remembers order ids the guard placed, each in a free slot (32 slots, the size of Velocity's order book per user).
+/// A live id is never evicted: with no free slot the call fails (the pre-check already refuses that case).
+fn record_placed(g: &mut Guard, ids: &[u32]) -> Result<()> {
+    for id in ids {
+        match g.placed_order_ids.iter_mut().find(|x| **x == 0) {
+            Some(slot) => *slot = *id,
+            None => return err!(GuardError::TooManyOpenOrders),
+        }
+    }
+    Ok(())
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -499,7 +527,12 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
     }
     // Order lifetime: a resting order must expire within the owner's bound, so a stale price cannot rest forever.
     if l.max_order_lifetime_secs > 0 {
-        let life = p.max_ts.map(|t| t as i128 - clock.unix_timestamp as i128).unwrap_or(i128::MAX);
+        // Velocity stores max_ts 0 as "never expires" and skips a past one, so anything not in the future is unbounded.
+        let now = clock.unix_timestamp as i128;
+        let life = match p.max_ts {
+            Some(t) if t as i128 > now => t as i128 - now,
+            _ => i128::MAX,
+        };
         if life > l.max_order_lifetime_secs as i128 {
             return refuse(rule::G2_ALLOWLIST, life.min(i64::MAX as i128), l.max_order_lifetime_secs as i128, GuardError::OrderLifetimeTooLong);
         }
@@ -669,8 +702,9 @@ pub struct Guard {
     pub refused_g6: u64,
     pub refused_g7: u64,
     pub last_refusal: LastRefusal,
-    /// Order ids the guard placed (ring buffer; 0 = empty). The agent may cancel only these.
+    /// Order ids the guard placed that are still open (0 = free slot). The agent may cancel only these.
     pub placed_order_ids: [u32; 32],
+    /// Unused since ids go into free slots; kept so the account layout does not change.
     pub placed_cursor: u8,
     pub cancel_count: u64,
     pub refused_cancels: u64,
@@ -842,8 +876,10 @@ pub enum GuardError {
     StaleExitUnfavourable,
     #[msg("the agent may cancel only orders the guard placed, by id")]
     CancelNotAllowed,
-    #[msg("the order's max_ts is later than the owner's order lifetime allows")]
+    #[msg("the order's max_ts is not in the future or is later than the owner's order lifetime allows")]
     OrderLifetimeTooLong,
+    #[msg("32 orders the guard placed are already open; cancel one first")]
+    TooManyOpenOrders,
 }
 
 #[cfg(test)]
@@ -869,5 +905,16 @@ mod stored_order_tests {
         // A stale exit SELL (limit 0 bps) must not sit below the last price.
         assert!(stored_breach(&slot(1, 1, 91_000_000, 0, 0, 0, 0), oracle, 0).is_some());
         assert!(stored_breach(&slot(1, 1, 91_390_000, 0, 0, 0, 0), oracle, 0).is_none());
+    }
+
+    #[test]
+    fn stored_max_ts_must_be_in_the_future_and_inside_the_cap() {
+        let now = 1_795_230_000;
+        let with = |t: i64| velocity::OrderSlot { max_ts: t, ..Default::default() };
+        assert!(stored_lifetime_breach(&with(0), now, 60), "0 never expires");
+        assert!(stored_lifetime_breach(&with(now), now, 60));
+        assert!(stored_lifetime_breach(&with(now + 61), now, 60));
+        assert!(!stored_lifetime_breach(&with(now + 60), now, 60));
+        assert!(!stored_lifetime_breach(&with(0), now, 0), "no cap set");
     }
 }

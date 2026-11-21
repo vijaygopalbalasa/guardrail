@@ -498,6 +498,7 @@ pub mod gerr {
     pub const STALE_EXIT_UNFAVOURABLE: u32 = 6028;
     pub const CANCEL_NOT_ALLOWED: u32 = 6029;
     pub const ORDER_LIFETIME_TOO_LONG: u32 = 6030;
+    pub const TOO_MANY_OPEN_ORDERS: u32 = 6031;
 }
 
 pub mod rule {
@@ -932,6 +933,7 @@ pub struct RawOrder {
     pub auction_duration: u8,
     pub oracle_price_offset: i64,
     pub user_order_id: u8,
+    pub max_ts: i64,
 }
 
 /// Open orders read straight from the User account (User + 1064 + i*104).
@@ -956,6 +958,7 @@ pub fn raw_orders(env: &Env, owner: &Pubkey) -> Vec<RawOrder> {
             direction: d[o + 91],
             reduce_only: d[o + 92] == 1,
             auction_duration: d[o + 96],
+            max_ts: i64_at(o + 64),
         })
         .collect()
 }

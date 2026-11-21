@@ -93,6 +93,8 @@ pub struct OrderSlot {
     pub auction_end: i64,
     pub oracle_price_offset: i64,
     pub auction_duration: u8,
+    /// Expiry (unix seconds); 0 = never.
+    pub max_ts: i64,
 }
 
 pub const USER_ORDERS: usize = 1064;
@@ -151,6 +153,7 @@ impl UserView {
                 filled: u64_at(d, o + 24),
                 auction_start: i64_at(d, o + 48),
                 auction_end: i64_at(d, o + 56),
+                max_ts: i64_at(d, o + 64),
                 oracle_price_offset: i64_at(d, o + 72),
                 order_id: u32::from_le_bytes(d[o + 80..o + 84].try_into().unwrap()),
                 market_index: u16_at(d, o + 84),

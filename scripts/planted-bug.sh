@@ -9,7 +9,8 @@ VEL=programs/guard/src/velocity.rs
 B1=$(mktemp); B2=$(mktemp); B3=$(mktemp)
 cp $LIB $B1; cp $MATH $B2; cp $VEL $B3
 restore() { cp $B1 $LIB; cp $B2 $MATH; cp $B3 $VEL; }
-plant() { # $1 label, $2 file, $3 python old, $4 python new
+plant() { # $1 label, $2 file, $3 python old, $4 python new, $5 "unit" to also run the program's unit tests
+  if [ -n "${ONLY:-}" ] && [[ "$1" != *"$ONLY"* ]]; then return; fi  # ONLY=R5 runs just the plants whose label has R5
   echo "=== $1"
   python3 - "$2" "$3" "$4" <<'PY'
 import sys
@@ -78,6 +79,11 @@ plant "F3 agent may cancel all" $LIB "            _ => false,
         };"
 plant "INFO order lifetime ignored" $LIB "        if life > l.max_order_lifetime_secs as i128 {" "        if false {"
 plant "INFO last refusal by rule not kept" $LIB "            g.last_refusal_by_rule[(r as usize).min(7)] = lr;" ""
+plant "R5 lifetime: max_ts 0 or in the past passes (life = max_ts - now)" $LIB "            Some(t) if t as i128 > now => t as i128 - now," "            Some(t) => t as i128 - now,"
+plant "R5 placed ids never pruned" $LIB "        if *id != 0 && !open.contains(id) {" "        if false && *id != 0 && !open.contains(id) {"
+plant "R5 a new id evicts a live one" $LIB "        match g.placed_order_ids.iter_mut().find(|x| **x == 0) {" "        match g.placed_order_ids.iter_mut().next() {"
+plant "R5 no refusal when 32 guard orders are open" $LIB "        if !matches!(outcome, Outcome::Refuse { .. }) && !ctx.accounts.guard.placed_order_ids.contains(&0) {" "        if false {"
+plant "R5 stored max_ts not checked after the CPI (unit tests)" $LIB "    cap_secs > 0 && (o.max_ts <= now || o.max_ts as i128 - now as i128 > cap_secs as i128)" "    cap_secs > 0 && o.max_ts as i128 - now as i128 > cap_secs as i128" unit
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1
