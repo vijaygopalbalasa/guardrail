@@ -21,7 +21,7 @@ open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
@@ -93,6 +93,19 @@ plant "R6 an order Velocity did not store counts as accepted" $LIB "        if p
 plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
 plant "R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = true || !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);"
 plant "R8 an order that keeps exposure equal by flipping is waived (the review case)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = exposure > exposure_before;"
+plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = eq.max(carried);" "        g.baseline_equity = eq.max(carried.min(eq));"
+plant "R9 N2 checkpoint accepts any Velocity account" $LIB "    #[account(mut, has_one = velocity_user)]
+    pub guard: Account<'info, Guard>,
+    /// CHECK: read only, bound to the guard by has_one" "    #[account(mut)]
+    pub guard: Account<'info, Guard>,
+    /// CHECK: read only, bound to the guard by has_one"
+plant "R9 N3 exits skip the order lifetime" $LIB "        // after the price moves. An exit can always be placed again, so this never traps a position.
+        if let Some(life) = lifetime_breach(l, p, clock.unix_timestamp) {" "        // after the price moves. An exit can always be placed again, so this never traps a position.
+        if let Some(life) = None::<i128> {"
+plant "R9 N4 the owner's reduce-only orders count against the agent's exits" $VEL "&& o.direction == direction && only_ids.contains(&o.order_id))" "&& o.direction == direction && (only_ids.contains(&o.order_id) || o.order_id > 0))"
+plant "R9 N5 surplus reduce-only orders pass" $LIB "    if p.reduce_only {
+        return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)" "    if false {
+        return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

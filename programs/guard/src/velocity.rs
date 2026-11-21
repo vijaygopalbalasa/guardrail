@@ -193,10 +193,10 @@ impl UserView {
     }
 
     /// Unfilled size of the open reduce-only orders on one side of a market (for G9 stacking).
-    pub fn resting_reduce_only(&self, market_index: u16, direction: u8) -> u64 {
+    pub fn resting_reduce_only(&self, market_index: u16, direction: u8, only_ids: &[u32]) -> u64 {
         self.orders
             .iter()
-            .filter(|o| o.reduce_only && o.market_index == market_index && o.direction == direction)
+            .filter(|o| o.reduce_only && o.market_index == market_index && o.direction == direction && only_ids.contains(&o.order_id))
             .map(|o| o.base.saturating_sub(o.filled))
             .sum()
     }

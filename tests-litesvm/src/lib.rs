@@ -550,6 +550,7 @@ pub mod gerr {
     pub const TOO_MANY_OPEN_ORDERS: u32 = 6031;
     pub const DAILY_LOSS_EXCEEDED: u32 = 6032;
     pub const ORDER_NOT_STORED: u32 = 6033;
+    pub const REDUCE_ONLY_BEYOND_POSITION: u32 = 6034;
 }
 
 pub mod rule {
@@ -654,6 +655,10 @@ pub struct GuardState {
     pub baseline_flows: i64,
     pub refused_g10: u64,
     pub last_refusal_g10: LastRefusal,
+    /// The last equity the guard saw (any call) and Velocity's net deposits then (audit round 2, N2).
+    pub last_seen_equity: i64,
+    pub last_seen_flows: i64,
+    pub has_last_seen: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -813,6 +818,21 @@ impl Env {
         self.gplace_as(label, g, &g.agent.insecure_clone(), o, &[])
     }
 
+    /// Anyone takes the day's G10 baseline with fresh prices: the permissionless checkpoint, signed only by the
+    /// harness's fee payer (neither the owner nor the agent).
+    pub fn checkpoint(&mut self, label: &str, g: &Guarded) -> TxResult {
+        let mut accounts = vec![w(g.guard), r(g.user)];
+        accounts.extend(Self::maps());
+        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[])
+    }
+
+    /// The checkpoint instruction with a chosen Velocity user account (to show it must be the guard's own).
+    pub fn checkpoint_with_user(&mut self, label: &str, g: &Guarded, user: &Pubkey) -> TxResult {
+        let mut accounts = vec![w(g.guard), r(*user)];
+        accounts.extend(Self::maps());
+        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[])
+    }
+
     pub fn gplace_as(&mut self, label: &str, g: &Guarded, signer: &Keypair, o: Order, extra: &[AccountMeta]) -> TxResult {
         let mut data = disc("place_perp_order").to_vec();
         data.extend(o.bytes());
@@ -892,6 +912,9 @@ impl Env {
             baseline_flows: i64_at(t + 24),
             refused_g10: u64_at(t + 32),
             last_refusal_g10: read_lr(t + 40),
+            last_seen_equity: if d.len() >= t + 85 + 17 { i64_at(t + 85) } else { 0 },
+            last_seen_flows: if d.len() >= t + 85 + 17 { i64_at(t + 93) } else { 0 },
+            has_last_seen: d.len() >= t + 85 + 17 && d[t + 101] == 1,
             placed_order_ids,
             cancel_count: u64_at(q),
             refused_cancels: u64_at(q + 8),

@@ -1,0 +1,8 @@
+test n1_two_plain_sells_cannot_flip_a_long_past_flat_with_g10_tripped ... ok
+test n3_an_exit_without_max_ts_is_refused_when_a_lifetime_is_set ... FAILED
+test n2_anyone_can_checkpoint_the_day_and_a_checkpoint_at_the_low_cannot_lower_it ... FAILED
+test n4_owner_reduce_only_orders_do_not_trap_the_agents_exit_while_paused ... FAILED
+test n2_twin_no_drop_no_refusal_on_a_new_day ... ok
+test n5_surplus_reduce_only_orders_are_refused_unpaused ... FAILED
+test n2_waiting_for_the_low_does_not_reset_the_baseline ... FAILED
+test result: FAILED. 2 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s

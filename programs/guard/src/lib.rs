@@ -87,6 +87,16 @@ pub mod guard {
         Ok(())
     }
 
+    /// G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.
+    /// It can only ever be the higher of equity now and the last equity the guard saw, so nobody gains by its timing.
+    pub fn checkpoint<'info>(ctx: Context<'_, '_, 'info, 'info, Checkpoint<'info>>) -> Result<()> {
+        let clock = Clock::get()?;
+        let ui = ctx.accounts.velocity_user.to_account_info();
+        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock);
+        msg!("guard: checkpoint, day {} baseline {}", ctx.accounts.guard.loss_day, ctx.accounts.guard.baseline_equity);
+        Ok(())
+    }
+
     /// G7: owner only. While paused, only cancels and exits (G9) go through.
     pub fn set_paused(ctx: Context<OwnerOnly>, paused: bool) -> Result<()> {
         ctx.accounts.guard.paused = paused;
@@ -108,7 +118,7 @@ pub mod guard {
             .collect();
         // Forget placed ids that are no longer open (filled, cancelled or expired). A live id is never overwritten.
         prune_placed(&mut ctx.accounts.guard, &before);
-        take_day_baseline(&mut ctx)?;
+        observe(&mut ctx)?;
         let mut baseline: Option<Baseline> = None;
         let mut outcome = check_order(&ctx, &params, &mut baseline)?;
         if let Some(b) = baseline {
@@ -187,7 +197,7 @@ pub mod guard {
         mut ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         order_id: Option<u32>,
     ) -> Result<()> {
-        take_day_baseline(&mut ctx)?;
+        observe(&mut ctx)?;
         let g = &ctx.accounts.guard;
         let allowed = match order_id {
             Some(id) if id != 0 => g.placed_order_ids.contains(&id),
@@ -352,7 +362,7 @@ fn stored_order_check(ctx: &Context<AgentTrade>, p: &OrderParams, outcome: &Outc
             msg!("guard POST-TRADE CHECK FAILED: stored order {} can execute at {} (oracle {}, limit {} bps)", o.order_id, x, oracle, limit);
             return err!(GuardError::PostTradeCheckFailed);
         }
-        if !matches!(outcome, Outcome::Exit) && stored_lifetime_breach(o, now, l.max_order_lifetime_secs) {
+        if stored_lifetime_breach(o, now, l.max_order_lifetime_secs) {
             msg!("guard POST-TRADE CHECK FAILED: stored order {} has max_ts {} (now {}, lifetime cap {} s)", o.order_id, o.max_ts, now, l.max_order_lifetime_secs);
             return err!(GuardError::PostTradeCheckFailed);
         }
@@ -489,6 +499,19 @@ fn account_leverage(
 }
 
 /// Pre-CPI checks.
+/// The order's lifetime when it breaks the owner's bound (max_ts missing, 0, past, or too far out), else None.
+/// Velocity stores max_ts 0 as "never expires" and skips a past one, so anything not in the future is unbounded.
+fn lifetime_breach(l: &Limits, p: &OrderParams, now: i64) -> Option<i128> {
+    if l.max_order_lifetime_secs == 0 {
+        return None;
+    }
+    let life = match p.max_ts {
+        Some(t) if t as i128 > now as i128 => t as i128 - now as i128,
+        _ => i128::MAX,
+    };
+    (life > l.max_order_lifetime_secs as i128).then(|| life.min(i64::MAX as i128))
+}
+
 /// G10's baseline for a UTC day: equity and Velocity's net deposits at the day's first risk-increasing check.
 #[derive(Clone, Copy)]
 struct Baseline {
@@ -497,30 +520,38 @@ struct Baseline {
     flows: i64,
 }
 
-/// G10: the guard's first call of a UTC day (an order, an exit or a cancel) takes the day's baseline when every price
-/// it needs is present and fresh. It never fails the call; if it cannot price the account, the next call tries again.
-fn take_day_baseline(ctx: &mut Context<AgentTrade>) -> Result<()> {
+/// G10 on every guard call: record the equity the guard sees, and on the first call of a UTC day take the day's
+/// baseline as the higher of equity now and the last equity seen (adjusted for deposits and withdrawals since), so
+/// neither waiting nor timing a call lowers it. Best effort: without fresh prices for every market it records nothing
+/// and never fails the call.
+fn observe(ctx: &mut Context<AgentTrade>) -> Result<()> {
     let clock = Clock::get()?;
-    let today = math::utc_day(clock.unix_timestamp);
-    let g = &ctx.accounts.guard;
-    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {
-        return Ok(());
-    }
-    let Some(user) = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()) else { return Ok(()) };
+    let ui = ctx.accounts.velocity_user.to_account_info();
+    observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock);
+    Ok(())
+}
+
+fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock) {
+    let Some(user) = velocity::UserView::load(user_ai) else { return };
     let mut prices = vec![];
     for m in user.active_markets() {
-        match market_price(ctx.remaining_accounts, m, clock.slot) {
+        match market_price(ra, m, clock.slot) {
             Ok((p, age)) if age <= g.limits.max_oracle_staleness_slots => prices.push((m, p)),
-            _ => return Ok(()),
+            _ => return,
         }
     }
-    let Ok((_, equity)) = account_leverage(ctx.remaining_accounts, &user, &prices, None) else { return Ok(()) };
-    let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return Ok(()) };
-    let g = &mut ctx.accounts.guard;
-    g.loss_day = today;
-    g.baseline_equity = eq;
-    g.baseline_flows = flows;
-    Ok(())
+    let Ok((_, equity)) = account_leverage(ra, &user, &prices, None) else { return };
+    let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return };
+    let today = math::utc_day(clock.unix_timestamp);
+    if g.max_daily_loss > 0 && g.loss_day != today {
+        let carried = if g.has_last_seen { g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows)) } else { eq };
+        g.loss_day = today;
+        g.baseline_equity = eq.max(carried);
+        g.baseline_flows = flows;
+    }
+    g.last_seen_equity = eq;
+    g.last_seen_flows = flows;
+    g.has_last_seen = true;
 }
 
 fn net_flows(user: &velocity::UserView) -> i128 {
@@ -561,7 +592,8 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
     // G9: a true exit (reduce-only, opposite to the position, and with the exits already resting no larger than it)
     // skips G1, G3, G4, G5 and the pause, and is never blocked by staleness. It keeps G2, and its price must stay
     // inside the band (or, with a very stale oracle, on the owner-favourable side of the last price).
-    let resting = user.resting_reduce_only(p.market_index, p.direction);
+    // Only the guard's own resting exits count (audit round 2, N4): the owner's reduce-only orders do not use them up.
+    let resting = user.resting_reduce_only(p.market_index, p.direction, &g.placed_order_ids);
     if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base, resting) {
         // Exits keep G2 (audit F2): only allowed markets and order types.
         if !l.markets.iter().any(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {
@@ -569,6 +601,11 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
         }
         if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
             return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
+        }
+        // Exits obey the order lifetime too (audit round 2, N3): a resting exit at the band edge must not be picked off
+        // after the price moves. An exit can always be placed again, so this never traps a position.
+        if let Some(life) = lifetime_breach(l, p, clock.unix_timestamp) {
+            return refuse(rule::G2_ALLOWLIST, life, l.max_order_lifetime_secs as i128, GuardError::OrderLifetimeTooLong);
         }
         let (oracle, age) = market_price(ra, p.market_index, clock.slot)?;
         if age > l.exit_max_staleness_slots {
@@ -589,6 +626,11 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
     if g.paused {
         return refuse(rule::G7_PAUSED, 1, 0, GuardError::Paused);
     }
+    // A reduce-only order that is not an exit (beyond the position with the exits already resting, or on the same
+    // side) can never fill as asked; Velocity cancels the surplus and a keeper is paid from the owner (audit round 2, N5).
+    if p.reduce_only {
+        return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128).saturating_add(resting as i128), pos.base.unsigned_abs() as i128, GuardError::ReduceOnlyBeyondPosition);
+    }
     // G2
     let row = match l.markets.iter().find(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {
         Some(r) => *r,
@@ -602,16 +644,8 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
         return refuse(rule::G1_ORDER_SIZE, p.base_asset_amount as i128, l.max_order_base as i128, GuardError::OrderTooLarge);
     }
     // Order lifetime: a resting order must expire within the owner's bound, so a stale price cannot rest forever.
-    if l.max_order_lifetime_secs > 0 {
-        // Velocity stores max_ts 0 as "never expires" and skips a past one, so anything not in the future is unbounded.
-        let now = clock.unix_timestamp as i128;
-        let life = match p.max_ts {
-            Some(t) if t as i128 > now => t as i128 - now,
-            _ => i128::MAX,
-        };
-        if life > l.max_order_lifetime_secs as i128 {
-            return refuse(rule::G2_ALLOWLIST, life.min(i64::MAX as i128), l.max_order_lifetime_secs as i128, GuardError::OrderLifetimeTooLong);
-        }
+    if let Some(life) = lifetime_breach(l, p, clock.unix_timestamp) {
+        return refuse(rule::G2_ALLOWLIST, life, l.max_order_lifetime_secs as i128, GuardError::OrderLifetimeTooLong);
     }
 
     // Prices: the order's market and every market with an open position or order, each from its own oracle.
@@ -653,16 +687,18 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
         };
         let flows = net_flows(&user);
         let today = math::utc_day(clock.unix_timestamp);
-        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {
+        let (b_eq, b_flows) = if g.loss_day == today {
             (g.baseline_equity as i128, g.baseline_flows as i128)
         } else {
+            // Normally set by observe() at the start of the call; same rule here: never below the last equity seen.
+            let carried = if g.has_last_seen { g.last_seen_equity as i128 + (flows - g.last_seen_flows as i128) } else { equity };
             let b = Baseline {
                 day: today,
-                equity: i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?,
+                equity: i64::try_from(equity.max(carried)).map_err(|_| GuardError::MathOverflow)?,
                 flows: i64::try_from(flows).map_err(|_| GuardError::MathOverflow)?,
             };
             *baseline = Some(b);
-            (equity, flows)
+            (b.equity as i128, flows)
         };
         let loss = daily_loss(b_eq, b_flows, equity, flows);
         if increases && loss > g.max_daily_loss as i128 {
@@ -843,6 +879,11 @@ pub struct Guard {
     pub baseline_flows: i64,
     pub refused_g10: u64,
     pub last_refusal_g10: LastRefusal,
+    /// The last equity the guard saw on any call, Velocity's net deposits then, and whether it has seen one: a new
+    /// day's baseline is never below it (audit round 2, N2). loss_day == today means the day's baseline is set.
+    pub last_seen_equity: i64,
+    pub last_seen_flows: i64,
+    pub has_last_seen: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
@@ -916,6 +957,15 @@ pub struct InitGuard<'info> {
     #[account(init, payer = owner, space = 8 + Guard::INIT_SPACE, seeds = [b"guard", velocity_user.key().as_ref()], bump)]
     pub guard: Account<'info, Guard>,
     pub system_program: Program<'info, System>,
+}
+
+/// Permissionless: any signer pays the fee; the guard must belong to this Velocity user.
+#[derive(Accounts)]
+pub struct Checkpoint<'info> {
+    #[account(mut, has_one = velocity_user)]
+    pub guard: Account<'info, Guard>,
+    /// CHECK: read only, bound to the guard by has_one; UserView::load checks the owner and discriminator.
+    pub velocity_user: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]
@@ -1017,6 +1067,8 @@ pub enum GuardError {
     DailyLossExceeded,
     #[msg("Velocity stored no order for this call")]
     OrderNotStored,
+    #[msg("a reduce-only order must oppose the position and, with the guard's resting exits, fit inside it")]
+    ReduceOnlyBeyondPosition,
 }
 
 #[cfg(test)]
