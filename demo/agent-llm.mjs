@@ -69,6 +69,19 @@ const sol = (x) => Number(x) / 1e9;
  * Runs the agent. `decide` defaults to the model; a recorded transcript can be replayed instead (offline test).
  * `market` (optional) moves the price each turn and fills accepted bids (surfpool fork).
  */
+function compactStatus(text) {
+  try {
+    const j = JSON.parse(text.slice(text.indexOf("{")));
+    const p = (j.positions ?? []).find((x) => Number(x.market_index) === 0);
+    const held = p ? Number(p.base) / 1e9 : 0, bids = p ? Number(p.open_bids) / 1e9 : 0;
+    const cap = Number(j.limits?.markets?.[0]?.maxExposureBase ?? 0) / 1e9;
+    const refused = Object.entries(j.refused ?? {}).filter(([, n]) => Number(n) > 0).map(([k, n]) => `${k} ${n}`).join(", ") || "none";
+    return `status: ${held} SOL held, ${bids} SOL bid, exposure cap ${cap} SOL; accepted ${j.accepted}, refused ${refused}`;
+  } catch {
+    return text.slice(0, 120);
+  }
+}
+
 export async function runLlmAgent({ mode, demo, turns = 10, model = process.env.GUARDRAIL_AGENT_MODEL ?? DEFAULT_MODEL, decide, market, openingLong = 0, dropPerTurn = 0.01, log = console.log, logFile }) {
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -127,7 +140,9 @@ export async function runLlmAgent({ mode, demo, turns = 10, model = process.env.
         } else summary.refused[verdict.ruleName] = (summary.refused[verdict.ruleName] ?? 0) + 1;
       }
       if (d.tool === "guardrail_cancel_order") summary.cancels++;
-      log(`turn ${turn + 1}: ${d.reason || "(no reason given)"}\n        -> ${d.tool} ${JSON.stringify(d.args)} -> ${outcome}`);
+      // DEMO_COMPACT=1 (terminal recordings): the status tool's JSON is summed up in one line.
+      const shown = process.env.DEMO_COMPACT && d.tool === "guardrail_status" ? compactStatus(outcome) : outcome;
+      log(`turn ${turn + 1}: ${d.reason || "(no reason given)"}\n        -> ${d.tool} ${JSON.stringify(d.args)} -> ${shown}`);
       if (logFile) appendFileSync(logFile, JSON.stringify({ turn: turn + 1, price: Number(price.toFixed(4)), model: summary.model, reason: d.reason, tool: d.tool, args: d.args, outcome, accepted: verdict?.accepted ?? null, rule: verdict?.ruleName ?? null, usage: d.usage ?? null }) + "\n");
       history.push(
         { role: "user", content: state },
@@ -172,6 +187,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     decide = async (_messages, turn) => ({ reason: rec[turn]?.reason ?? "", tool: rec[turn]?.tool ?? null, args: rec[turn]?.args ?? {}, usage: null });
   }
   const s = await runLlmAgent({ mode, demo, turns: decide ? Math.min(turns, 99) : turns, market, logFile, decide, openingLong: market && mode !== "calm" ? 3 : 0 });
-  console.log(`log: ${logFile}`);
+  console.log(`log: out/${logFile.split("/").pop()}`);
   process.exitCode = s.turns > 0 ? 0 : 1;
 }
