@@ -1,84 +1,99 @@
 === G1 off by one
 test g1_refuses_order_one_unit_over_max_size ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 === G2 market allowlist ignores the index
 test g2_refuses_market_not_on_allowlist ... FAILED
 test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... FAILED
-test result: FAILED. 29 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 36 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 === G2 order type check removed
 test g2_refuses_order_type_not_allowed ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G2 builder check removed
 test g2_refuses_builder_idx_and_builder_fee ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 === G3 forgets the running total
 test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G3 never resets on a new day
 test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 === G4 ignores this order
+test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
 test g4_refuses_ask_that_takes_worst_case_short_over_cap ... FAILED
 test g4_refuses_bid_that_takes_worst_case_long_over_cap ... FAILED
-test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
-test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: FAILED. 35 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 === G4 first-match slot lookup
 test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G5 ignores unrealized PnL
 test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test refuses_when_equity_is_not_positive ... FAILED
+test result: FAILED. 36 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 === G5 check removed
-test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... FAILED
 test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... FAILED
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... FAILED
 test g9_exit_allowed_when_leverage_is_over_cap ... FAILED
-test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
-=== G6 limit price band skipped
+test result: FAILED. 35 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+=== G6 price field skipped
+test g6_refuses_oracle_order_with_a_far_price_field ... FAILED
 test g6_refuses_limit_price_outside_band ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test g9_exit_price_must_stay_in_band ... FAILED
+test result: FAILED. 35 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+=== G6 oracle offset skipped
+test g6_refuses_limit_order_whose_oracle_offset_is_outside_band ... FAILED
+test g6_refuses_oracle_offset_outside_band ... FAILED
+test result: FAILED. 36 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 === G6 auction prices skipped
 test g6_refuses_auction_price_outside_band ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
-=== G6 oracle offset skipped
-test g6_refuses_oracle_offset_outside_band ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G6 market order without a worst price allowed
+test g6_refuses_market_order_without_a_worst_price ... FAILED
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+=== G9 exit skips the price band
+test g9_exit_price_must_stay_in_band ... FAILED
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+=== G5 borrow in another spot market ignored
+test refuses_when_another_spot_market_holds_a_borrow ... FAILED
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G6 staleness off by one
 test g6_refuses_stale_oracle ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G7 pause ignored
 test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
 test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... FAILED
 test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... FAILED
-test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 35 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 === G7 owner check removed from set_limits
+test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
 test g7_only_the_owner_sets_limits ... FAILED
 test g7_revoke_and_rotate_agent ... FAILED
-test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
-test result: FAILED. 28 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 35 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G7 revoked agent still trades
 test g7_revoke_and_rotate_agent ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 === G9 exit does not need to oppose the position
 test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G9 exits blocked by limits (no bypass)
-test g9_exit_allowed_when_exposure_is_over_cap ... FAILED
+test g9_exit_price_must_stay_in_band ... FAILED
 test g9_exit_allowed_when_daily_notional_is_spent ... FAILED
+test g9_exit_allowed_when_exposure_is_over_cap ... FAILED
+test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... FAILED
 test g9_exit_actually_closes_the_position_under_tight_limits ... FAILED
 test g9_exit_allowed_when_leverage_is_over_cap ... FAILED
-test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... FAILED
-test result: FAILED. 26 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 32 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === G8 a third Velocity instruction (withdraw) appears
 test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... FAILED
-test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 37 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === post-trade check off by one (refuses at the cap)
 test g4_refuses_ask_that_takes_worst_case_short_over_cap ... FAILED
 test g4_refuses_bid_that_takes_worst_case_long_over_cap ... FAILED
-test result: FAILED. 29 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: FAILED. 36 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 === restored
 sources restored byte for byte
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 exit 0
