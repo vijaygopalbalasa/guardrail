@@ -31,7 +31,7 @@ access to Solana devnet. Run every command from the repository root.
 | Step | Command | What you should see |
 |---|---|---|
 | 0. Local key and config | `./scripts/init-local.sh` | a throwaway key in `keys/dev.json` and `config.yml` (your own solana config is not touched) |
-| 1. Get Velocity's devnet binary | `solana -C config.yml program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so && shasum -a 256 fixtures/velocity-devnet.so` | the same hash as in `fixtures/velocity-devnet.so.sha256` |
+| 1. Get Velocity's devnet binary | `solana -C config.yml program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so && (sha256sum fixtures/velocity-devnet.so 2>/dev/null || shasum -a 256 fixtures/velocity-devnet.so)` | the same hash as in `fixtures/velocity-devnet.so.sha256` |
 | 2. Build the guard | `./scripts/build.sh` | ends with `Finished`; `target/deploy/guard.so` exists |
 | 3. The headline replay | `(cd tests-litesvm && cargo test --release --test runaway -- --nocapture)` | both runs step by step, then the HEADLINE lines (41.2% vs 9.4%, breaches 0) |
 | 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `46 passed` for the limit tests, plus the probes and the replay |
