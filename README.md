@@ -1,0 +1,139 @@
+# Guardrail
+
+**"My AI trading bot blew up my account overnight."**
+
+Guardrail: limits your AI trading agent cannot break. It is a Solana program that becomes the delegate of a Velocity
+perps account. The agent can trade only through it, every order is checked on chain against limits the owner froze,
+and the agent can never withdraw.
+
+## Headline (REPLAY on Velocity's real program)
+
+The same runaway agent, the same falling market, run twice. The agent doubles a losing long every step and retries
+with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps. Collateral: 1,000 dUSDT.
+
+| | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
+|---|---|---|---|---|---|
+| Unguarded (agent is Velocity's delegate) | **412.44 dUSDT (41.2%)** | 55 SOL | 6.98x | Velocity's own 5x margin check (88 orders refused) | n/a |
+| Guarded | **94.47 dUSDT (9.4%)** | 10 SOL | 0.89x | the guard: 55 refused by G1, 50 by G4 | **0** |
+
+"REPLAY" means: Velocity's real devnet binary running in LiteSVM, devnet state cloned on Nov 21 2026, the SOL price
+written by the test at each step, and real fills from a second account. It is not live trading. A second guarded run
+with a looser exposure cap lost 150.26 dUSDT (15.0%), refused by G1 and G3, also with 0 breaches. A breach means an
+accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance,
+measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`.
+
+## Try it in two minutes (after the first build)
+
+Needs Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54) and Node 22 or newer.
+
+| Step | Command | What you should see |
+|---|---|---|
+| 1. Get Velocity's devnet binary | `solana program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so` | its sha256 matches `fixtures/velocity-devnet.so.sha256` |
+| 2. Build the guard | `./scripts/build.sh` | `target/deploy/guard.so` |
+| 3. The headline replay | `cd tests-litesvm && cargo test --release --test runaway -- --nocapture` | both runs step by step, then the HEADLINE lines |
+| 4. Every limit test | `cd tests-litesvm && cargo test --release` | 46 replay tests pass |
+| 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && scripts/local-validator.sh start` | a validator with Velocity cloned from devnet and the guard |
+| 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
+| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `cd dashboard && python3 -m http.server 8780` and open the printed URL | limits, accepted vs refused by rule, the last refusal, every decision |
+
+Everything at once: `scripts/test-all.sh`.
+
+## What is real, with receipts
+
+| Claim | Test | Where |
+|---|---|---|
+| A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
+| A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
+| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
+| Breaking any limit on purpose makes its own tests fail (29 planted bugs, all caught) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
+| Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
+| The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
+| The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
+| The guard's code reaches only Velocity's place and cancel instructions | `g8_guard_source_reaches_only_place_and_cancel_on_velocity`, `g8_guard_has_no_withdraw_or_delegate_instruction` | `tests-litesvm/tests/limits.rs` |
+| A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
+| An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
+| The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
+| The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
+
+## Not claimed
+
+- Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
+- Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
+- The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
+- Fills and moving prices are shown in replays, because Velocity's devnet oracle is stale. On the local validator the
+  cloned oracle is a frozen snapshot, so orders rest but do not fill there.
+- The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
+  `place_and_take`.
+- Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
+- Daily-loss and open-order-count limits are not built.
+
+## How it compares
+
+- **Xorr** enforces caps inside its own off-chain executor, for spot trading.
+- **CRESCO** is a generic token mandate.
+- **Velocity's equity floor** exists, but only Velocity's admin can set it; the account's owner and delegate cannot.
+- **Guardrail** is enforced on chain, by the program that holds the delegate role, on every perps order: order size,
+  markets, daily notional, worst-case exposure including open orders, leverage on unrealized PnL, and the price
+  band. The agent's key has no other path to the account.
+
+## The limits
+
+| | Limit | In one line |
+|---|---|---|
+| G0 | Agent only | Only the agent key the owner named can trade through the guard; a revoked or different key is rejected. |
+| G1 | Order size | No single order larger than the owner's maximum. |
+| G2 | Allowlists | Only the owner's markets and order types (Limit, Market, Oracle); no trigger orders, no builder fees, no odd order flags. |
+| G3 | Daily notional | Total order value per UTC day stays under the cap; a new day starts a new total. |
+| G4 | Worst-case exposure | Position plus every open order on one side plus this order stays under the cap for that market. |
+| G5 | Leverage | Worst-case notional across the account, over collateral plus unrealized PnL, stays under the cap. |
+| G6 | Price band | Every price on the order stays within a band around the market's own oracle, and the oracle must be fresh. |
+| G7 | Owner controls | Only the owner sets limits, rotates or revokes the agent, and pauses. |
+| G8 | No withdraw | The guard has no withdraw path and reaches only Velocity's place and cancel instructions. |
+| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position skips G1 to G5 and the pause but stays inside the band, and with a very stale oracle it may only be priced in the owner's favour. |
+
+A refused order is a successful transaction that records the rule, the measured value and the owner's cap, and
+emits an `OrderChecked` event. Nothing reaches Velocity. Real errors (wrong agent, bad accounts, a stale oracle on a
+new order, Velocity's own errors) still fail.
+
+## Use it from any agent framework (MCP)
+
+`mcp/server.mjs` holds only the agent's key and exposes three tools: `guardrail_place_order`,
+`guardrail_cancel_order` and `guardrail_status`. There is no tool to change limits, rotate the agent, unpause or
+withdraw.
+
+```json
+{
+  "mcpServers": {
+    "guardrail": {
+      "command": "node",
+      "args": ["/path/to/guardrail/mcp/server.mjs"],
+      "env": {
+        "GUARDRAIL_RPC_URL": "http://127.0.0.1:8999",
+        "GUARDRAIL_AGENT_KEYPAIR": "/path/to/agent-keypair.json",
+        "GUARDRAIL_OWNER": "<the Velocity account owner's public key>"
+      }
+    }
+  }
+}
+```
+
+TypeScript: `@guardrail/client` (`client/`) has `placeOrder`, which returns `{ accepted, rule, value, cap, reason }`,
+plus `cancelOrder` and `getGuard`.
+
+## Architecture
+
+```
+owner --(once: init_guard, set_limits, set_agent, set_paused; Velocity update_user_delegate)--+
+                                                                                            v
+agent --> MCP server or @guardrail/client --> guard program --(CPI, PDA signs as the delegate)--> Velocity place_perp_order / cancel_order
+                                                  |
+                                                  +- checks G0 to G9 before the CPI, reading the Velocity account, the market and its oracle
+                                                  +- refuses: records counters and last_refusal, emits OrderChecked, Velocity untouched
+                                                  +- accepts: forwards the order, re-reads the account after the CPI and asserts the caps
+dashboard --> reads the Guard account and its OrderChecked events from the RPC
+```
+
+- `programs/guard/`: the Anchor program (`lib.rs` checks and CPI, `math.rs` limit math, `velocity.rs` Velocity
+  account layouts).
+- `tests-litesvm/`: replay tests on Velocity's real binary.
+- `client/`, `mcp/`, `demo/`, `dashboard/`: the TypeScript client, the MCP server, the scripted agent and the dashboard.
