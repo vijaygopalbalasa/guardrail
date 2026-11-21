@@ -25,7 +25,9 @@ with the reason. The owner keeps full control (trade directly, change limits, re
   stay within N bps of the oracle price, whatever the order type; stale oracle refused. Applies to exits too.
 - G7 owner-only: set or change limits, rotate or revoke the agent, pause; the agent can never change limits.
 - G9 exits (reduce-only, opposing, size <= |position|) skip pause and caps G1/G3/G4/G5 but NOT the G6 band or staleness;
-  cancels are ALWAYS allowed (a guard must never trap an agent in a losing position); test it.
+  cancels are ALWAYS allowed. Exit staleness: past an owner-set exit_max_staleness_slots, exits are allowed only on the
+  owner-favourable side of the last oracle price (exit SELL >= last price, exit BUY <= last price), so a stale exit never
+  leaks value. (a guard must never trap an agent in a losing position); test it.
 - G0 setup safety: init_guard requires the Velocity User's authority == the signing owner (no PDA squatting); the agent
   check lives in the account constraints (agent set and equal to the signer).
 - G8 withdraw is impossible through the guard (no such instruction; Velocity Withdraw is has_one = authority).

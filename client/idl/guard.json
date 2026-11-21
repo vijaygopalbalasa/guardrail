@@ -1,0 +1,878 @@
+{
+  "address": "BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy",
+  "metadata": {
+    "name": "guard",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Guardrail: limits your AI trading agent cannot break, as the delegate of a Velocity perps account."
+  },
+  "instructions": [
+    {
+      "name": "cancel_order",
+      "docs": [
+        "G9: cancels are always allowed, even while paused."
+      ],
+      "discriminator": [
+        95,
+        129,
+        237,
+        240,
+        8,
+        49,
+        223,
+        132
+      ],
+      "accounts": [
+        {
+          "name": "agent",
+          "signer": true
+        },
+        {
+          "name": "guard",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "velocity_user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "velocity_state"
+        },
+        {
+          "name": "velocity_user",
+          "writable": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "velocity_program",
+          "address": "vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P"
+        }
+      ],
+      "args": [
+        {
+          "name": "order_id",
+          "type": {
+            "option": "u32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "init_guard",
+      "docs": [
+        "The Velocity user's authority creates the guard with an agent and limits. Afterwards the owner sets the guard",
+        "PDA as the user's delegate with Velocity's own update_user_delegate."
+      ],
+      "discriminator": [
+        80,
+        108,
+        68,
+        230,
+        253,
+        134,
+        39,
+        155
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "velocity_user"
+        },
+        {
+          "name": "guard",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "velocity_user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent",
+          "type": "pubkey"
+        },
+        {
+          "name": "limits",
+          "type": {
+            "defined": {
+              "name": "Limits"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "place_perp_order",
+      "docs": [
+        "The agent's only way to trade. Remaining accounts are Velocity's account maps (oracles, then spot markets,",
+        "then perp markets); the guard reads the ones it needs and forwards all of them."
+      ],
+      "discriminator": [
+        69,
+        161,
+        93,
+        202,
+        120,
+        126,
+        76,
+        185
+      ],
+      "accounts": [
+        {
+          "name": "agent",
+          "signer": true
+        },
+        {
+          "name": "guard",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  103,
+                  117,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "velocity_user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "velocity_state"
+        },
+        {
+          "name": "velocity_user",
+          "writable": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "velocity_program",
+          "address": "vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "OrderParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_agent",
+      "docs": [
+        "G7: owner only. Pubkey::default() revokes the agent."
+      ],
+      "discriminator": [
+        154,
+        74,
+        121,
+        91,
+        137,
+        19,
+        101,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "guard",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "agent",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_limits",
+      "docs": [
+        "G7: owner only."
+      ],
+      "discriminator": [
+        207,
+        50,
+        250,
+        67,
+        211,
+        33,
+        70,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "guard",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "limits",
+          "type": {
+            "defined": {
+              "name": "Limits"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "docs": [
+        "G7: owner only. While paused, only cancels and exits (G9) go through."
+      ],
+      "discriminator": [
+        91,
+        60,
+        125,
+        192,
+        176,
+        225,
+        166,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "guard",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Guard",
+      "discriminator": [
+        54,
+        187,
+        84,
+        137,
+        192,
+        15,
+        74,
+        248
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "OrderChecked",
+      "discriminator": [
+        94,
+        66,
+        49,
+        41,
+        200,
+        97,
+        113,
+        250
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "OrderTooLarge",
+      "msg": "G1: order size exceeds the owner's limit"
+    },
+    {
+      "code": 6001,
+      "name": "MarketNotAllowed",
+      "msg": "G2: market is not on the owner's allowlist"
+    },
+    {
+      "code": 6002,
+      "name": "OrderTypeNotAllowed",
+      "msg": "G2: order type is not allowed"
+    },
+    {
+      "code": 6003,
+      "name": "BuilderFieldsRefused",
+      "msg": "G2: builder fields must be empty"
+    },
+    {
+      "code": 6004,
+      "name": "DailyNotionalExceeded",
+      "msg": "G3: daily notional cap would be exceeded"
+    },
+    {
+      "code": 6005,
+      "name": "ExposureExceeded",
+      "msg": "G4: worst-case exposure on this market would exceed the cap"
+    },
+    {
+      "code": 6006,
+      "name": "LeverageExceeded",
+      "msg": "G5: worst-case leverage would exceed the cap"
+    },
+    {
+      "code": 6007,
+      "name": "PriceOutsideBand",
+      "msg": "G6: price is outside the band around the oracle"
+    },
+    {
+      "code": 6008,
+      "name": "StaleOracle",
+      "msg": "G6: oracle is stale"
+    },
+    {
+      "code": 6009,
+      "name": "Paused",
+      "msg": "G7: guard is paused"
+    },
+    {
+      "code": 6010,
+      "name": "NotOwner",
+      "msg": "G7: signer is not the owner"
+    },
+    {
+      "code": 6011,
+      "name": "NotAgent",
+      "msg": "signer is not this guard's agent"
+    },
+    {
+      "code": 6012,
+      "name": "AgentRevoked",
+      "msg": "the agent has been revoked"
+    },
+    {
+      "code": 6013,
+      "name": "NotPerp",
+      "msg": "only perp orders are allowed"
+    },
+    {
+      "code": 6014,
+      "name": "BitFlagsRefused",
+      "msg": "order bit flags must be zero"
+    },
+    {
+      "code": 6015,
+      "name": "TriggerOrdersRefused",
+      "msg": "trigger orders are not supported"
+    },
+    {
+      "code": 6016,
+      "name": "ZeroSize",
+      "msg": "order size must be greater than zero"
+    },
+    {
+      "code": 6017,
+      "name": "NotVelocityUser",
+      "msg": "account is not a Velocity user"
+    },
+    {
+      "code": 6018,
+      "name": "NotUserAuthority",
+      "msg": "signer is not the Velocity user's authority"
+    },
+    {
+      "code": 6019,
+      "name": "BadMarketAccount",
+      "msg": "a Velocity market account is invalid"
+    },
+    {
+      "code": 6020,
+      "name": "MissingMarketAccount",
+      "msg": "a needed Velocity market or oracle account is missing"
+    },
+    {
+      "code": 6021,
+      "name": "UnsupportedOracle",
+      "msg": "the market's oracle source is not supported"
+    },
+    {
+      "code": 6022,
+      "name": "OtherSpotBalance",
+      "msg": "only a positive quote balance is supported: another spot balance or a quote borrow exists"
+    },
+    {
+      "code": 6023,
+      "name": "BadOracleAccount",
+      "msg": "oracle account is invalid"
+    },
+    {
+      "code": 6024,
+      "name": "NonPositiveEquity",
+      "msg": "account equity is not positive"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidLimits",
+      "msg": "limits are invalid"
+    },
+    {
+      "code": 6026,
+      "name": "PostTradeCheckFailed",
+      "msg": "post-trade check failed"
+    },
+    {
+      "code": 6027,
+      "name": "MathOverflow",
+      "msg": "arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Guard",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "velocity_user",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "docs": [
+              "Pubkey::default() when revoked."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "limits",
+            "type": {
+              "defined": {
+                "name": "Limits"
+              }
+            }
+          },
+          {
+            "name": "day",
+            "docs": [
+              "UTC day number (unix / 86400) that day_notional belongs to."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "day_notional",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "accepted_count",
+            "docs": [
+              "Orders accepted (G9 exits included)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "refused_g1",
+            "docs": [
+              "Orders refused, by rule (G2 includes order-shape refusals; G5 includes non-positive equity and unsupported",
+              "spot balances; G7 is the pause)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "refused_g2",
+            "type": "u64"
+          },
+          {
+            "name": "refused_g3",
+            "type": "u64"
+          },
+          {
+            "name": "refused_g4",
+            "type": "u64"
+          },
+          {
+            "name": "refused_g5",
+            "type": "u64"
+          },
+          {
+            "name": "refused_g6",
+            "type": "u64"
+          },
+          {
+            "name": "refused_g7",
+            "type": "u64"
+          },
+          {
+            "name": "last_refusal",
+            "type": {
+              "defined": {
+                "name": "LastRefusal"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LastRefusal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rule",
+            "type": "u8"
+          },
+          {
+            "name": "reason",
+            "docs": [
+              "The GuardError code (6000 + variant)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i128"
+          },
+          {
+            "name": "cap",
+            "type": "i128"
+          },
+          {
+            "name": "slot",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Limits",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "max_order_base",
+            "docs": [
+              "G1: largest base amount per order."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "markets",
+            "docs": [
+              "G2 allowlist and G4 caps."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "MarketLimit"
+                  }
+                },
+                8
+              ]
+            }
+          },
+          {
+            "name": "allowed_order_types",
+            "docs": [
+              "G2: bitmask of allowed order types (1 << tag). Only Market, Limit and Oracle may be set."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "daily_notional_cap",
+            "docs": [
+              "G3: total order notional per UTC day, in quote units (1e6 = 1 dUSDT)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_leverage_bps",
+            "docs": [
+              "G5: worst-case notional over equity, in basis points (10_000 = 1x)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "price_band_bps",
+            "docs": [
+              "G6: prices must be within this many basis points of the oracle."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "max_oracle_staleness_slots",
+            "docs": [
+              "G6: the oracle must have been posted within this many slots."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "market_index",
+            "docs": [
+              "Velocity perp market index."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_exposure_base",
+            "docs": [
+              "G4 cap on worst-case exposure in base units (1e9 = 1 SOL). Zero means the row is unused."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OrderChecked",
+      "docs": [
+        "Emitted for every order the agent sends, accepted or refused (a refused transaction keeps its logs)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "guard",
+            "type": "pubkey"
+          },
+          {
+            "name": "accepted",
+            "type": "bool"
+          },
+          {
+            "name": "rule",
+            "docs": [
+              "One of `rule::*`."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "market_index",
+            "type": "u16"
+          },
+          {
+            "name": "direction",
+            "type": "u8"
+          },
+          {
+            "name": "base_asset_amount",
+            "type": "u64"
+          },
+          {
+            "name": "reduce_only",
+            "type": "bool"
+          },
+          {
+            "name": "value",
+            "docs": [
+              "The measured value for the rule (size, notional, exposure, leverage bps, band bps, slots)."
+            ],
+            "type": "i128"
+          },
+          {
+            "name": "cap",
+            "docs": [
+              "The owner's cap for the rule."
+            ],
+            "type": "i128"
+          },
+          {
+            "name": "reason",
+            "docs": [
+              "The GuardError code naming the refusal (0 when accepted)."
+            ],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OrderParams",
+      "docs": [
+        "Mirror of Velocity's OrderParams (borsh layout from its IDL). Enums are kept as their u8 tags."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "order_type",
+            "type": "u8"
+          },
+          {
+            "name": "market_type",
+            "type": "u8"
+          },
+          {
+            "name": "direction",
+            "type": "u8"
+          },
+          {
+            "name": "user_order_id",
+            "type": "u8"
+          },
+          {
+            "name": "base_asset_amount",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "market_index",
+            "type": "u16"
+          },
+          {
+            "name": "reduce_only",
+            "type": "bool"
+          },
+          {
+            "name": "post_only",
+            "type": "u8"
+          },
+          {
+            "name": "bit_flags",
+            "type": "u8"
+          },
+          {
+            "name": "max_ts",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "trigger_price",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "trigger_condition",
+            "type": "u8"
+          },
+          {
+            "name": "oracle_price_offset",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "auction_duration",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "auction_start_price",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "auction_end_price",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "builder_idx",
+            "type": {
+              "option": "u8"
+            }
+          },
+          {
+            "name": "builder_fee_tenth_bps",
+            "type": {
+              "option": "u16"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

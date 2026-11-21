@@ -1,0 +1,21 @@
+{
+  "name": "@guardrail/client",
+  "version": "0.1.0",
+  "description": "Route an AI trading agent's Velocity perp orders through the Guardrail program and read its verdicts.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist", "idl"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@solana/web3.js": "1.98.4"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.9.3"
+  },
+  "license": "Apache-2.0"
+}

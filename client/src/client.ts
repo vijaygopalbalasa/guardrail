@@ -1,0 +1,225 @@
+import {
+  ComputeBudgetProgram, Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction,
+  type AccountMeta,
+} from "@solana/web3.js";
+import { GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID, VELOCITY, RULE_NAMES, discriminator } from "./constants.js";
+import { GUARD_ERRORS } from "./errors.js";
+import { decodeEvents, decodeGuard, encodeLimits, encodeOrderParams, type GuardAccount, type Limits, type OrderInput } from "./codec.js";
+
+export interface Verdict {
+  accepted: boolean;
+  /** Rule code: 0 accepted, 1..7 = G1..G7, 9 = G9 exit. */
+  rule: number;
+  ruleName: string;
+  /** The measured value for the rule and the owner's cap (units depend on the rule). */
+  value: bigint;
+  cap: bigint;
+  /** Guard error code naming the refusal (0 when accepted) and its name. */
+  reason: number;
+  reasonName: string | null;
+  signature: string;
+}
+
+/** A transaction the guard (or Velocity) rejected outright: wrong agent, bad accounts, stale oracle, Velocity error. */
+export class GuardrailError extends Error {
+  constructor(message: string, public code: number | null, public codeName: string | null, public logs: string[]) {
+    super(message);
+  }
+}
+
+const u16le = (n: number) => { const b = Buffer.alloc(2); b.writeUInt16LE(n); return b; };
+
+export function velocityUserAddress(authority: PublicKey, subAccount = 0): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("user"), authority.toBuffer(), u16le(subAccount)], VELOCITY_PROGRAM_ID)[0];
+}
+export function guardAddress(velocityUser: PublicKey, programId = GUARD_PROGRAM_ID): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("guard"), velocityUser.toBuffer()], programId)[0];
+}
+export function perpMarketAddress(index: number): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("perp_market"), u16le(index)], VELOCITY_PROGRAM_ID)[0];
+}
+export function spotMarketAddress(index: number): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("spot_market"), u16le(index)], VELOCITY_PROGRAM_ID)[0];
+}
+export const velocityStateAddress = () =>
+  PublicKey.findProgramAddressSync([Buffer.from("velocity_state")], VELOCITY_PROGRAM_ID)[0];
+
+export interface ClientOptions {
+  guardProgramId?: PublicKey;
+  /** Compute unit limit for trade transactions (default 800k). */
+  computeUnits?: number;
+}
+
+export class GuardrailClient {
+  readonly programId: PublicKey;
+  readonly computeUnits: number;
+  constructor(public connection: Connection, opts: ClientOptions = {}) {
+    this.programId = opts.guardProgramId ?? GUARD_PROGRAM_ID;
+    this.computeUnits = opts.computeUnits ?? 800_000;
+  }
+
+  guardFor(owner: PublicKey): { velocityUser: PublicKey; guard: PublicKey } {
+    const velocityUser = velocityUserAddress(owner);
+    return { velocityUser, guard: guardAddress(velocityUser, this.programId) };
+  }
+
+  /** The Guard account: limits, counters (accepted and refused by rule) and the last refusal. */
+  async getGuard(owner: PublicKey): Promise<GuardAccount> {
+    const { guard } = this.guardFor(owner);
+    const acc = await this.connection.getAccountInfo(guard, "confirmed");
+    if (!acc) throw new Error(`no guard at ${guard.toBase58()}`);
+    return decodeGuard(acc.data);
+  }
+
+  /**
+   * Velocity's account maps for an order: oracles, then spot market 0, then perp markets (the order's market and
+   * every market where the user has a position or open order). Each market's own oracle is read from its account.
+   */
+  async remainingAccounts(velocityUser: PublicKey, marketIndex: number): Promise<AccountMeta[]> {
+    const markets = new Set<number>([marketIndex]);
+    const user = await this.connection.getAccountInfo(velocityUser, "confirmed");
+    if (user) {
+      for (let i = 0; i < 8; i++) {
+        const o = VELOCITY.USER_PERP_POSITIONS + i * VELOCITY.PERP_POSITION_LEN;
+        const active = [8, 16, 40, 48].some((f) => user.data.readBigInt64LE(o + f) !== 0n) || user.data[o + 78] !== 0;
+        if (active) markets.add(user.data.readUInt16LE(o + 76));
+      }
+    }
+    const perps = [...markets].map(perpMarketAddress);
+    const spot0 = spotMarketAddress(0);
+    const infos = await this.connection.getMultipleAccountsInfo([spot0, ...perps], "confirmed");
+    const oracles: PublicKey[] = [];
+    const add = (k: PublicKey) => { if (!oracles.some((x) => x.equals(k))) oracles.push(k); };
+    infos.forEach((info, i) => {
+      if (!info) throw new Error(`missing Velocity market account ${(i === 0 ? spot0 : perps[i - 1]).toBase58()}`);
+      add(new PublicKey(info.data.subarray(...(i === 0
+        ? [VELOCITY.SPOT_MARKET_ORACLE, VELOCITY.SPOT_MARKET_ORACLE + 32]
+        : [VELOCITY.PERP_MARKET_ORACLE, VELOCITY.PERP_MARKET_ORACLE + 32]) as [number, number])));
+    });
+    return [
+      ...oracles.map((pubkey) => ({ pubkey, isSigner: false, isWritable: false })),
+      { pubkey: spot0, isSigner: false, isWritable: true },
+      ...perps.map((pubkey) => ({ pubkey, isSigner: false, isWritable: true })),
+    ];
+  }
+
+  private tradeKeys(agent: PublicKey, owner: PublicKey, extra: AccountMeta[]): AccountMeta[] {
+    const { velocityUser, guard } = this.guardFor(owner);
+    return [
+      { pubkey: agent, isSigner: true, isWritable: false },
+      { pubkey: guard, isSigner: false, isWritable: true },
+      { pubkey: velocityStateAddress(), isSigner: false, isWritable: false },
+      { pubkey: velocityUser, isSigner: false, isWritable: true },
+      { pubkey: VELOCITY_PROGRAM_ID, isSigner: false, isWritable: false },
+      ...extra,
+    ];
+  }
+
+  private nonce = 0;
+
+  private async send(ixs: TransactionInstruction[], signers: Keypair[]): Promise<{ signature: string; logs: string[] }> {
+    // Vary the compute-unit limit per call so two identical orders in the same slot are distinct transactions.
+    this.nonce = (this.nonce + 1) % 10_000;
+    const tx = new Transaction().add(ComputeBudgetProgram.setComputeUnitLimit({ units: this.computeUnits - this.nonce }), ...ixs);
+    let logs: string[] = [];
+    try {
+      const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash("confirmed");
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = signers[0].publicKey;
+      tx.sign(...signers);
+      const signature = await this.connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "confirmed" });
+      const res = await this.connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
+      const got = await this.connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+      logs = got?.meta?.logMessages ?? [];
+      if (res.value.err) throw Object.assign(new Error(`transaction ${signature} failed: ${JSON.stringify(res.value.err)}`), { logs });
+      return { signature, logs };
+    } catch (e: unknown) {
+      const err = e as { message?: string; logs?: string[]; getLogs?: (c: Connection) => Promise<string[]> };
+      logs = err.logs ?? (err.getLogs ? await err.getLogs(this.connection).catch(() => []) : logs);
+      const all = `${err.message ?? ""}\n${logs.join("\n")}`;
+      const m = /custom program error: 0x([0-9a-f]+)/i.exec(all) ?? /"Custom":(\d+)/.exec(all) ?? /Error Number: (\d+)/.exec(all);
+      const code = m ? (m[0].includes("0x") ? parseInt(m[1], 16) : parseInt(m[1], 10)) : null;
+      const name = code !== null ? (GUARD_ERRORS[code] ?? null) : null;
+      throw new GuardrailError(`transaction failed${name ? `: ${name}` : ""}: ${(err.message ?? "").split("\n")[0]}`, code, name, logs);
+    }
+  }
+
+  /**
+   * Places an order through the guard as the agent. Resolves with the guard's verdict: refused orders are recorded
+   * successes (Velocity is not called), so `accepted: false` comes back with the rule, value, cap and reason.
+   */
+  async placeOrder(args: { agent: Keypair; owner: PublicKey; order: OrderInput; payer?: Keypair }): Promise<Verdict> {
+    const { velocityUser } = this.guardFor(args.owner);
+    const extra = await this.remainingAccounts(velocityUser, args.order.marketIndex ?? 0);
+    const ix = new TransactionInstruction({
+      programId: this.programId,
+      keys: this.tradeKeys(args.agent.publicKey, args.owner, extra),
+      data: Buffer.concat([discriminator("global", "place_perp_order"), encodeOrderParams(args.order)]),
+    });
+    const signers = args.payer && !args.payer.publicKey.equals(args.agent.publicKey) ? [args.payer, args.agent] : [args.agent];
+    const { signature, logs } = await this.send([ix], signers);
+    const ev = decodeEvents(logs)[0];
+    if (!ev) throw new GuardrailError("no OrderChecked event in the transaction logs", null, null, logs);
+    return {
+      accepted: ev.accepted, rule: ev.rule, ruleName: RULE_NAMES[ev.rule] ?? `rule ${ev.rule}`, value: ev.value, cap: ev.cap,
+      reason: ev.reason, reasonName: ev.reason ? (GUARD_ERRORS[ev.reason] ?? null) : null, signature,
+    };
+  }
+
+  /** Cancels an order (or the latest one) through the guard. Always allowed, even while paused. */
+  async cancelOrder(args: { agent: Keypair; owner: PublicKey; orderId?: number; payer?: Keypair }): Promise<{ signature: string }> {
+    const { velocityUser } = this.guardFor(args.owner);
+    const extra = await this.remainingAccounts(velocityUser, 0);
+    const id = args.orderId === undefined ? Buffer.from([0]) : Buffer.concat([Buffer.from([1]), (() => { const b = Buffer.alloc(4); b.writeUInt32LE(args.orderId!); return b; })()]);
+    const ix = new TransactionInstruction({
+      programId: this.programId,
+      keys: this.tradeKeys(args.agent.publicKey, args.owner, extra),
+      data: Buffer.concat([discriminator("global", "cancel_order"), id]),
+    });
+    const signers = args.payer && !args.payer.publicKey.equals(args.agent.publicKey) ? [args.payer, args.agent] : [args.agent];
+    const { signature } = await this.send([ix], signers);
+    return { signature };
+  }
+
+  // ----- owner-only (never exposed to the agent) -----
+
+  /** Creates the guard and makes it the Velocity user's delegate, in one transaction signed by the owner. */
+  async initGuard(owner: Keypair, agent: PublicKey, limits: Limits): Promise<{ signature: string; guard: PublicKey }> {
+    const { velocityUser, guard } = this.guardFor(owner.publicKey);
+    const init = new TransactionInstruction({
+      programId: this.programId,
+      keys: [
+        { pubkey: owner.publicKey, isSigner: true, isWritable: true },
+        { pubkey: velocityUser, isSigner: false, isWritable: false },
+        { pubkey: guard, isSigner: false, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      data: Buffer.concat([discriminator("global", "init_guard"), agent.toBuffer(), encodeLimits(limits)]),
+    });
+    const delegate = new TransactionInstruction({
+      programId: VELOCITY_PROGRAM_ID,
+      keys: [
+        { pubkey: velocityUser, isSigner: false, isWritable: true },
+        { pubkey: owner.publicKey, isSigner: true, isWritable: false },
+      ],
+      data: Buffer.concat([discriminator("global", "update_user_delegate"), u16le(0), guard.toBuffer()]),
+    });
+    const { signature } = await this.send([init, delegate], [owner]);
+    return { signature, guard };
+  }
+
+  private ownerIx(name: string, owner: PublicKey, args: Buffer): TransactionInstruction {
+    return new TransactionInstruction({
+      programId: this.programId,
+      keys: [
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: this.guardFor(owner).guard, isSigner: false, isWritable: true },
+      ],
+      data: Buffer.concat([discriminator("global", name), args]),
+    });
+  }
+  async setLimits(owner: Keypair, limits: Limits) { return this.send([this.ownerIx("set_limits", owner.publicKey, encodeLimits(limits))], [owner]); }
+  /** PublicKey.default revokes the agent. */
+  async setAgent(owner: Keypair, agent: PublicKey) { return this.send([this.ownerIx("set_agent", owner.publicKey, agent.toBuffer())], [owner]); }
+  async setPaused(owner: Keypair, paused: boolean) { return this.send([this.ownerIx("set_paused", owner.publicKey, Buffer.from([paused ? 1 : 0]))], [owner]); }
+}
