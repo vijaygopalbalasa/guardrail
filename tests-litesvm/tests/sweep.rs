@@ -24,14 +24,14 @@ const SIGMA: f64 = 0.012; // 1.2% a step
 const WINDOW_BPS: u64 = 300;
 const DAILY_LOSS: u64 = 100_000_000; // G10: 100 dUSDT a day
 
-fn sweep_limits() -> Limits {
+fn sweep_limits(band_bps: u32) -> Limits {
     let mut l = Limits::loose();
     l.max_order_base = 4 * BASE; // G1
     l.markets[0] = (0, 30 * BASE); // G4: 30 SOL worst case
     l.allowed_order_types = T_LIMIT; // G2
     l.daily_notional_cap = 100_000_000_000; // G3: 100,000 dUSDT a day (not meant to bind)
     l.max_leverage_bps = 15_000; // G5: 1.5x
-    l.price_band_bps = 200; // G6: 2%
+    l.price_band_bps = band_bps; // G6: 2% (or 4% in the second sweep)
     l.max_oracle_staleness_slots = 50;
     l
 }
@@ -104,9 +104,9 @@ enum Want {
     Sell,
 }
 
-fn run(seed: u64, guarded: bool) -> Run {
+fn run(seed: u64, guarded: bool, band_bps: u32) -> Run {
     let prices = path(seed);
-    let limits = sweep_limits();
+    let limits = sweep_limits(band_bps);
     let mut env = Env::new();
     env.quiet = true;
     env.add_guard_program();
@@ -249,11 +249,14 @@ fn median(mut v: Vec<f64>) -> f64 {
 #[test]
 fn sweep_grid_agent_on_30_random_paths() {
     let mut rows = vec![];
+    let mut wide: Vec<Run> = vec![];
     let mut total_refused: BTreeMap<String, u32> = BTreeMap::new();
     let (mut g5_runs, mut g6_runs, mut g10_runs) = (vec![], vec![], vec![]);
     for seed in 1..=SEEDS {
-        let u = run(seed, false);
-        let g = run(seed, true);
+        let u = run(seed, false, 200);
+        let g = run(seed, true, 200);
+        let g4 = run(seed, true, 400);
+        wide.push(g4);
         for (k, n) in &g.refused_by {
             *total_refused.entry(k.clone()).or_default() += n;
         }
@@ -290,6 +293,21 @@ fn sweep_grid_agent_on_30_random_paths() {
     lines.push(String::new());
     lines.push(format!("SWEEP  worst loss, median over {SEEDS} paths: unguarded {um:.1}%, guarded {gm:.1}%. Worst single path: unguarded {uw:.1}%, guarded {gw:.1}%."));
     lines.push(format!("SWEEP  refusals by rule (all paths): {total_refused:?}; of those, the grid's sells: {sells:?}. Breaches: {breaches}."));
+    {
+        let wm = median(wide.iter().map(|r| r.worst_loss_pct).collect());
+        let ww = wide.iter().map(|r| r.worst_loss_pct).fold(0.0, f64::max);
+        let mut wr: BTreeMap<String, u32> = BTreeMap::new();
+        for r in &wide { for (k, n) in &r.refused_by { *wr.entry(k.clone()).or_default() += n; } }
+        let wb: u32 = wide.iter().map(|r| r.breaches).sum();
+        let wacc: u32 = wide.iter().map(|r| r.accepted).sum();
+        let gacc: u32 = rows.iter().map(|r| r.4.accepted).sum();
+        let gref: u32 = total_refused.values().sum();
+        let wref: u32 = wr.values().sum();
+        lines.push(format!("SWEEP  same paths with the G6 band at 4% (wider than the bot's 3% window): median worst loss {wm:.1}%, worst path {ww:.1}%; refusals {wr:?} ({wref} of {} orders asked, vs {gref} of {} with the 2% band); breaches {wb}.", wref + wacc, gref + gacc));
+        let w5: Vec<u64> = wide.iter().enumerate().filter(|(_, r)| r.refused_by.contains_key("G5 leverage")).map(|(k, _)| k as u64 + 1).collect();
+        lines.push(format!("SWEEP  with the 4% band, every refusal is G5 (leverage), on seeds {w5:?}; on the other paths the bot is never refused."));
+        assert_eq!(wb, 0, "zero breaches with the 4% band");
+    }
     lines.push(format!("SWEEP  G5 (leverage) bound on seeds {g5_runs:?}; G6 (price band) on seeds {g6_runs:?}; G10 (daily loss) on seeds {g10_runs:?}."));
     lines.push("For contrast, the runaway (martingale) replay on a path where SOL falls 12% in 14 steps is one more row, in tests/runaway.rs and notes/runaway-replay.txt; there the unguarded run was stopped only by Velocity's own 5x margin check.".to_string());
     lines.push("Breach = an accepted order over G1, G4, G3 or the band, or a risk-increasing order accepted over G5 or while the day's loss was over G10, at acceptance, measured from raw account bytes.".to_string());

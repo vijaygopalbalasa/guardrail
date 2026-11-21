@@ -58,8 +58,11 @@ step), unguarded and guarded, on Velocity's real binary with fills when the pric
 On calm paths the guard changes nothing, so the honest headline is the same median loss. It refused 493 orders by G6
 on all 30 paths, by construction: the bot keeps orders up to 3% away and the band is 2% (119 of those were sells). It
 refused 111 buys by G5 (leverage) on seeds 3, 4, 7, 8, 18, 19, 23, 25, 28 and 30, the paths that fell 8% or more; no
-sell was refused by G5. G10 did not bind: once the price was below the grid, the bot stopped buying on its own. Full
-table with fills per run: `notes/sweep.txt`.
+sell was refused by G5. G10 did not bind: once the price was below the grid, the bot stopped buying on its own.
+
+When the limits fit the bot (the same paths with the G6 band at 4%, wider than its 3% window), it is refused only by
+G5, on the same 10 falling paths (181 of 743 orders it asked for), and never on the other 20. Median worst loss 1.1%,
+worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 
 ## What is real, with receipts
 

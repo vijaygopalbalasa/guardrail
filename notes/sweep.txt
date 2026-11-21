@@ -36,6 +36,8 @@ seed      end      low |  unguarded  max pos  fills   Vel. |    guarded  max pos
 
 SWEEP  worst loss, median over 30 paths: unguarded 1.1%, guarded 1.1%. Worst single path: unguarded 26.6%, guarded 22.6%.
 SWEEP  refusals by rule (all paths): {"G5 leverage": 111, "G6 price band": 493}; of those, the grid's sells: {"G6 price band": 119}. Breaches: 0.
+SWEEP  same paths with the G6 band at 4% (wider than the bot's 3% window): median worst loss 1.1%, worst path 22.6%; refusals {"G5 leverage": 181} (181 of 743 orders asked, vs 604 of 1126 with the 2% band); breaches 0.
+SWEEP  with the 4% band, every refusal is G5 (leverage), on seeds [3, 4, 7, 8, 18, 19, 23, 25, 28, 30]; on the other paths the bot is never refused.
 SWEEP  G5 (leverage) bound on seeds [3, 4, 7, 8, 18, 19, 23, 25, 28, 30]; G6 (price band) on seeds [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]; G10 (daily loss) on seeds [].
 For contrast, the runaway (martingale) replay on a path where SOL falls 12% in 14 steps is one more row, in tests/runaway.rs and notes/runaway-replay.txt; there the unguarded run was stopped only by Velocity's own 5x margin check.
 Breach = an accepted order over G1, G4, G3 or the band, or a risk-increasing order accepted over G5 or while the day's loss was over G10, at acceptance, measured from raw account bytes.
