@@ -432,7 +432,8 @@ fn g7_pause_blocks_new_orders_but_not_cancels() {
     let o2 = Order::resting(0, BASE, 90_900_000);
     let r = env.gplace("paused", &g, o2);
     refused(&env, &g, &r, &o2, gerr::PAUSED, rule::G7);
-    assert_ok(&env.gcancel("cancel while paused", &g, None));
+    let id = env.last_guard_order(&g).expect("the guard placed an order");
+    assert_ok(&env.gcancel("cancel while paused", &g, Some(id)));
     assert!(env.user(&g.owner.pubkey()).open_orders.is_empty());
     assert_ok(&env.set_paused("owner unpauses", &g, &owner, false));
     let r = env.gplace("after unpause", &g, o2);
@@ -527,15 +528,25 @@ fn g9_exit_allowed_when_leverage_is_over_cap() {
 }
 
 #[test]
-fn g9_exit_allowed_when_paused_or_market_delisted() {
+fn g9_exit_allowed_when_paused() {
     let (mut env, g) = exit_setup();
     let owner = g.owner.insecure_clone();
     assert_ok(&env.set_paused("owner pauses", &g, &owner, true));
     exit_is_allowed_where_new_order_is_refused(&mut env, &g, gerr::PAUSED);
-    assert_ok(&env.gcancel("cancel the exit", &g, None));
-    assert_ok(&env.set_paused("owner unpauses", &g, &owner, false));
+}
+
+#[test]
+fn g9_exit_in_a_delisted_market_is_refused_by_the_allowlist() {
+    // Audit F2: exits skip only the pause and G1/G3/G4/G5, never G2. The owner exits a delisted market directly.
+    let (mut env, g) = exit_setup();
     tighten(&mut env, &g, |l| l.markets[0] = (5, BASE));
-    exit_is_allowed_where_new_order_is_refused(&mut env, &g, gerr::MARKET_NOT_ALLOWED);
+    let mut exit = Order::resting(1, BASE, 91_500_000);
+    exit.reduce_only = true;
+    let r = env.gplace("exit in a market no longer on the allowlist", &g, exit);
+    refused(&env, &g, &r, &exit, gerr::MARKET_NOT_ALLOWED, rule::G2);
+    tighten(&mut env, &g, |l| l.markets[0] = (0, 1_000_000 * BASE));
+    let r = env.gplace("same exit with the market allowed", &g, exit);
+    accepted(&env, &g, &r, &exit, rule::G9);
 }
 
 #[test]

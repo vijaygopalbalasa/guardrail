@@ -1,0 +1,1034 @@
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+test f3_agent_cannot_cancel_the_owners_orders_or_cancel_all ... FAILED
+test f1_oracle_order_without_offset_is_refused ... FAILED
+test info_order_lifetime_bound ... FAILED
+test info_last_refusal_is_also_kept_per_rule ... FAILED
+test f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle ... FAILED
+test f1_stale_exit_oracle_without_offset_is_refused ... FAILED
+test f1_oracle_exit_without_offset_is_refused_even_while_paused ... FAILED
+test f2_exit_must_use_an_allowed_order_type ... FAILED
+test f4_exits_beyond_the_position_counting_resting_exits_are_not_exits ... FAILED
+
+failures:
+
+---- f3_agent_cannot_cancel_the_owners_orders_or_cancel_all stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent CF3t6wdeNNtWd8pi7bcaLmpWdYPdvpEP4AC4BWTVPjec
+[owner places BUY 1 directly] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFMSSwCgt8/Qb9DRcrpVsT3MpDftjyxNv+e/toYvWZWegEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAExJLAKC3z9Bv0NFyulWxPcykN+2PLE2/57+2hi9ZlZ62g5EHwAAAACAf2kFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEHAAAAAQAAANoAAAAAAAA=
+
+thread 'f3_agent_cannot_cancel_the_owners_orders_or_cancel_all' (133295368) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- f1_oracle_order_without_offset_is_refused stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent EXtS5AwiL28Hh3uYNzT3niCcQ1DSiXJ5k2SuvsDkskeE
+[Oracle BUY, no offset, auction rel 0..0] OK
+    Program log: Updating auction duration to 10
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAH/3oHOBR6RGQxPH+68CgtcVowAjUTORni5GRhQw6pnZwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAP/egc4FHpEZDE8f7rwKC1xWjACNRM5GeLkZGFDDqmdn2g5EHwAAAAAAAAAAAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE4JAWsAAAAAAAAAAAAAAAABAAAAAAABBAEAAAAAAAAACtoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'f1_oracle_order_without_offset_is_refused' (133295365) panicked at tests/audit.rs:60:5:
+event says refused
+
+---- info_order_lifetime_bound stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 7g5xMnmHZmjz7i1czhgbZLCv6d2iodxX856iL3E7aswh
+[no max_ts] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGx4zHT24nsC7fzSC1clXsH/WH6iK7x6LrQLsVwwbDxjQEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAALHjMdPbiewLt/NILVyVewf9YfqIrvHoutAuxXDBsPGN2g5EHwAAAADAjGwFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'info_order_lifetime_bound' (133295371) panicked at tests/audit.rs:211:5:
+event says refused
+
+---- info_last_refusal_is_also_kept_per_rule stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 6MTf3GAVaT8hCAamDjqWeTNKov2AntVQtx7tJQwbPkzd
+[owner sets limits] OK
+    Program log: guard: limits updated by the owner
+[G1 refusal] OK
+    Program log: guard REFUSED (rule 1): G1: order size exceeds the owner's limit (value 2000000000, cap 1000000000)
+[G6 refusal] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 1246, cap 100)
+
+thread 'info_last_refusal_is_also_kept_per_rule' (133295370) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 62QY1HbaarHrUrsseSUSFo8quYPZ5tBRFtMnynq55NZy
+[partner: initialize_user_stats + initialize_user] OK
+[partner: deposit 100000 dUSDT] OK
+[keeper: initialize_user_stats + initialize_user] OK
+[keeper: deposit 1000 dUSDT] OK
+[partner rests SELL 1 @ 97.80 (+7%)] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGkQWTbnaKB28n6+YVffTfNqfPXnnQo7wbUQ/X0ldxb6AEBAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAKRBZNudooHbyfr5hV99N82p89eedCjvBtRD9fSV3Fvo2g5EHwAAAABAT9QFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAQAAANoAAAAAAAA=
+[attack: Oracle BUY, no offset] OK
+    Program log: Updating auction duration to 10
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAGFHX80KYU/9Y/WpzSz6STN6SpSk/NlJ/KU5wOULbkV9wEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAIUdfzQphT/1j9anNLPpJM3pKlKT82Un8pTnA5QtuRX32w5EHwAAAAAAAAAAAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE4JAWsAAAAAAAAAAAAAAAABAAAAAAABBAEAAAAAAAAACtsAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle' (133295364) panicked at tests/audit.rs:84:5:
+event says refused
+
+---- f1_stale_exit_oracle_without_offset_is_refused stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent BgABkMieQeuzunJUM4ZJwksFTA4ytKweb2TDnExaxv5K
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent ask] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGB1PYGGvF7DkFCVXxnQlFf41QNjXGeciv70++btjqjDgEBAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAIHU9gYa8XsOQUJVfGdCUV/jVA2NcZ5yK/vT75u2OqMO2g5EHwAAAADgLXQFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow buys] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAGgwDB2pU3jFze4ob0AeH9r9dwc/rP7RVHmNtWIl+24jgEBAAAAAQABABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAKDAMHalTeMXN7ihvQB4f2v13Bz+s/tFUeY21YiX7biO3A5EHwAAAADgLXQFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAAAAANwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[stale exit: Oracle BUY, no offset] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a -1000000000 position, size 1000000000)
+    Program log: Updating auction duration to 10
+    Program log: 4DRDR8LtbQFECQFrAAAAAAAAAAABAAAAAAAAAAAAAAGB1PYGGvF7DkFCVXxnQlFf41QNjXGeciv70++btjqjDgECAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlpECQFrAAAAAIHU9gYa8XsOQUJVfGdCUV/jVA2NcZ5yK/vT75u2OqMOEQ9EHwAAAAAAAAAAAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGIJAWsAAAAAAAAAAAAAAAACAAAAAAABBAEAAQABAAAAChEAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'f1_stale_exit_oracle_without_offset_is_refused' (133295366) panicked at tests/audit.rs:124:5:
+event says refused
+
+---- f1_oracle_exit_without_offset_is_refused_even_while_paused stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 5cAVAjhnrnByvpU2Sd5f7uZG76WFfMDdve8RTyyETKtf
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent bid] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAEODR1JkBlLaAZV8hfArHoxRBRJF/zpoI9WPazjA7pXQgEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAA4NHUmQGUtoBlXyF8CsejFEFEkX/Omgj1Y9rOMDuldC2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow sells] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFdrNCgCFU08mIDd011v2AgI3JO3EsNbLPsVDp0xYb1DgEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAF2s0KAIVTTyYgN3TXW/YCAjck7cSw1ss+xUOnTFhvUO3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAV2s0KAIVTTyYgN3TXW/YCAjck7cSw1ss+xUOnTFhvUOAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAV2s0KAIVTTyYgN3TXW/YCAjck7cSw1ss+xUOnTFhvUOAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAV2s0KAIVTTyYgN3TXW/YCAjck7cSw1ss+xUOnTFhvUOAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAV2s0KAIVTTyYgN3TXW/YCAjck7cSw1ss+xUOnTFhvUOAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[owner pauses] OK
+    Program log: guard: paused = true
+[exit: Oracle SELL, no offset, paused] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 1000000000)
+    Program log: Updating auction duration to 10
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAEODR1JkBlLaAZV8hfArHoxRBRJF/zpoI9WPazjA7pXQgECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAA4NHUmQGUtoBlXyF8CsejFEFEkX/Omgj1Y9rOMDuldC3g5EHwAAAAAAAAAAAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE4JAWsAAAAAAAAAAAAAAAACAAAAAAABBAEAAAEBAAAACt4AAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'f1_oracle_exit_without_offset_is_refused_even_while_paused' (133295363) panicked at tests/audit.rs:103:5:
+event says refused
+
+---- f2_exit_must_use_an_allowed_order_type stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent BAU7cUUZW1xzT9KS5Nk4kyBEc9UCvrdc1Eo41iMaUcVQ
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent bid] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFKwOl4Fn1D5wCBLYI89FKqCK7oh6UzHdFBn8zLuSPIlwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAErA6XgWfUPnAIEtgjz0UqoIruiHpTMd0UGfzMu5I8iX2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow sells] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAGaDpUR5SqohGbTxa3NDl7BqgwKEJB2Pg+Eymdu3NYqogEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAJoOlRHlKqiEZtPFrc0OXsGqDAoQkHY+D4TKZ27c1iqi3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAZoOlRHlKqiEZtPFrc0OXsGqDAoQkHY+D4TKZ27c1iqiAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAZoOlRHlKqiEZtPFrc0OXsGqDAoQkHY+D4TKZ27c1iqiAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAZoOlRHlKqiEZtPFrc0OXsGqDAoQkHY+D4TKZ27c1iqiAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAZoOlRHlKqiEZtPFrc0OXsGqDAoQkHY+D4TKZ27c1iqiAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[exit as an Oracle order when only Limit is allowed] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 1000000000)
+    Program log: Updating auction start price to -271525
+    Program log: Updating auction end price to -500000
+    Program log: Updating auction duration to 15
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFKwOl4Fn1D5wCBLYI89FKqCK7oh6UzHdFBn8zLuSPIlwECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAErA6XgWfUPnAIEtgjz0UqoIruiHpTMd0UGfzMu5I8iX3g5EHwAAAAAAAAAAAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYNv7///////gXvj//////04JAWsAAAAA4F74//////8CAAAAAAABBAEAAAEBAAAAD94AAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'f2_exit_must_use_an_allowed_order_type' (133295367) panicked at tests/audit.rs:145:5:
+event says refused
+
+---- f4_exits_beyond_the_position_counting_resting_exits_are_not_exits stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 10000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent DRFztq8FmUYmpA13yoyVfWex8Cuu4KYjvtzNYzHMkbpB
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent bid] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFq+MdZ++jhIlka7lpWU3BxFlsl0/TMcrPGUgSfrJyo4gEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGr4x1n76OEiWRruWlZTcHEWWyXT9Mxys8ZSBJ+snKji2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow sells] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAGVcHWsZAid4RvxxNIRqjxDlqtJO9mQrXNysb56mlowZwEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAJVwdaxkCJ3hG/HE0hGqPEOWq0k72ZCtc3KxvnqaWjBn3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAZVwdaxkCJ3hG/HE0hGqPEOWq0k72ZCtc3KxvnqaWjBnAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAZVwdaxkCJ3hG/HE0hGqPEOWq0k72ZCtc3KxvnqaWjBnAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAZVwdaxkCJ3hG/HE0hGqPEOWq0k72ZCtc3KxvnqaWjBnAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAZVwdaxkCJ3hG/HE0hGqPEOWq0k72ZCtc3KxvnqaWjBnAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[owner pauses] OK
+    Program log: guard: paused = true
+[exit 0.5] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 500000000)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFq+MdZ++jhIlka7lpWU3BxFlsl0/TMcrPGUgSfrJyo4gECAAAAAQEBAGXNHQAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGr4x1n76OEiWRruWlZTcHEWWyXT9Mxys8ZSBJ+snKji3g5EHwAAAADgLXQFAAAAAABlzR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAEBAQAAAN4AAAAAAAA=
+    Program log: guard: order accepted, size 500000000 market 0
+[exit 0.5 more (total 1.0 = position)] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 500000000)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFq+MdZ++jhIlka7lpWU3BxFlsl0/TMcrPGUgSfrJyo4gEDAAAAAQEBAGXNHQAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGr4x1n76OEiWRruWlZTcHEWWyXT9Mxys8ZSBJ+snKji3g5EHwAAAADwVHQFAAAAAABlzR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAABAQEAAAEBAQAAAN4AAAAAAAA=
+    Program log: guard: order accepted, size 500000000 market 0
+[exit 0.5 beyond the position] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 500000000)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFq+MdZ++jhIlka7lpWU3BxFlsl0/TMcrPGUgSfrJyo4gEEAAAAAQEBAGXNHQAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGr4x1n76OEiWRruWlZTcHEWWyXT9Mxys8ZSBJ+snKji3g5EHwAAAAAAfHQFAAAAAABlzR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAABAQEAAAEBAQAAAN4AAAAAAAA=
+    Program log: guard: order accepted, size 500000000 market 0
+
+thread 'f4_exits_beyond_the_position_counting_resting_exits_are_not_exits' (133295369) panicked at tests/audit.rs:199:5:
+event says refused
+
+
+failures:
+    f1_oracle_exit_without_offset_is_refused_even_while_paused
+    f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle
+    f1_oracle_order_without_offset_is_refused
+    f1_stale_exit_oracle_without_offset_is_refused
+    f2_exit_must_use_an_allowed_order_type
+    f3_agent_cannot_cancel_the_owners_orders_or_cancel_all
+    f4_exits_beyond_the_position_counting_resting_exits_are_not_exits
+    info_last_refusal_is_also_kept_per_rule
+    info_order_lifetime_bound
+
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 47 tests
+test every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter ... FAILED
+test g2_refuses_order_type_not_allowed ... FAILED
+test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... FAILED
+test g2_refuses_market_not_on_allowlist ... FAILED
+test g1_refuses_order_one_unit_over_max_size ... FAILED
+test accepted_orders_and_exits_count_and_real_errors_record_nothing ... FAILED
+test g2_refuses_builder_idx_and_builder_fee ... FAILED
+test exit_staleness_limit_must_not_be_below_the_order_staleness_limit ... ok
+test g4_refuses_ask_that_takes_worst_case_short_over_cap ... FAILED
+test g4_refuses_bid_that_takes_worst_case_long_over_cap ... FAILED
+test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
+test g6_refuses_limit_price_outside_band ... FAILED
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... FAILED
+test g6_refuses_limit_order_whose_oracle_offset_is_outside_band ... FAILED
+test g6_refuses_auction_price_outside_band ... FAILED
+test g6_refuses_market_order_without_a_worst_price ... FAILED
+test g6_refuses_oracle_order_with_a_far_price_field ... FAILED
+test g6_refuses_oracle_offset_outside_band ... FAILED
+test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... FAILED
+test g5_refuses_when_an_open_position_market_is_missing ... ok
+test g6_refuses_stale_oracle ... ok
+test g7_limits_are_validated ... ok
+test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... ok
+test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
+test g7_only_the_owner_sets_limits ... ok
+test g8_guard_has_no_withdraw_or_delegate_instruction ... ok
+test g7_revoke_and_rotate_agent ... ok
+test g8_agent_cannot_withdraw_or_trade_around_the_guard ... ok
+test g9_exit_allowed_when_daily_notional_is_spent ... ok
+test g9_exit_allowed_when_exposure_is_over_cap ... ok
+test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... ok
+test g9_exit_price_must_stay_in_band ... FAILED
+test g9_exit_actually_closes_the_position_under_tight_limits ... ok
+test g9_exit_allowed_when_paused ... ok
+test g9_exit_allowed_when_leverage_is_over_cap ... ok
+test guard_ignores_a_look_alike_oracle_at_another_address ... ok
+test g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band ... FAILED
+test g9_exit_in_a_delisted_market_is_refused_by_the_allowlist ... FAILED
+test init_guard_requires_the_velocity_user_authority ... ok
+test refuses_unsupported_oracle_source_bad_market_and_bad_oracle ... ok
+test refuses_when_equity_is_not_positive ... FAILED
+test order_shape_refusals_trigger_bitflags_spot_zero ... FAILED
+test stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed ... FAILED
+test stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed ... FAILED
+test moderately_stale_exit_still_uses_the_normal_band ... ok
+test stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction ... FAILED
+test refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative ... FAILED
+
+failures:
+
+---- every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent EVV8x1h6VS5VSLAWKpV1QQopFEfSV5GBVB9aB1XqvmEb
+
+thread 'every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter' (133295382) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- g2_refuses_order_type_not_allowed stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent FwnVEnQVPB2Mfgg4vmY1L1aDLUVnJZwKeeBnU9jHmEEc
+[G2 market order not allowed] OK
+    Program log: guard REFUSED (rule 2): G2: order type is not allowed (value 0, cap 2)
+
+thread 'g2_refuses_order_type_not_allowed' (133295387) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent EWrym575dTMLJDrtNanodDzZf9bBt2DBHZuPpXtqJRD3
+[G3 1 SOL] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAG7VFHrdZpbhaOUy78yFxOyzJfJxatQMl+XR/h4egVj8gEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAALtUUet1mluFo5TLvzIXE7LMl8nFq1AyX5dH+Hh6BWPy2g5EHwAAAADAjGwFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[G3 1 SOL] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAG7VFHrdZpbhaOUy78yFxOyzJfJxatQMl+XR/h4egVj8gECAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAALtUUet1mluFo5TLvzIXE7LMl8nFq1AyX5dH+Hh6BWPy2g5EHwAAAACwZWwFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day' (133295388) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g2_refuses_market_not_on_allowlist stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 6PRfLUkDQmwMqTGw29RinzxQAVsFXFAJVxtQjAagFi92
+[G2 market 1 not allowed] OK
+    Program log: guard REFUSED (rule 2): G2: market is not on the owner's allowlist (value 1, cap 0)
+
+thread 'g2_refuses_market_not_on_allowlist' (133295386) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g1_refuses_order_one_unit_over_max_size stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 4AQSYtkTGU6tBQ1Km5qf4ncn9Z1KHCpX6GygdKaaTssJ
+[G1 over by one] OK
+    Program log: guard REFUSED (rule 1): G1: order size exceeds the owner's limit (value 2000000001, cap 2000000000)
+
+thread 'g1_refuses_order_one_unit_over_max_size' (133295384) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- accepted_orders_and_exits_count_and_real_errors_record_nothing stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 7SMX6QHWt7V2KE4HSZqLLBaLixN3Wu3Mb2XjGazfPrGw
+[accepted] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGkDZ82PlUPL8pUlewIq+a0TBVE7NqnpCluDKiy6YRtDQEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAKQNnzY+VQ8vylSV7Air5rRMFUTs2qekKW4MqLLphG0N2g5EHwAAAADAjGwFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'accepted_orders_and_exits_count_and_real_errors_record_nothing' (133295381) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g2_refuses_builder_idx_and_builder_fee stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 7Rvv2FfjXctm9nXfXEP3GEQa4w4jTzxQwhKq7CczDHq9
+[G2 builder_idx set] OK
+    Program log: guard REFUSED (rule 2): G2: builder fields must be empty (value 1, cap 0)
+
+thread 'g2_refuses_builder_idx_and_builder_fee' (133295385) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g4_refuses_ask_that_takes_worst_case_short_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 6dTKxSeXJ3DmKJyXPxFwXw9TzVoJdYT7MKsLsbytrdPg
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAF1grTs2IT7uMr1SvgJQm9m3djutlTAtSjDi2C62QLinwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAHWCtOzYhPu4yvVK+AlCb2bd2O62VMC1KMOLYLrZAuKf2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAE32Dr5IdMNDik6OhMvIGr2UbztmF6ej3juK4MiksRkQQEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAADfYOvkh0w0OKTo6Ey8gavZRvO2YXp6PeO4rgyKSxGRB3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABATfYOvkh0w0OKTo6Ey8gavZRvO2YXp6PeO4rgyKSxGRBAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAATfYOvkh0w0OKTo6Ey8gavZRvO2YXp6PeO4rgyKSxGRBAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABATfYOvkh0w0OKTo6Ey8gavZRvO2YXp6PeO4rgyKSxGRBAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AATfYOvkh0w0OKTo6Ey8gavZRvO2YXp6PeO4rgyKSxGRBAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[G4 ask 3.1 (worst short 2.1)] OK
+    Program log: guard REFUSED (rule 4): G4: worst-case exposure on this market would exceed the cap (value 2100000000, cap 2000000000)
+
+thread 'g4_refuses_ask_that_takes_worst_case_short_over_cap' (133295389) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g4_refuses_bid_that_takes_worst_case_long_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 4en8nJnMD1zasfWEwP5e6pc2gK8gmXyGe8tQMJagMsy6
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGRkjOXD1c0kckRJSOdDd5V+Te4NYGa/cvp7nKYEhERvwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAJGSM5cPVzSRyRElI50N3lX5N7g1gZr9y+nucpgSERG/2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAEXvIkpWiejEvUQqH3uSY1CgLK6WXJu4Z4fzvWRNYW8jQEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAABe8iSlaJ6MS9RCofe5JjUKAsrpZcm7hnh/O9ZE1hbyN3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABARe8iSlaJ6MS9RCofe5JjUKAsrpZcm7hnh/O9ZE1hbyNAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAARe8iSlaJ6MS9RCofe5JjUKAsrpZcm7hnh/O9ZE1hbyNAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABARe8iSlaJ6MS9RCofe5JjUKAsrpZcm7hnh/O9ZE1hbyNAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AARe8iSlaJ6MS9RCofe5JjUKAsrpZcm7hnh/O9ZE1hbyNAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[G4 rest 0.5 (worst 1.5)] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGRkjOXD1c0kckRJSOdDd5V+Te4NYGa/cvp7nKYEhERvwECAAAAAQABAGXNHQAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAJGSM5cPVzSRyRElI50N3lX5N7g1gZr9y+nucpgSERG/3g5EHwAAAADAjGwFAAAAAABlzR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAAAAQAAAN4AAAAAAAA=
+    Program log: guard: order accepted, size 500000000 market 0
+[G4 0.6 more (worst 2.1)] OK
+    Program log: guard REFUSED (rule 4): G4: worst-case exposure on this market would exceed the cap (value 2100000000, cap 2000000000)
+
+thread 'g4_refuses_bid_that_takes_worst_case_long_over_cap' (133295390) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g4_sums_every_slot_for_the_market_not_the_first_match stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 7sVSVjq1DHiDscrBtuQfXunKzJCwYNtYU6KvoqahAVHx
+[G4 crafted slot 3: 0.6 more (worst 2.1)] OK
+    Program log: guard REFUSED (rule 4): G4: worst-case exposure on this market would exceed the cap (value 2100000000, cap 2000000000)
+
+thread 'g4_sums_every_slot_for_the_market_not_the_first_match' (133295391) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_limit_price_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 9aMHSP4YW4LXNij47jUNP6TsBsuogBvaJoSaH5gmivg6
+[G6 bid 0.92 under] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 100, cap 100)
+
+thread 'g6_refuses_limit_price_outside_band' (133295397) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g5_refuses_order_that_takes_worst_case_leverage_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 2k5LvrQ4j7w9CHXqTxpUXXBUDBSmm77SVqDMsY2SjnB1
+[G5 one step over 3x] OK
+    Program log: guard REFUSED (rule 5): G5: worst-case leverage would exceed the cap (value 30001, cap 30000)
+
+thread 'g5_refuses_order_that_takes_worst_case_leverage_over_cap' (133295393) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_limit_order_whose_oracle_offset_is_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent Fqa2K9rVc6zi59LcixJsri71PXmZBh46bvm35jAiHfq8
+[G6 oracle-offset limit, offset out of band] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 547, cap 100)
+
+thread 'g6_refuses_limit_order_whose_oracle_offset_is_outside_band' (133295396) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_auction_price_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 8kLhQf8j6HnPbFRWSwFtBhomQAmdvEgtXt9kNSx49Ghk
+[G6 auction start outside] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 108, cap 100)
+
+thread 'g6_refuses_auction_price_outside_band' (133295395) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_market_order_without_a_worst_price stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent Ff2P9oYG3kn3HHnyTieT2FUErGjMkUvSZwWtPhwj8RQ
+[G6 market order with price 0] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 10000, cap 100)
+
+thread 'g6_refuses_market_order_without_a_worst_price' (133295398) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_oracle_order_with_a_far_price_field stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 6vk6PeVcc7AdpCvVJPaKFNksz34umbEjvRwtbcAaVszu
+[G6 oracle order with price $50] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 4528, cap 100)
+
+thread 'g6_refuses_oracle_order_with_a_far_price_field' (133295400) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g6_refuses_oracle_offset_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 6gxKJQpJkBgTnbapc8ttzf7HhgAtTJrrLDVCRCxPaayQ
+[G6 oracle offset -0.92] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 100, cap 100)
+
+thread 'g6_refuses_oracle_offset_outside_band' (133295399) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent EeDxuKpaRKkzZXN8e4aMYeBQGdKJkrEuH33Cdoozk7AV
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAEdN52HFKzn3pxMVHgp6W0CKok/RW9L196gxD/azf4BRAEBAAAAAQABAOQLVAIAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAB03nYcUrOfenExUeCnpbQIqiT9Fb0vX3qDEP9rN/gFE2g5EHwAAAACgIHEFAAAAAADkC1QCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 10000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFroKmWm8bjAQuJcgIRdPiDTa1lIzLxG6x9IHHM5EnznQEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGugqZabxuMBC4lyAhF0+INNrWUjMvEbrH0gcczkSfOd3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAWugqZabxuMBC4lyAhF0+INNrWUjMvEbrH0gcczkSfOdAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAWugqZabxuMBC4lyAhF0+INNrWUjMvEbrH0gcczkSfOdAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAWugqZabxuMBC4lyAhF0+INNrWUjMvEbrH0gcczkSfOdAQAAAAAAAAAAARCsAAAAAAAAAQDyBSoBAAAAASCjNRsAAAAAATT3BgAAAAAAAAABi0fX//////8AAWugqZabxuMBC4lyAhF0+INNrWUjMvEbrH0gcczkSfOdAQEAAAABAQEAEKXU6AAAAAEg+8s/AQAAAAHQwDIdAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[G5 after the drop, one step over] OK
+    Program log: guard REFUSED (rule 5): G5: worst-case leverage would exceed the cap (value 30001, cap 30000)
+
+thread 'g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room' (133295392) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g7_pause_blocks_new_orders_but_not_cancels stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent Ty2YotytApBdefhb2WFrFndziMAzEVTJuvNR4eNZy6f
+[before pause] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAGruPlC1dP1K1agO6/1DqnaABd7zhWbWfIbO6bOjoE6AwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAKu4+ULV0/UrVqA7r/UOqdoAF3vOFZtZ8hs7ps6OgToD2g5EHwAAAADAjGwFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[agent tries to unpause] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetPaused
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: BjBYVNCLZTUmjRcTq2XEJuieAGs8fcKThBfDNjMwtg2T
+    Program log: Right:
+    Program log: Ty2YotytApBdefhb2WFrFndziMAzEVTJuvNR4eNZy6f
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+[owner pauses] OK
+    Program log: guard: paused = true
+[paused] OK
+    Program log: guard REFUSED (rule 7): G7: guard is paused (value 1, cap 0)
+
+thread 'g7_pause_blocks_new_orders_but_not_cancels' (133295404) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g9_exit_price_must_stay_in_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent HdaePRx8zVQPMgxLTdZtMHtm7eaVbU8Hz2K8RAEGoB6r
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAEdwNp2uJXGqYYHCc+Cm9xOPSW4LjdHWDNOXiR0ePVLUgEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAB3A2na4lcaphgcJz4Kb3E49JbguN0dYM05eJHR49UtS2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAHhceBqkt52cPDoLFl5OZ/U7HvQVuSFlFk9jNPn6kmi0QEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAOFx4GqS3nZw8OgsWXk5n9Tse9BW5IWUWT2M0+fqSaLR3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAeFx4GqS3nZw8OgsWXk5n9Tse9BW5IWUWT2M0+fqSaLRAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAeFx4GqS3nZw8OgsWXk5n9Tse9BW5IWUWT2M0+fqSaLRAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAeFx4GqS3nZw8OgsWXk5n9Tse9BW5IWUWT2M0+fqSaLRAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAeFx4GqS3nZw8OgsWXk5n9Tse9BW5IWUWT2M0+fqSaLRAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[exit 12.5% under the oracle] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 1246, cap 100)
+
+thread 'g9_exit_price_must_stay_in_band' (133295416) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent DhaWJprk7mVXERjjCpjWyzwHJbcyKmWZvTMt5znL7aea
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAHLEMDZLr6h2XoZX6j6LW+iqaShFaZd+HR08ut483LZvwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAMsQwNkuvqHZehlfqPotb6KppKEVpl34dHTy63jzctm/2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFC4JU1Q7Pa9DD5/KiZOIg+Rz0xyQBiHEPJn14ZNpcLZwEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAELglTVDs9r0MPn8qJk4iD5HPTHJAGIcQ8mfXhk2lwtn3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAULglTVDs9r0MPn8qJk4iD5HPTHJAGIcQ8mfXhk2lwtnAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAULglTVDs9r0MPn8qJk4iD5HPTHJAGIcQ8mfXhk2lwtnAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAULglTVDs9r0MPn8qJk4iD5HPTHJAGIcQ8mfXhk2lwtnAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAULglTVDs9r0MPn8qJk4iD5HPTHJAGIcQ8mfXhk2lwtnAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[owner tightens] OK
+    Program log: guard: limits updated by the owner
+[new order with a 20-slot-old oracle] FAILED InstructionError(1, Custom(6008))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: guard: oracle for market 0 is 20 slots old (max 3)
+    Program log: AnchorError thrown in programs/guard/src/lib.rs:398. Error Code: StaleOracle. Error Number: 6008. Error Message: G6: oracle is stale.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x1778
+[stale oracle, exit far under the last price] OK
+    Program log: guard REFUSED (rule 6): G6: price is outside the band around the oracle (value 1246, cap 100)
+
+thread 'g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band' (133295414) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- g9_exit_in_a_delisted_market_is_refused_by_the_allowlist stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 3kW4UHWGR7fx5svAkcUmEdeYxES4UiEvG23vE8KiA2kx
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFWwUptiKWMvIrwRhNMaMaQ3veQayLlqXQTUswmR+IJLwEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAFbBSm2IpYy8ivBGE0xoxpDe95BrIuWpdBNSzCZH4gkv2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAHJQ5MOoV7nWHAqeVWm5DYTjd0vVj0JKkasVBeM9nIaGgEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAMlDkw6hXudYcCp5VabkNhON3S9WPQkqRqxUF4z2choa3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAclDkw6hXudYcCp5VabkNhON3S9WPQkqRqxUF4z2choaAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAclDkw6hXudYcCp5VabkNhON3S9WPQkqRqxUF4z2choaAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAclDkw6hXudYcCp5VabkNhON3S9WPQkqRqxUF4z2choaAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAclDkw6hXudYcCp5VabkNhON3S9WPQkqRqxUF4z2choaAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[owner tightens] OK
+    Program log: guard: limits updated by the owner
+[exit in a market no longer on the allowlist] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 1000000000)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFWwUptiKWMvIrwRhNMaMaQ3veQayLlqXQTUswmR+IJLwECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAFbBSm2IpYy8ivBGE0xoxpDe95BrIuWpdBNSzCZH4gkv3g5EHwAAAADgLXQFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAEBAQAAAN4AAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'g9_exit_in_a_delisted_market_is_refused_by_the_allowlist' (133295415) panicked at tests/limits.rs:546:5:
+event says refused
+
+---- refuses_when_equity_is_not_positive stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent F8gTkEdDT3rA8bvwUodSgEeRHFGVHMFS8oYrmvb7zdDk
+[equity below zero] OK
+    Program log: guard REFUSED (rule 5): account equity is not positive (value -1000000001, cap 0)
+
+thread 'refuses_when_equity_is_not_positive' (133295424) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- order_shape_refusals_trigger_bitflags_spot_zero stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 64tzM5ofuqrFz6XkM4pGS2K6AuT9r4z5dGmDkuZKbmA2
+[trigger limit] OK
+    Program log: guard REFUSED (rule 2): trigger orders are not supported (value 3, cap 0)
+
+thread 'order_shape_refusals_trigger_bitflags_spot_zero' (133295421) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 7seiXuo2qwe11hdJGA3hf8xwHHkrW43HsBJRHSRDBzfR
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFWaqKyEt3fNtPEIaZVZlnx21X4UTuNXomP8OdcM+0chQEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAFZqorIS3d8208QhplVmWfHbVfhRO41eiY/w51wz7RyF2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAHD+Y/nRl3zSRIF0bIv+JGIyG5n2X6N0PttvXvdeXKJEgEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAMP5j+dGXfNJEgXRsi/4kYjIbmfZfo3Q+229e915cokS3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAcP5j+dGXfNJEgXRsi/4kYjIbmfZfo3Q+229e915cokSAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAcP5j+dGXfNJEgXRsi/4kYjIbmfZfo3Q+229e915cokSAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAcP5j+dGXfNJEgXRsi/4kYjIbmfZfo3Q+229e915cokSAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAcP5j+dGXfNJEgXRsi/4kYjIbmfZfo3Q+229e915cokSAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[stale exit SELL at 91.00 (below 91.39)] OK
+    Program log: guard: stale exit (51 slots) refused: price is on the unfavourable side of 91390000
+    Program log: guard REFUSED (rule 6): G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price (value 51, cap 50)
+
+thread 'stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed' (133295427) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 86PQ6ZFfEdzemHMF6dJtTJ66iHzesGkz8Q2dwmX64Fm7
+[flow-s: initialize_user_stats + initialize_user] OK
+[flow-s: deposit 1000000 dUSDT] OK
+[agent: ask to open a short] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAEv0hBwBCWfk1uHb7V4hmnN8UuVcu2u7ASuY5AnCpww8AEBAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAC/SEHAEJZ+TW4dvtXiGac3xS5Vy7a7sBK5jkCcKnDDw2g5EHwAAAADgLXQFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: buys the agent's ask] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAEuf3bO7kSkjA1/k9/eMnQfvVGc3fhFTF0+nIKgpvgS0wEBAAAAAQABABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAC5/ds7uRKSMDX+T394ydB+9UZzd+EVMXT6cgqCm+BLT3A5EHwAAAADgLXQFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAAAAANwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[stale exit BUY at 91.80 (above 91.39)] OK
+    Program log: guard: stale exit (51 slots) refused: price is on the unfavourable side of 91390000
+    Program log: guard REFUSED (rule 6): G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price (value 51, cap 50)
+
+thread 'stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed' (133295425) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent BcA5yAa9SSba1wYBn3gD7shQqQapPbjGWKrycuUEAMut
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAHwF3xfN7nrmGPRXNhrt2lmgXtz1A/fdWevvfWdSOtnHgEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAPAXfF83ueuYY9Fc2Gu3aWaBe3PUD991Z6+99Z1I62ce2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAE3hYd1EIj1aCvibMU8+AcrkrbRUeJrg/1RRSsMQFE9+AEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAADeFh3UQiPVoK+JsxTz4ByuSttFR4muD/VFFKwxAUT343A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABATeFh3UQiPVoK+JsxTz4ByuSttFR4muD/VFFKwxAUT34AQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAATeFh3UQiPVoK+JsxTz4ByuSttFR4muD/VFFKwxAUT34AQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABATeFh3UQiPVoK+JsxTz4ByuSttFR4muD/VFFKwxAUT34AQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AATeFh3UQiPVoK+JsxTz4ByuSttFR4muD/VFFKwxAUT34AQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[stale exit market SELL with no price] OK
+    Program log: guard: stale exit (51 slots) refused: missing price is on the unfavourable side of 91390000
+    Program log: guard REFUSED (rule 6): G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price (value 51, cap 50)
+
+thread 'stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction' (133295426) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+---- refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 3ttuSESj3PhfRndkocfijw9SB4fYFmiaFQJncucgMdyq
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAHnOvCP6WtqZvdFLBN5TYzG5dQYNwhQCANG272ERm4R8wEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAOc68I/pa2pm90UsE3lNjMbl1Bg3CFAIA0bbvYRGbhHz2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAH/Gaqg/mmBtx7ODv6WsfLKtUDdZRr0auwZUTHFLfowpAEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAP8ZqqD+aYG3Hs4O/pax8sq1QN1lGvRq7BlRMcUt+jCk3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABAf8ZqqD+aYG3Hs4O/pax8sq1QN1lGvRq7BlRMcUt+jCkAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAAf8ZqqD+aYG3Hs4O/pax8sq1QN1lGvRq7BlRMcUt+jCkAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABAf8ZqqD+aYG3Hs4O/pax8sq1QN1lGvRq7BlRMcUt+jCkAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AAf8ZqqD+aYG3Hs4O/pax8sq1QN1lGvRq7BlRMcUt+jCkAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[borrow in spot market 1] OK
+    Program log: guard REFUSED (rule 5): only a positive quote balance is supported: another spot balance or a quote borrow exists (value 0, cap 0)
+
+thread 'refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative' (133295422) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+
+failures:
+    accepted_orders_and_exits_count_and_real_errors_record_nothing
+    every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter
+    g1_refuses_order_one_unit_over_max_size
+    g2_refuses_builder_idx_and_builder_fee
+    g2_refuses_market_not_on_allowlist
+    g2_refuses_order_type_not_allowed
+    g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day
+    g4_refuses_ask_that_takes_worst_case_short_over_cap
+    g4_refuses_bid_that_takes_worst_case_long_over_cap
+    g4_sums_every_slot_for_the_market_not_the_first_match
+    g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room
+    g5_refuses_order_that_takes_worst_case_leverage_over_cap
+    g6_refuses_auction_price_outside_band
+    g6_refuses_limit_order_whose_oracle_offset_is_outside_band
+    g6_refuses_limit_price_outside_band
+    g6_refuses_market_order_without_a_worst_price
+    g6_refuses_oracle_offset_outside_band
+    g6_refuses_oracle_order_with_a_far_price_field
+    g7_pause_blocks_new_orders_but_not_cancels
+    g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band
+    g9_exit_in_a_delisted_market_is_refused_by_the_allowlist
+    g9_exit_price_must_stay_in_band
+    order_shape_refusals_trigger_bitflags_spot_zero
+    refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative
+    refuses_when_equity_is_not_positive
+    stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed
+    stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction
+    stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed
+
+test result: FAILED. 19 passed; 28 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 2 tests
+test probe_reduce_only_and_fill_split ... ok
+test probe_exit_price_far_under_oracle ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+
+running 2 tests
+test replay_runaway_agent_unguarded_vs_guarded ... FAILED
+test replay_leverage_cap_binds_when_losses_shrink_equity ... FAILED
+
+failures:
+
+---- replay_runaway_agent_unguarded_vs_guarded stdout ----
+
+thread 'replay_runaway_agent_unguarded_vs_guarded' (133295436) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- replay_leverage_cap_binds_when_losses_shrink_equity stdout ----
+
+thread 'replay_leverage_cap_binds_when_losses_shrink_equity' (133295435) panicked at src/lib.rs:819:68:
+range start index 360 out of range for slice of length 352
+
+
+failures:
+    replay_leverage_cap_binds_when_losses_shrink_equity
+    replay_runaway_agent_unguarded_vs_guarded
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

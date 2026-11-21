@@ -78,6 +78,7 @@ pub struct Order {
     pub auction: Option<(u8, i64, i64)>,
     pub builder_idx: Option<u8>,
     pub builder_fee: Option<u16>,
+    pub max_ts: Option<i64>,
 }
 
 impl Order {
@@ -86,6 +87,7 @@ impl Order {
             order_type: 1, market_type: 1, direction, user_order_id: 0, base, price, market_index: 0, reduce_only: false,
             post_only: 0, bit_flags: 0, trigger_price: None, oracle_price_offset: None, auction: None, builder_idx: None,
             builder_fee: None,
+            max_ts: None,
         }
     }
     /// A resting post-only limit order (what the agent uses in these replays).
@@ -111,7 +113,7 @@ impl Order {
         d.push(self.reduce_only as u8);
         d.push(self.post_only);
         d.push(self.bit_flags);
-        d.push(0); // max_ts None
+        opt(&mut d, self.max_ts.map(|v| v.to_le_bytes()));
         opt(&mut d, self.trigger_price.map(|v| v.to_le_bytes()));
         d.push(0); // trigger_condition Above
         opt(&mut d, self.oracle_price_offset.map(|v| v.to_le_bytes()));
@@ -494,6 +496,8 @@ pub mod gerr {
     pub const NON_POSITIVE_EQUITY: u32 = 6024;
     pub const INVALID_LIMITS: u32 = 6025;
     pub const STALE_EXIT_UNFAVOURABLE: u32 = 6028;
+    pub const CANCEL_NOT_ALLOWED: u32 = 6029;
+    pub const ORDER_LIFETIME_TOO_LONG: u32 = 6030;
 }
 
 pub mod rule {
@@ -523,6 +527,8 @@ pub struct Limits {
     pub price_band_bps: u32,
     pub max_oracle_staleness_slots: u64,
     pub exit_max_staleness_slots: u64,
+    /// Non-exit orders must carry max_ts within this many seconds of now (0 = no bound).
+    pub max_order_lifetime_secs: u64,
 }
 
 impl Limits {
@@ -539,6 +545,7 @@ impl Limits {
             price_band_bps: 10_000,
             max_oracle_staleness_slots: 1_000_000,
             exit_max_staleness_slots: 2_000_000,
+            max_order_lifetime_secs: 0,
         }
     }
     pub fn bytes(&self) -> Vec<u8> {
@@ -553,6 +560,7 @@ impl Limits {
         d.extend_from_slice(&self.price_band_bps.to_le_bytes());
         d.extend_from_slice(&self.max_oracle_staleness_slots.to_le_bytes());
         d.extend_from_slice(&self.exit_max_staleness_slots.to_le_bytes());
+        d.extend_from_slice(&self.max_order_lifetime_secs.to_le_bytes());
         d
     }
 }
@@ -580,6 +588,12 @@ pub struct GuardState {
     /// refused[i] = orders refused by rule i (index 1..=7 used: G1..G7).
     pub refused: [u64; 8],
     pub last_refusal: LastRefusal,
+    /// Order ids the guard placed (ring buffer; 0 = empty).
+    pub placed_order_ids: Vec<u32>,
+    pub cancel_count: u64,
+    pub refused_cancels: u64,
+    /// The last refusal for each rule (index = rule code 0..=7).
+    pub last_refusal_by_rule: Vec<LastRefusal>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -782,8 +796,8 @@ impl Env {
     pub fn guard_state(&self, g: &Guarded) -> GuardState {
         let d = self.svm.get_account(&g.guard).expect("guard exists").data;
         let key = |o: usize| Address::new_from_array(d[o..o + 32].try_into().unwrap());
-        // 8 disc, owner 32, velocity_user 32, agent 32, paused 1, limits (8 + 8*10 + 1 + 8 + 4 + 4 + 8 + 8 = 121), day, day_notional
-        let o = 8 + 96 + 1 + 121;
+        // 8 disc, owner 32, velocity_user 32, agent 32, paused 1, limits (8 + 8*10 + 1 + 8 + 4 + 4 + 8 + 8 + 8 = 129), day, day_notional
+        let o = 8 + 96 + 1 + 129;
         // then bump 1, accepted_count u64, refused_g1..g7 7 x u64, last_refusal {rule u8, reason u32, value i128, cap i128, slot u64}
         let u64_at = |x: usize| u64::from_le_bytes(d[x..x + 8].try_into().unwrap());
         let c = o + 16 + 1;
@@ -792,7 +806,24 @@ impl Env {
             *r = u64_at(c + 8 + (i - 1) * 8);
         }
         let lr = c + 8 + 7 * 8;
+        let read_lr = |x: usize| LastRefusal {
+            rule: d[x],
+            reason: u32::from_le_bytes(d[x + 1..x + 5].try_into().unwrap()),
+            value: i128::from_le_bytes(d[x + 5..x + 21].try_into().unwrap()),
+            cap: i128::from_le_bytes(d[x + 21..x + 37].try_into().unwrap()),
+            slot: u64_at(x + 37),
+        };
+        // after last_refusal (45 bytes): placed_order_ids [u32; 32], placed_cursor u8, cancel_count u64,
+        // refused_cancels u64, last_refusal_by_rule [LastRefusal; 8]
+        let p = lr + 45;
+        let placed_order_ids = (0..32).map(|i| u32::from_le_bytes(d[p + i * 4..p + i * 4 + 4].try_into().unwrap())).filter(|x| *x != 0).collect();
+        let q = p + 128 + 1;
+        let by = q + 16;
         GuardState {
+            placed_order_ids,
+            cancel_count: u64_at(q),
+            refused_cancels: u64_at(q + 8),
+            last_refusal_by_rule: (0..8).map(|i| read_lr(by + i * 45)).collect(),
             owner: key(8),
             velocity_user: key(40),
             agent: key(72),
@@ -878,5 +909,84 @@ impl Env {
 impl Env {
     pub fn slot_now(&self) -> u64 {
         self.svm.get_sysvar::<Clock>().slot
+    }
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------
+// Audit helpers: raw order slots and a keeper fill
+// ---------------------------------------------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct RawOrder {
+    pub order_id: u32,
+    pub status: u8,
+    pub order_type: u8,
+    pub direction: u8,
+    pub reduce_only: bool,
+    pub price: u64,
+    pub base: u64,
+    pub filled: u64,
+    pub auction_start: i64,
+    pub auction_end: i64,
+    pub auction_duration: u8,
+    pub oracle_price_offset: i64,
+    pub user_order_id: u8,
+}
+
+/// Open orders read straight from the User account (User + 1064 + i*104).
+pub fn raw_orders(env: &Env, owner: &Pubkey) -> Vec<RawOrder> {
+    let d = env.svm.get_account(&user_pda(owner)).unwrap().data;
+    let u64_at = |o: usize| u64::from_le_bytes(d[o..o + 8].try_into().unwrap());
+    let i64_at = |o: usize| i64::from_le_bytes(d[o..o + 8].try_into().unwrap());
+    (0..32)
+        .map(|i| 1064 + i * 104)
+        .filter(|o| d[o + 86] == 1)
+        .map(|o| RawOrder {
+            price: u64_at(o + 8),
+            base: u64_at(o + 16),
+            filled: u64_at(o + 24),
+            auction_start: i64_at(o + 48),
+            auction_end: i64_at(o + 56),
+            oracle_price_offset: i64_at(o + 72),
+            order_id: u32::from_le_bytes(d[o + 80..o + 84].try_into().unwrap()),
+            status: d[o + 86],
+            order_type: d[o + 87],
+            user_order_id: d[o + 89],
+            direction: d[o + 91],
+            reduce_only: d[o + 92] == 1,
+            auction_duration: d[o + 96],
+        })
+        .collect()
+}
+
+impl Env {
+    /// A keeper fills `order_id` of `taker_owner` against `makers` with Velocity's fill_perp_order.
+    pub fn fill_order(&mut self, label: &str, filler: &Keypair, taker_owner: &Pubkey, order_id: u32, makers: &[&Pubkey]) -> TxResult {
+        let mut data = disc("fill_perp_order").to_vec();
+        data.push(1);
+        data.extend_from_slice(&order_id.to_le_bytes());
+        data.push(0);
+        let f = filler.pubkey();
+        let mut accounts = vec![
+            AccountMeta::new_readonly(STATE, false),
+            AccountMeta::new_readonly(f, true),
+            AccountMeta::new(user_pda(&f), false),
+            AccountMeta::new(stats_pda(&f), false),
+            AccountMeta::new(user_pda(taker_owner), false),
+            AccountMeta::new(stats_pda(taker_owner), false),
+        ];
+        accounts.extend(Self::maps());
+        for m in makers {
+            accounts.push(AccountMeta::new(user_pda(m), false));
+            accounts.push(AccountMeta::new(stats_pda(m), false));
+        }
+        self.send(label, vec![Instruction { program_id: VELOCITY, accounts, data }], &[filler])
+    }
+
+    /// The id of the most recent open order the guard placed (for cancels by id).
+    pub fn last_guard_order(&self, g: &Guarded) -> Option<u32> {
+        let placed = self.guard_state(g).placed_order_ids;
+        raw_orders(self, &g.owner.pubkey()).iter().map(|o| o.order_id).filter(|id| placed.contains(id)).max()
     }
 }
