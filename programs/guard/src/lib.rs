@@ -97,7 +97,7 @@ pub mod guard {
     /// The agent's only way to trade. Remaining accounts are Velocity's account maps (oracles, then spot markets,
     /// then perp markets); the guard reads the ones it needs and forwards all of them.
     pub fn place_perp_order<'info>(
-        ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
+        mut ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         params: OrderParams,
     ) -> Result<()> {
         let before: Vec<u32> = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info())
@@ -108,6 +108,7 @@ pub mod guard {
             .collect();
         // Forget placed ids that are no longer open (filled, cancelled or expired). A live id is never overwritten.
         prune_placed(&mut ctx.accounts.guard, &before);
+        take_day_baseline(&mut ctx)?;
         let mut baseline: Option<Baseline> = None;
         let mut outcome = check_order(&ctx, &params, &mut baseline)?;
         if let Some(b) = baseline {
@@ -183,9 +184,10 @@ pub mod guard {
     /// G9: the agent may always cancel an order the guard placed, even while paused. It may not cancel the owner's
     /// own orders or cancel everything (None); such a request is a recorded refusal.
     pub fn cancel_order<'info>(
-        ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
+        mut ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         order_id: Option<u32>,
     ) -> Result<()> {
+        take_day_baseline(&mut ctx)?;
         let g = &ctx.accounts.guard;
         let allowed = match order_id {
             Some(id) if id != 0 => g.placed_order_ids.contains(&id),
@@ -490,6 +492,32 @@ struct Baseline {
     day: i64,
     equity: i64,
     flows: i64,
+}
+
+/// G10: the guard's first call of a UTC day (an order, an exit or a cancel) takes the day's baseline when every price
+/// it needs is present and fresh. It never fails the call; if it cannot price the account, the next call tries again.
+fn take_day_baseline(ctx: &mut Context<AgentTrade>) -> Result<()> {
+    let clock = Clock::get()?;
+    let today = math::utc_day(clock.unix_timestamp);
+    let g = &ctx.accounts.guard;
+    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {
+        return Ok(());
+    }
+    let Some(user) = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()) else { return Ok(()) };
+    let mut prices = vec![];
+    for m in user.active_markets() {
+        match market_price(ctx.remaining_accounts, m, clock.slot) {
+            Ok((p, age)) if age <= g.limits.max_oracle_staleness_slots => prices.push((m, p)),
+            _ => return Ok(()),
+        }
+    }
+    let Ok((_, equity)) = account_leverage(ctx.remaining_accounts, &user, &prices, None) else { return Ok(()) };
+    let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return Ok(()) };
+    let g = &mut ctx.accounts.guard;
+    g.loss_day = today;
+    g.baseline_equity = eq;
+    g.baseline_flows = flows;
+    Ok(())
 }
 
 fn net_flows(user: &velocity::UserView) -> i128 {

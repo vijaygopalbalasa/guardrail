@@ -33,7 +33,8 @@ with the reason. The owner keeps full control (trade directly, change limits, re
 - G8 withdraw is impossible through the guard (no such instruction; Velocity Withdraw is has_one = authority).
 Every accepted or refused order emits an event (limit, value, reason) for the dashboard. A limit refusal is a SUCCESSFUL
 transaction that does not call Velocity and increments per-limit refusal counters in the Guard account (durable on-chain
-record); real errors and the after-CPI cap assertion still fail the transaction. G10 (stretch): daily loss cap.
+record); real errors and the after-CPI cap assertion still fail the transaction. G10 daily loss cap (built Nov 21): the
+day's baseline is taken at the guard's first call that UTC day; a loss before that first call is not counted (no crank).
 Decided defaults (Nov 21): G9 bypass only for reduce-only orders opposing the position with size <= |position|; cancels
 always allowed; breach = accepted order leaving G3/G4/G5 over cap (price drift reported separately); G4 in base units per
 market (market table = G2 allowlist); G5 whole account, collateral = spot0 only; guard exposes place and cancel only.

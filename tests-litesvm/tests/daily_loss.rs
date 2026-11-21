@@ -159,3 +159,27 @@ fn an_order_velocity_does_not_store_fails_instead_of_counting_as_accepted() {
     assert_eq!(after.accepted_count, before.accepted_count);
     assert_eq!(after.day_notional, before.day_notional);
 }
+
+#[test]
+fn g10_an_exit_first_day_starts_the_count_at_that_exit() {
+    let (mut env, g) = setup();
+    env.step(DAY_SLOTS, P0); // a new UTC day; no baseline yet
+    let mut exit = Order::resting(1, BASE, P0 + 20_000);
+    exit.reduce_only = true;
+    assert!(events(&env.gplace("the day's first call is an exit", &g, exit))[0].accepted);
+    assert!(env.guard_state(&g).baseline_equity > 0, "the exit took the day's baseline");
+    env.step(5, price(5.0));
+    assert_refused(&bid(&mut env, &g, "a risky bid after a 5% drop", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
+}
+
+#[test]
+fn g10_a_cancel_first_day_starts_the_count_at_that_cancel() {
+    let (mut env, g) = setup();
+    assert!(events(&bid(&mut env, &g, "a resting bid from yesterday", P0))[0].accepted);
+    let id = env.last_guard_order(&g).unwrap();
+    env.step(DAY_SLOTS, P0);
+    assert_ok(&env.gcancel("the day's first call is a cancel", &g, Some(id)));
+    assert!(env.guard_state(&g).loss_day > 0 && env.guard_state(&g).baseline_equity > 0, "the cancel took the day's baseline");
+    env.step(5, price(5.0));
+    assert_refused(&bid(&mut env, &g, "a risky bid after a 5% drop", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
+}

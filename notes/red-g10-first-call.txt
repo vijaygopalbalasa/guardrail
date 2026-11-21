@@ -1,0 +1,2 @@
+thread 'g10_an_exit_first_day_starts_the_count_at_that_exit' (133785454) panicked at tests/daily_loss.rs:170:5:
+thread 'g10_a_cancel_first_day_starts_the_count_at_that_cancel' (133785453) panicked at tests/daily_loss.rs:184:5:

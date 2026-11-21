@@ -90,6 +90,7 @@ plant "R6 G10 baseline re-taken on every call" $LIB "        let (b_eq, b_flows)
 plant "R6 G10 baseline never resets on a new day" $LIB "        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {" "        let (b_eq, b_flows) = if g.baseline_equity != 0 {"
 plant "R6 G10 refusal filed under G7" $LIB "                rule::G10_DAILY_LOSS => g.refused_g10 += 1," "                rule::G10_DAILY_LOSS => g.refused_g7 += 1,"
 plant "R6 an order Velocity did not store counts as accepted" $LIB "        if placed.is_empty() {" "        if false {"
+plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1
