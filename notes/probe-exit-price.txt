@@ -1,0 +1,70 @@
+[agent: initialize_user_stats + initialize_user] OK
+[agent: deposit 1000 dUSDT] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[partner: initialize_user_stats + initialize_user] OK
+[partner: deposit 100000 dUSDT] OK
+[agent BUY 1 @ 91.30] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAF4DRWHhFSe+gwxUHjYXpyfBwfYptzIM/yXbM+cmCBuDgEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAHgNFYeEVJ76DDFQeNhenJ8HB9im3Mgz/Jdsz5yYIG4O2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+[flow sells into it] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAEwkVbabsEKd7mrAH//tnN7Kwwto1IiBANNRx1eqLIeuAEBAAAAAQEBAHQ7pAsAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAADCRVtpuwQp3uasAf/+2c3srDC2jUiIEA01HHV6osh643A5EHwAAAACgIHEFAAAAAAB0O6QLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABATCRVtpuwQp3uasAf/+2c3srDC2jUiIEA01HHV6osh64AQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAATCRVtpuwQp3uasAf/+2c3srDC2jUiIEA01HHV6osh64AQEAAAABAQEAdDukCwAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABATCRVtpuwQp3uasAf/+2c3srDC2jUiIEA01HHV6osh64AQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AATCRVtpuwQp3uasAf/+2c3srDC2jUiIEA01HHV6osh64AQEAAAABAQEAdDukCwAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+agent position (1000000000, 0, 0)
+[agent reduce-only SELL 1 @ 12.5% under (not post-only)] OK
+    Program log: Updating auction start price to 91202221
+    Program log: Updating auction end price to 80000000
+    Program log: Updating auction duration to 180
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAF4DRWHhFSe+gwxUHjYXpyfBwfYptzIM/yXbM+cmCBuDgECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAHgNFYeEVJ76DDFQeNhenJ8HB9im3Mgz/Jdsz5yYIG4O3g5EHwAAAAAAtMQEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtqJvBQAAAAAAtMQEAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAEBAAAAtN4AAAAAAAA=
+place ok=true orders=[OrderView { order_id: 2, status: 1, direction: 1, price: 80000000, base: 1000000000, filled: 0 }]
+[partner BUY 1 limit 12.5% under with the agent as maker] OK
+    Program log: 4DRDR8LtbQFACQFrAAAAAAAAAAABAAAAAAAAAAAAAAGIDIFZ+kB2wfcVPkl7UzHXZ2PAky8kosZf0VvEesYTKQEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlpACQFrAAAAAIgMgVn6QHbB9xU+SXtTMddnY8CTLySixl/RW8R6xhMpBg9EHwAAAAAAtMQEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAAAAAAYAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126429)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126429), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126429)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126429), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: taker does not cross amm: taker price 80000000 amm price 98638688
+    Program log: no fulfillment methods found
+partner take ok=true partner base 0 -> 0, partner perp [PerpView { market_index: 0, base_asset_amount: 0, quote_asset_amount: 0, quote_break_even_amount: 0, quote_entry_amount: 0, open_bids: 1000000000, open_asks: 0, settled_pnl: 0, open_orders: 1 }]; agent (1000000000, 0, -1000000000)
+[cancel all (raw)] OK
+    Program log: 4DRDR8LtbQFACQFrAAAAAAEAAAABAAEAAAAAAAAAAAAAAAAAAAAAAXgNFYeEVJ76DDFQeNhenJ8HB9im3Mgz/Jdsz5yYIG4OAQIAAAABAQEAypo7AAAAAAEAAAAAAAAAAAEAAAAAAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+[agent reduce-only SELL 1 @ 25% under (not post-only)] OK
+    Program log: Updating auction start price to 90482953
+    Program log: Updating auction end price to 68500000
+    Program log: Updating auction duration to 180
+    Program log: 4DRDR8LtbQFACQFrAAAAAAAAAAABAAAAAAAAAAAAAAF4DRWHhFSe+gwxUHjYXpyfBwfYptzIM/yXbM+cmCBuDgEDAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlpACQFrAAAAAHgNFYeEVJ76DDFQeNhenJ8HB9im3Mgz/Jdsz5yYIG4OCA9EHwAAAAAgOhUEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEKlkBQAAAAAgOhUEAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAABAQEAAAEBAAAAtAgAAAAAAAA=
+place ok=true orders=[OrderView { order_id: 3, status: 1, direction: 1, price: 68500000, base: 1000000000, filled: 0 }]
+[partner BUY 1 limit 25% under with the agent as maker] OK
+    Program log: 4DRDR8LtbQFQCQFrAAAAAAAAAAABAAAAAAAAAAAAAAGIDIFZ+kB2wfcVPkl7UzHXZ2PAky8kosZf0VvEesYTKQECAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlpQCQFrAAAAAIgMgVn6QHbB9xU+SXtTMddnY8CTLySixl/RW8R6xhMpMA9EHwAAAAAgOhUEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAAAAAAAADAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126471)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126471), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126471)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126471), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: taker does not cross amm: taker price 68500000 amm price 98638688
+    Program log: no fulfillment methods found
+partner take ok=true partner base 0 -> 0, partner perp [PerpView { market_index: 0, base_asset_amount: 0, quote_asset_amount: 0, quote_break_even_amount: 0, quote_entry_amount: 0, open_bids: 2000000000, open_asks: 0, settled_pnl: 0, open_orders: 2 }]; agent (1000000000, 0, -1000000000)
+[cancel all (raw)] OK
+    Program log: 4DRDR8LtbQFQCQFrAAAAAAEAAAABAAEAAAAAAAAAAAAAAAAAAAAAAXgNFYeEVJ76DDFQeNhenJ8HB9im3Mgz/Jdsz5yYIG4OAQMAAAABAQEAypo7AAAAAAEAAAAAAAAAAAEAAAAAAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=

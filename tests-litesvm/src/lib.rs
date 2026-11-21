@@ -484,7 +484,7 @@ pub mod gerr {
     pub const BAD_MARKET_ACCOUNT: u32 = 6019;
     pub const MISSING_MARKET_ACCOUNT: u32 = 6020;
     pub const UNSUPPORTED_ORACLE: u32 = 6021;
-    pub const WRONG_ORACLE: u32 = 6022;
+    pub const OTHER_SPOT_BORROW: u32 = 6022;
     pub const BAD_ORACLE_ACCOUNT: u32 = 6023;
     pub const NON_POSITIVE_EQUITY: u32 = 6024;
     pub const INVALID_LIMITS: u32 = 6025;
@@ -805,5 +805,16 @@ impl Env {
         let u = self.user(owner);
         let (cdi, _, _) = self.market_params();
         (u.spot0_scaled_balance as u128 * cdi / 10u128.pow(13)) as i128
+    }
+}
+
+impl Env {
+    /// Cancels all of a trader's orders directly on Velocity (probe helper).
+    pub fn gcancel_raw(&mut self, k: &Keypair) -> TxResult {
+        let mut data = disc("cancel_orders").to_vec();
+        data.extend_from_slice(&[0, 0, 0]);
+        let mut accounts = vec![AccountMeta::new_readonly(STATE, false), AccountMeta::new(user_pda(&k.pubkey()), false), AccountMeta::new_readonly(k.pubkey(), true)];
+        accounts.extend(Self::maps());
+        self.send("cancel all (raw)", vec![Instruction { program_id: VELOCITY, accounts, data }], &[k])
     }
 }

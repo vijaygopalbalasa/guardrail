@@ -66,3 +66,39 @@ fn probe_reduce_only_and_fill_split() {
     env.note(format!("flow ok={} agent pos after exits={:?} orders={:?}", r.is_ok(), pos(&env, &a), env.user(&a.pubkey()).open_orders));
     std::fs::write(format!("{}/../notes/probe-velocity.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
 }
+
+/// Can a reduce-only exit be sold far under the oracle to a partner? (Decides whether G9 exits need the price band.)
+#[test]
+fn probe_exit_price_far_under_oracle() {
+    let mut env = Env::new();
+    let p0 = 91_390_000;
+    env.step(1, p0);
+    let a = env.trader("agent", 1_000);
+    let flow = env.trader("flow", 1_000_000);
+    let partner = env.trader("partner", 100_000);
+    env.step(2, p0);
+    assert!(env.place("agent BUY 1 @ 91.30", &a, Order::resting(0, BASE, 91_300_000)).is_ok());
+    env.step(2, p0);
+    let ap = a.pubkey();
+    assert!(env.place_and_take("flow sells into it", &flow, Order::limit(1, 50 * BASE, 91_300_000), &[&ap]).is_ok());
+    env.note(format!("agent position {:?}", pos(&env, &a)));
+    for (label, price) in [("12.5% under", 80_000_000u64), ("25% under", 68_500_000)] {
+        env.step(2, p0);
+        let mut exit = Order::limit(1, BASE, price);
+        exit.reduce_only = true;
+        let r = env.place(&format!("agent reduce-only SELL 1 @ {label} (not post-only)"), &a, exit);
+        env.note(format!("place ok={} orders={:?}", r.is_ok(), env.user(&a.pubkey()).open_orders));
+        env.step(40, p0); // let any auction finish
+        let pp = partner.pubkey();
+        let before = pos(&env, &partner);
+        let r = env.place_and_take(&format!("partner BUY 1 limit {label} with the agent as maker"), &partner, Order::limit(0, BASE, price), &[&ap]);
+        let after = pos(&env, &partner);
+        let pu = env.user(&pp);
+        env.note(format!(
+            "partner take ok={} partner base {} -> {}, partner perp {:?}; agent {:?}",
+            r.is_ok(), before.0, after.0, pu.perp, pos(&env, &a)
+        ));
+        let _ = env.gcancel_raw(&a);
+    }
+    std::fs::write(format!("{}/../notes/probe-exit-price.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
+}

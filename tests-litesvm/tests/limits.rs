@@ -651,3 +651,129 @@ fn g8_agent_cannot_withdraw_or_trade_around_the_guard() {
     let r = env.send("agent withdraws directly from Velocity", vec![Instruction { program_id: VELOCITY, accounts, data }], &[&agent]);
     assert!(r.is_err(), "Velocity withdraw is has_one = authority");
 }
+
+// ------------------------------------------------------------------ G6 on every price field, exits included
+
+#[test]
+fn g6_refuses_limit_order_whose_oracle_offset_is_outside_band() {
+    // On Velocity an oracle offset overrides the limit price, so it must be checked on Limit orders too.
+    let mut l = Limits::loose();
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    let mut bad = Order::resting(0, BASE, 91_000_000); // price in band
+    bad.oracle_price_offset = Some(-5_000_000); // but oracle - $5 is 5.5% away
+    let r = env.gplace("G6 limit with out-of-band offset", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::PRICE_OUTSIDE_BAND, rule::G6);
+    let mut good = bad;
+    good.oracle_price_offset = Some(-500_000);
+    let r = env.gplace("G6 limit with in-band offset", &g, good);
+    assert_ok(&r);
+    assert!(events(&r)[0].accepted);
+}
+
+#[test]
+fn g6_refuses_oracle_order_with_a_far_price_field() {
+    let mut l = Limits::loose();
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    let mut bad = Order::limit(0, BASE, 50_000_000); // price $50, far from the oracle
+    bad.order_type = 4;
+    bad.oracle_price_offset = Some(-500_000);
+    let r = env.gplace("G6 oracle order with price $50", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::PRICE_OUTSIDE_BAND, rule::G6);
+    let mut good = bad;
+    good.price = 0;
+    let r = env.gplace("G6 oracle order with no price", &g, good);
+    assert_ok(&r);
+}
+
+#[test]
+fn g6_refuses_market_order_without_a_worst_price() {
+    let mut l = Limits::loose();
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    let mut bad = Order::limit(0, BASE, 0);
+    bad.order_type = 0;
+    let r = env.gplace("G6 market order with price 0", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::PRICE_OUTSIDE_BAND, rule::G6);
+    let mut good = bad;
+    good.price = 91_800_000;
+    let r = env.gplace("G6 market order with an in-band worst price", &g, good);
+    assert_ok(&r);
+}
+
+#[test]
+fn g9_exit_price_must_stay_in_band() {
+    // A reduce-only exit far under the oracle could hand the position's value to a partner; the band still applies.
+    let mut l = Limits::loose();
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    open_long(&mut env, &g, BASE);
+    let mut bad = Order::limit(1, BASE, 80_000_000);
+    bad.reduce_only = true;
+    let r = env.gplace("exit 12.5% under the oracle", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::PRICE_OUTSIDE_BAND, rule::G6);
+    let mut good = Order::resting(1, BASE, 91_500_000);
+    good.reduce_only = true;
+    let r = env.gplace("exit in band", &g, good);
+    accepted(&env, &g, &r, &good, rule::G9);
+}
+
+// ------------------------------------------------------------------ account and equity refusals
+
+fn patch(env: &mut Env, key: Address, f: impl Fn(&mut Vec<u8>)) {
+    let mut a = env.svm.get_account(&key).unwrap();
+    f(&mut a.data);
+    env.svm.set_account(key, a).unwrap();
+}
+
+#[test]
+fn refuses_unsupported_oracle_source_bad_market_and_bad_oracle() {
+    let (mut env, g) = setup(Limits::loose());
+    let o = Order::resting(0, BASE, 91_000_000);
+    let saved = env.svm.get_account(&PERP0).unwrap();
+    patch(&mut env, PERP0, |d| d[673] = 13); // PythLazer1K
+    assert_code(&env.gplace("oracle source PythLazer1K", &g, o), gerr::UNSUPPORTED_ORACLE);
+    env.svm.set_account(PERP0, saved.clone()).unwrap();
+    patch(&mut env, PERP0, |d| d[0] ^= 0xff);
+    assert_code(&env.gplace("perp market with a wrong discriminator", &g, o), gerr::BAD_MARKET_ACCOUNT);
+    env.svm.set_account(PERP0, saved).unwrap();
+    let saved_o = env.svm.get_account(&SOL_ORACLE).unwrap();
+    patch(&mut env, SOL_ORACLE, |d| d[0] ^= 0xff);
+    assert_code(&env.gplace("oracle with a wrong discriminator", &g, o), gerr::BAD_ORACLE_ACCOUNT);
+    env.svm.set_account(SOL_ORACLE, saved_o).unwrap();
+    let r = env.gplace("all accounts restored", &g, o);
+    accepted(&env, &g, &r, &o, rule::ACCEPTED);
+}
+
+#[test]
+fn refuses_when_equity_is_not_positive() {
+    let (mut env, g) = setup(Limits::loose());
+    // Craft an unsettled loss larger than the collateral on market 0 (slot 0: quote -2000 dUSDT, no base).
+    patch(&mut env, g.user, |d| {
+        let o = 424;
+        d[o + 16..o + 24].copy_from_slice(&(-2_000_000_000i64).to_le_bytes());
+        d[o + 76..o + 78].copy_from_slice(&0u16.to_le_bytes());
+    });
+    let o = Order::resting(0, BASE, 91_000_000);
+    let r = env.gplace("equity below zero", &g, o);
+    refused(&env, &g, &r, &o, gerr::NON_POSITIVE_EQUITY, rule::G5);
+}
+
+#[test]
+fn refuses_when_another_spot_market_holds_a_borrow() {
+    // A borrow outside the quote market would make the guard's collateral overstate equity, so it refuses.
+    let (mut env, g) = setup(Limits::loose());
+    let o = Order::resting(0, BASE, 91_000_000);
+    patch(&mut env, g.user, |d| {
+        let s = 104 + 40; // spot slot 1
+        d[s..s + 8].copy_from_slice(&1_000_000_000u64.to_le_bytes());
+        d[s + 32..s + 34].copy_from_slice(&1u16.to_le_bytes());
+        d[s + 34] = 1; // Borrow
+    });
+    let r = env.gplace("borrow in spot market 1", &g, o);
+    refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BORROW, rule::G5);
+    patch(&mut env, g.user, |d| d[104 + 40 + 34] = 0); // the same balance as a deposit is ignored
+    let r = env.gplace("deposit in spot market 1 (ignored)", &g, o);
+    accepted(&env, &g, &r, &o, rule::ACCEPTED);
+}

@@ -1,0 +1,185 @@
+
+running 38 tests
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... ok
+test g1_refuses_order_one_unit_over_max_size ... ok
+test g2_refuses_market_not_on_allowlist ... ok
+test g4_refuses_ask_that_takes_worst_case_short_over_cap ... ok
+test g2_refuses_builder_idx_and_builder_fee ... ok
+test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... ok
+test g2_refuses_order_type_not_allowed ... ok
+test g4_refuses_bid_that_takes_worst_case_long_over_cap ... ok
+test g4_sums_every_slot_for_the_market_not_the_first_match ... ok
+test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... ok
+test g6_refuses_limit_order_whose_oracle_offset_is_outside_band ... FAILED
+test g6_refuses_auction_price_outside_band ... ok
+test g6_refuses_oracle_order_with_a_far_price_field ... FAILED
+test g5_refuses_when_an_open_position_market_is_missing ... ok
+test g6_refuses_stale_oracle ... ok
+test g6_refuses_market_order_without_a_worst_price ... ok
+test g6_refuses_oracle_offset_outside_band ... ok
+test g7_only_the_owner_sets_limits ... ok
+test g6_refuses_limit_price_outside_band ... ok
+test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... ok
+test g7_limits_are_validated ... ok
+test g7_pause_blocks_new_orders_but_not_cancels ... ok
+test g8_guard_has_no_withdraw_or_delegate_instruction ... ok
+test g7_revoke_and_rotate_agent ... ok
+test g8_agent_cannot_withdraw_or_trade_around_the_guard ... ok
+test g9_exit_allowed_when_exposure_is_over_cap ... ok
+test g9_exit_allowed_when_daily_notional_is_spent ... ok
+test g9_exit_allowed_when_leverage_is_over_cap ... ok
+test g9_exit_actually_closes_the_position_under_tight_limits ... ok
+test guard_ignores_a_look_alike_oracle_at_another_address ... ok
+test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... ok
+test order_shape_refusals_trigger_bitflags_spot_zero ... ok
+test g9_exit_price_must_stay_in_band ... FAILED
+test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... ok
+test refuses_unsupported_oracle_source_bad_market_and_bad_oracle ... ok
+test init_guard_requires_the_velocity_user_authority ... ok
+test refuses_when_another_spot_market_holds_a_borrow ... FAILED
+test refuses_when_equity_is_not_positive ... ok
+
+failures:
+
+---- g6_refuses_limit_order_whose_oracle_offset_is_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent HPUkC9NGhT1TZUZChSvWL4HGA1UAGcXdBdH7cS6jUVye
+[G6 limit with out-of-band offset] FAILED InstructionError(1, Custom(6191))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P invoke [2]
+    Program log: Instruction: PlacePerpOrder
+    Program log: Limit order price must be 0 for taker oracle offset order
+    Program log: AnchorError occurred. Error Code: InvalidOrderLimitPrice. Error Number: 6191. Error Message: InvalidOrderLimitPrice.
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P failed: custom program error: 0x182f
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x182f
+
+thread 'g6_refuses_limit_order_whose_oracle_offset_is_outside_band' (132816141) panicked at tests/limits.rs:666:5:
+assertion `left == right` failed: wrong error code
+  left: 6191
+ right: 6007
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- g6_refuses_oracle_order_with_a_far_price_field stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent 96h99b6jUh6JzToEX7ktS31jjpU146fyaZtSaMLPZuy5
+[G6 oracle order with price $50] FAILED InstructionError(1, Custom(6191))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P invoke [2]
+    Program log: Instruction: PlacePerpOrder
+    Program log: Updating auction start price to -728475
+    Program log: Updating auction end price to -500000
+    Program log: Updating auction duration to 15
+    Program log: Oracle order can not have a price
+    Program log: AnchorError occurred. Error Code: InvalidOrderLimitPrice. Error Number: 6191. Error Message: InvalidOrderLimitPrice.
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P failed: custom program error: 0x182f
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x182f
+
+thread 'g6_refuses_oracle_order_with_a_far_price_field' (132816145) panicked at tests/limits.rs:683:5:
+assertion `left == right` failed: wrong error code
+  left: 6191
+ right: 6007
+
+---- g9_exit_price_must_stay_in_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent FrenB9LkScKZbSWQK95X3WwDhGg3drBrR7N1fQqAriWU
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] OK
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAFoisrLigf+L6FPiLvHBU2Fj47qXB7Pj0yR5JYNE+X8UgEBAAAAAQABAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGiKysuKB/4voU+Iu8cFTYWPjupcHs+PTJHklg0T5fxS2g5EHwAAAACgIHEFAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAAAAQAAANoAAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+[flow: sells into the agent's bid] OK
+    Program log: Updating auction start price to 91369051
+    Program log: Updating auction end price to 91300000
+    Program log: Updating auction duration to 5
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAEVl4A/JJXo+HPx6vHAnYw9TfPkwXOX5H0Y6fUqZMRFawEBAAAAAQEBABCl1OgAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAABWXgD8klej4c/Hq8cCdjD1N8+TBc5fkfRjp9SpkxEVr3A5EHwAAAACgIHEFAAAAAAAQpdToAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZC5yBQAAAACgIHEFAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAABAQEAAAEAAAAACtwAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIGAAABARWXgD8klej4c/Hq8cCdjD1N8+TBc5fkfRjp9SpkxEVrAQAAAAAAAAAAAQ+sAAAAAAAAASAJxhUAAAAAAbAd/QEAAAAAAVaCAAAAAAAAAAABrhYAAAAAAAAAARWXgD8klej4c/Hq8cCdjD1N8+TBc5fkfRjp9SpkxEVrAQEAAAABAQEAEKXU6AAAAAEgCcYVAAAAAAGwHf0BAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAIHAAABARWXgD8klej4c/Hq8cCdjD1N8+TBc5fkfRjp9SpkxEVrAQAAAAAAAAAAARCsAAAAAAAAAQBlzR0AAAAAAVCQuAIAAAAAAVKyAAAAAAAAAAABU2L///////8AARWXgD8klej4c/Hq8cCdjD1N8+TBc5fkfRjp9SpkxEVrAQEAAAABAQEAEKXU6AAAAAEgbpMzAAAAAAEArrUEAAAAAAAAAAAAADCAcgUAAAAAAAAAAAAAAAA=
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+    Program log: Invalid Perp 0 MM Oracle: Stale for Margin (oracle_delay=6126387)
+    Program log: Invalid Perp 0 MM Oracle: Stale (oracle_delay=6126387), (stale_for_amm_immediate=true, stale_for_amm_low_risk=true, stale_for_margin=true)
+[exit 12.5% under the oracle] OK
+    Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 1000000000)
+    Program log: Updating auction start price to 91202221
+    Program log: Updating auction end price to 80000000
+    Program log: Updating auction duration to 180
+    Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFoisrLigf+L6FPiLvHBU2Fj47qXB7Pj0yR5JYNE+X8UgECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+    Program log: aBNAOFkVAlowCQFrAAAAAGiKysuKB/4voU+Iu8cFTYWPjupcHs+PTJHklg0T5fxS3g5EHwAAAAAAtMQEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtqJvBQAAAAAAtMQEAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAEBAAAAtN4AAAAAAAA=
+    Program log: guard: order accepted, size 1000000000 market 0
+
+thread 'g9_exit_price_must_stay_in_band' (132816159) panicked at src/lib.rs:621:18:
+expected a refusal, got success. logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: guard: G9 exit (reduce-only, opposite to a 1000000000 position, size 1000000000)
+Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P invoke [2]
+Program log: Instruction: PlacePerpOrder
+Program log: Updating auction start price to 91202221
+Program log: Updating auction end price to 80000000
+Program log: Updating auction duration to 180
+Program log: 4DRDR8LtbQEwCQFrAAAAAAAAAAABAAAAAAAAAAAAAAFoisrLigf+L6FPiLvHBU2Fj47qXB7Pj0yR5JYNE+X8UgECAAAAAQEBAMqaOwAAAAABAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAwgHIFAAAAAAAAAAAAAAAA
+Program log: aBNAOFkVAlowCQFrAAAAAGiKysuKB/4voU+Iu8cFTYWPjupcHs+PTJHklg0T5fxS3g5EHwAAAAAAtMQEAAAAAADKmjsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtqJvBQAAAAAAtMQEAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAABAQEAAAEBAAAAtN4AAAAAAAA=
+Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P consumed 25247 of 1389280 compute units
+Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P success
+Program data: XkIxKchhcfoYnRK457w97hY6yPkEEt1Tgb026ADx38f0lAb8W4r1/QEJAAABAMqaOwAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+Program log: guard: order accepted, size 1000000000 market 0
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 38652 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy success
+
+---- refuses_when_another_spot_market_holds_a_borrow stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+    Program log: guard created: agent Dv6VTGL4UfQxig26W6q5Q5tbwXF2AtL2Ht2y6GDCUtCT
+[borrow in spot market 1] FAILED InstructionError(1, Custom(6087))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P invoke [2]
+    Program log: Instruction: PlacePerpOrder
+    Program log: Could not find spot market 1 at programs/velocity/src/math/margin.rs:390
+    Program log: AnchorError occurred. Error Code: SpotMarketNotFound. Error Number: 6087. Error Message: SpotMarketNotFound.
+    Program vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P failed: custom program error: 0x17c7
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x17c7
+
+thread 'refuses_when_another_spot_market_holds_a_borrow' (132816165) panicked at tests/limits.rs:775:5:
+assertion `left == right` failed: wrong error code
+  left: 6087
+ right: 6022
+
+
+failures:
+    g6_refuses_limit_order_whose_oracle_offset_is_outside_band
+    g6_refuses_oracle_order_with_a_far_price_field
+    g9_exit_price_must_stay_in_band
+    refuses_when_another_spot_market_holds_a_borrow
+
+test result: FAILED. 34 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
