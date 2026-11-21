@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
-import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed } from "../render.js";
+import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed, explorerUrl, link } from "../render.js";
 
 const GUARD = "ihYBqnzinaqysQcbmYetzXkVAVDXM7wWkYr1xWRGZVU";
 const OTHER_GUARD = "DsDm2DK29TXgaDMmj8ZdmZ6qGeTmNRnn9V567LvaHyCt";
@@ -137,4 +137,26 @@ test("the agent feed renders the model's words as text and pairs orders with cha
   assert.equal(joined.get(feed.turns[0]).slot, 10n);
   assert.equal(joinAgentFeed(feed.turns, [chain[0]]), null, "count mismatch: no join");
   assert.equal(joinAgentFeed(feed.turns, [{ slot: 1n, accepted: true }, { slot: 2n, accepted: true }]), null, "verdict mismatch: no join");
+});
+
+test("explorer links: only base58 values, only devnet or mainnet, only explorer.solana.com, opened with noopener", () => {
+  const sig = "5x".padEnd(88, "A");
+  assert.equal(explorerUrl("tx", sig, "devnet"), `https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+  assert.equal(explorerUrl("tx", HOSTILE, "devnet"), null, "hostile value");
+  assert.equal(explorerUrl("tx", "javascript:alert(1)", "devnet"), null);
+  assert.equal(explorerUrl("tx", sig, "evil"), null, "unknown cluster");
+  assert.equal(explorerUrl("script", sig, "devnet"), null, "unknown kind");
+  assert.equal(explorerUrl("tx", sig, null), null, "local validator: no link");
+  const bad = link(doc, "javascript:alert(1)", "x");
+  assert.equal(bad.tag, "span", "a non-explorer url renders as text");
+  const good = link(doc, explorerUrl("address", GUARD, "devnet"), "guard");
+  assert.equal(good.tag, "a");
+  assert.equal(good.rel, "noopener noreferrer");
+  assert.equal(good.target, "_blank");
+  const feed = new El("div");
+  renderFeed(doc, feed, [{ slot: 1n, accepted: false, rule: 1, reason: 6000, direction: 0, size: 1n, reduceOnly: false, value: 1n, cap: 1n, signature: HOSTILE }], "devnet");
+  const anchors = [];
+  const walk = (e) => { if (e.tag === "a") anchors.push(e); (e.children ?? []).forEach(walk); };
+  walk(feed);
+  assert.equal(anchors.length, 0, "no link for a hostile signature");
 });

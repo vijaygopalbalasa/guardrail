@@ -177,5 +177,7 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
     }
     for (const e of txCache.get(s.signature)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
   }
-  return { guard, velocity, decisions };
+  let slot = null;
+  try { slot = await rpc(url, "getSlot", [{ commitment: "confirmed" }]); } catch { /* shown without a slot */ }
+  return { guard, velocity, decisions, slot };
 }

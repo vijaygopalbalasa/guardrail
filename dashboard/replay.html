@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guardrail Replay</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%222%22 y=%222%22 width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%232a78d6%22/%3E%3Crect x=%222%22 y=%226%22 width=%2212%22 height=%222%22 fill=%22%23fcfcfb%22/%3E%3C/svg%3E">
-<link rel="stylesheet" href="./style.css?v=15">
+<link rel="stylesheet" href="./style.css?v=19">
 </head>
 <body>
 <div class="wrap">
@@ -18,30 +18,41 @@
   </div>
   <h1 class="hero" id="hero">The agent tried to double a losing long.</h1>
   <p class="hero-note"><span class="replay-tag">Replay</span><span id="label"></span></p>
-  <div class="controls">
-    <button class="play" id="play" type="button">Play</button>
-    <input id="step" type="range" min="0" max="13" value="0" aria-label="Replay step">
-    <span id="stepn" class="stepn"></span>
-    <label class="note" for="right">Compare with</label>
-    <select id="right"></select>
+  <div class="sticky-bar">
+    <div class="final-strip" id="final"></div>
+    <div class="controls">
+      <button class="play" id="play" type="button">Play</button>
+      <input id="step" type="range" min="0" max="13" value="0" aria-label="Replay step">
+      <span id="stepn" class="stepn"></span>
+      <label class="note" for="right">Compare with</label>
+      <select id="right"></select>
+    </div>
   </div>
-  <section class="card" style="margin-bottom:16px">
-    <h2>SOL price</h2>
-    <p class="h2-sub">Written by the test each step, falling 1% a step. Both runs see the same prices.</p>
-    <div class="chart" id="price"></div>
-  </section>
-  <div class="legend" aria-hidden="true">
-    <span><span class="key un"></span>unguarded position</span>
-    <span><span class="key gu"></span>guarded position</span>
+  <div class="charts-row">
+    <section class="card">
+      <h2>SOL price</h2>
+      <p class="h2-sub">Written by the test each step, falling 1% a step. Both runs see the same prices.</p>
+      <div class="chart" id="price"></div>
+    </section>
+    <section class="card">
+      <h2>Equity lost, % of the 1,000 dUSDT account</h2>
+      <p class="h2-sub" id="loss-sub">Unguarded and the guarded run you compare, on one axis.</p>
+      <div class="chart" id="loss"></div>
+    </section>
+  </div>
+  <div class="legend">
+    <span><span class="key un"></span>unguarded</span>
+    <span><span class="key gu"></span>guarded</span>
     <span><span class="capk"></span>exposure cap (G4)</span>
-    <span><span class="tick"></span>a step with refused orders</span>
+    <span><span class="tick"></span>a step with refused orders (the count shows at the current step)</span>
   </div>
   <div class="cols">
     <section class="card" id="left"></section>
     <section class="card" id="rightp"></section>
   </div>
-  <p class="note" id="agent" style="margin-top:16px"></p>
+  <p class="note final-note" id="final-note"></p>
+  <p class="note" id="agent" style="margin-top:12px"></p>
 </div>
-<script type="module" src="./replay.js?v=15"></script>
+<script type="module" src="./replay.js?v=19"></script>
 </body>
 </html>

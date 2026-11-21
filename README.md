@@ -2,7 +2,7 @@
 
 **"My AI trading bot blew up my account overnight."**
 
-![The same runaway agent, unguarded and guarded, on Velocity's real program](docs/replay.png)
+![Equity lost by the same runaway agent on a falling SOL price: 41.2% unguarded, 9.4% through Guardrail (replay on Velocity's real program)](docs/replay.png)
 
 The same runaway agent on a 12% fall loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
 random price paths loses the same median (1.1%) either way, 26.6% vs 22.6% on its worst path, with **0 limit
@@ -17,7 +17,8 @@ it, every order is checked on chain against limits the owner set, and a refused 
 Live on Solana devnet: program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet),
 with guarded agents' accepted orders and refusals on chain: `notes/devnet-receipts.md`.
 
-Caveat on this first screen: devnet and local only, no real users. The guard wraps Velocity's `place_perp_order` and
+Caveat on this first screen: devnet only. Reviewed by an independent audit pass, not a professional firm. The owner
+can always trade directly or remove the delegate. No real users yet. The guard wraps Velocity's `place_perp_order` and
 `cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
 is a missing feature, not a bypass, because the agent's key has no direct path to the account.
 

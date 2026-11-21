@@ -101,3 +101,12 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - Replay: the headline guarded run now carries G10 at 50 dUSDT: refusals 55 G1, 30 G4, 20 G10; worst loss unchanged at
   9.4% (the position was already capped at 10 SOL). With only G10 tight (20 dUSDT): 98 G10 refusals, 14.0% vs 41.2%.
   The brake stops new risk; it does not close a held position.
+
+## Round 7 (Nov 21): G10 baseline at the guard's first call of the day
+
+- Red: `g10_an_exit_first_day_starts_the_count_at_that_exit` and `g10_a_cancel_first_day_starts_the_count_at_that_cancel`
+  failed (notes/red-g10-first-call.txt): with an exit or a cancel first, the baseline was only taken later, after the
+  price had fallen, so the loss before it was not counted.
+- Fix: place_perp_order and cancel_order both take the day's baseline first, when every price they need is present and
+  fresh; it never fails the call (with a stale or missing price the next call tries again). Plant caught
+  (notes/planted-bug-r7.txt). Devnet upgraded in place, bytes verified (notes/devnet-guard-so.sha256).
