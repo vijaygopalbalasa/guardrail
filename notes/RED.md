@@ -44,3 +44,20 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - Planted bugs: 29 plants, all caught (notes/planted-bug-run.txt). The script now aborts if a plant site is not
   unique; an earlier run had two plants silently not applied because a refactor duplicated their text.
 - Full suite including client, MCP and dashboard on a local validator: notes/test-all-run.txt.
+
+## Round 4 (2026-11-21): security audit fixes (guardrail-audit-nov21.md)
+- Red: the reviewer's probes ported as `tests-litesvm/tests/audit.rs` (9 tests) plus two updated limit tests; all
+  failed before the fix (notes/red5-run.txt).
+- F1 (High): Oracle orders without an offset are refused (no worst price); the stale-exit rule no longer exempts
+  Oracle orders; after the CPI the guard re-reads the order Velocity stored (price, offset, auction prices, including
+  auction prices Velocity generates) and fails the transaction if any can execute outside the band on the owner's
+  unfavourable side. The reviewer's +7% fill is now impossible (`f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`).
+- F2 (Medium): exits keep G2 (allowed markets and order types); they skip only the pause and G1/G3/G4/G5.
+- F3 (Medium): the agent can cancel only orders the guard placed, by id (the guard records placed order ids);
+  cancel-all and cancels of the owner's orders are recorded refusals; every cancel emits CancelChecked and is counted.
+- F4 (Low): an exit counts the reduce-only orders already resting on its side.
+- INFO: owner-set order lifetime (max_ts bound) and a last refusal kept per rule.
+- Green: audit 9, limits 47, probes 2, replays 2, math and unit tests 12, client, MCP, demo and dashboard tests.
+- Plants: 39 of 40 caught. The one not caught by the replay tests is the post-CPI stored-order check itself: every
+  order that would reach it is already refused by the pre-check, so it is defense in depth; the stored-order rule is
+  covered by unit tests on the audit's real stored orders, and its plant is caught there.

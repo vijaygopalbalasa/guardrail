@@ -17,20 +17,27 @@ export const DEMO_LIMITS = {
   exitMaxStalenessSlots: 2_000_000n,
 };
 
+/**
+ * Devnet: Velocity's devnet oracle is weeks old, so the order staleness limit is set very loose there (it is a
+ * property of devnet, stated in the receipts), and the accounts are funded with small amounts of real devnet SOL.
+ */
+export const DEVNET = process.env.DEMO_NETWORK === "devnet";
+const LIMITS = DEVNET ? { ...DEMO_LIMITS, maxOracleStalenessSlots: 100_000_000n, exitMaxStalenessSlots: 100_000_000n } : DEMO_LIMITS;
+
 export async function setupDemo(rpc = "http://127.0.0.1:8999") {
   const conn = new Connection(rpc, "confirmed");
   const dev = key("dev");
   const owner = Keypair.generate();
   const agent = Keypair.generate();
-  await fund(conn, dev, owner.publicKey, 5_000_000_000);
-  await fund(conn, dev, agent.publicKey, 1_000_000_000);
+  await fund(conn, dev, owner.publicKey, DEVNET ? 90_000_000 : 5_000_000_000);
+  await fund(conn, dev, agent.publicKey, DEVNET ? 20_000_000 : 1_000_000_000);
   await setupVelocityAccount(conn, owner, 1_000);
-  const { guard } = await new GuardrailClient(conn).initGuard(owner, agent.publicKey, DEMO_LIMITS);
+  const { guard, signature: initSig } = await new GuardrailClient(conn).initGuard(owner, agent.publicKey, LIMITS);
   const dir = fileURLToPath(new URL("../out/", import.meta.url));
   mkdirSync(dir, { recursive: true });
   const agentPath = `${dir}demo-agent-${agent.publicKey.toBase58().slice(0, 8)}.json`;
   writeFileSync(agentPath, JSON.stringify([...agent.secretKey]), { mode: 0o600 });
-  return { rpc, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath };
+  return { rpc, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath, initSig };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
