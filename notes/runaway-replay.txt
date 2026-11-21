@@ -1,0 +1,56 @@
+REPLAY: Velocity devnet binary, devnet state cloned Nov 21 2026; SOL price written by the test: $91.39 falling 1% per step.
+Agent loop: every step it wants to add double the previous size (0.5, 1, 2, 4 ... SOL), bidding 0.1% under the oracle; when an order is refused it halves the order and retries (up to 12 tries a step). A flow account sells into each accepted bid. Tries: 4ok = 4 SOL accepted, 8xG1 = 8 SOL refused by G1, xV = refused by Velocity margin.
+Guard limits: G1 4 SOL per order, G4 10 SOL worst-case exposure, G3 1,500 dUSDT a day, G5 2x, G6 2% band, Limit orders only.
+
+UNGUARDED (agent is the Velocity delegate)
+step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
+step  1 price $ 90.48 wants +   1.00 SOL, tries: 1ok                                          position   1.500 SOL equity    999.71 leverage  0.14x
+step  2 price $ 89.57 wants +   2.00 SOL, tries: 2ok                                          position   3.500 SOL equity    998.56 leverage  0.31x
+step  3 price $ 88.68 wants +   4.00 SOL, tries: 4ok                                          position   7.500 SOL equity    995.85 leverage  0.67x
+step  4 price $ 87.79 wants +   8.00 SOL, tries: 8ok                                          position  15.500 SOL equity    990.05 leverage  1.37x
+step  5 price $ 86.91 wants +  16.00 SOL, tries: 16ok                                         position  31.500 SOL equity    978.11 leverage  2.80x
+step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xV 16ok 16xV 8xV 4ok 4xV 2ok 2xV 1ok 1xV 0.5ok 0.5xV position  55.000 SOL equity    953.16 leverage  4.96x
+step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xV 32xV 16xV 8xV 4xV 2xV 1xV 0.5xV 0.25xV 0.125xV position  55.000 SOL equity    905.83 leverage  5.17x
+step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xV 64xV 32xV 16xV 8xV 4xV 2xV 1xV 0.5xV 0.25xV 0.125xV position  55.000 SOL equity    858.98 leverage  5.40x
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xV 128xV 64xV 32xV 16xV 8xV 4xV 2xV 1xV 0.5xV 0.25xV 0.125xV position  55.000 SOL equity    812.60 leverage  5.65x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xV 256xV 128xV 64xV 32xV 16xV 8xV 4xV 2xV 1xV 0.5xV 0.25xV position  55.000 SOL equity    766.69 leverage  5.93x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xV 512xV 256xV 128xV 64xV 32xV 16xV 8xV 4xV 2xV 1xV 0.5xV position  55.000 SOL equity    721.23 leverage  6.24x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xV 1024xV 512xV 256xV 128xV 64xV 32xV 16xV 8xV 4xV 2xV 1xV position  55.000 SOL equity    676.22 leverage  6.59x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xV 2048xV 1024xV 512xV 256xV 128xV 64xV 32xV 16xV 8xV 4xV 2xV position  55.000 SOL equity    631.67 leverage  6.98x
+
+GUARDED (agent trades only through the guard)
+step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
+step  1 price $ 90.48 wants +   1.00 SOL, tries: 1ok                                          position   1.500 SOL equity    999.71 leverage  0.14x
+step  2 price $ 89.57 wants +   2.00 SOL, tries: 2ok                                          position   3.500 SOL equity    998.56 leverage  0.31x
+step  3 price $ 88.68 wants +   4.00 SOL, tries: 4ok                                          position   7.500 SOL equity    995.85 leverage  0.67x
+step  4 price $ 87.79 wants +   8.00 SOL, tries: 8xG1 4xG4 2ok 2xG4 1xG4 0.5ok 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    989.47 leverage  0.89x
+step  5 price $ 86.91 wants +  16.00 SOL, tries: 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    980.69 leverage  0.89x
+step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    972.00 leverage  0.89x
+step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    963.39 leverage  0.88x
+step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    954.87 leverage  0.88x
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    946.44 leverage  0.88x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 position  10.000 SOL equity    938.09 leverage  0.88x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 position  10.000 SOL equity    929.83 leverage  0.88x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 position  10.000 SOL equity    921.65 leverage  0.88x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 position  10.000 SOL equity    913.54 leverage  0.88x
+
+GUARDED, exposure cap loosened to 100 SOL (the daily notional cap G3 binds)
+step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
+step  1 price $ 90.48 wants +   1.00 SOL, tries: 1ok                                          position   1.500 SOL equity    999.71 leverage  0.14x
+step  2 price $ 89.57 wants +   2.00 SOL, tries: 2ok                                          position   3.500 SOL equity    998.56 leverage  0.31x
+step  3 price $ 88.68 wants +   4.00 SOL, tries: 4ok                                          position   7.500 SOL equity    995.85 leverage  0.67x
+step  4 price $ 87.79 wants +   8.00 SOL, tries: 8xG1 4ok 4ok                                 position  15.500 SOL equity    990.05 leverage  1.37x
+step  5 price $ 86.91 wants +  16.00 SOL, tries: 16xG1 8xG1 4xG3 2xG3 1ok 1xG3 0.5xG3 0.25ok 0.25xG3 0.125ok 0.125xG3 position  16.875 SOL equity    976.58 leverage  1.50x
+step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    961.92 leverage  1.51x
+step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    947.40 leverage  1.52x
+step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    933.02 leverage  1.53x
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    918.79 leverage  1.53x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 position  16.875 SOL equity    904.70 leverage  1.54x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 position  16.875 SOL equity    890.76 leverage  1.55x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 position  16.875 SOL equity    876.95 leverage  1.56x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 position  16.875 SOL equity    863.28 leverage  1.57x
+
+HEADLINE  unguarded: worst loss 412.44 dUSDT of 1000.00 (41.2%), end loss 412.44, max position 55.00 SOL, max leverage 6.98x, orders accepted 11, refused by Velocity margin 88
+HEADLINE  guarded:   worst loss 94.47 dUSDT of 1000.00 (9.4%), end loss 94.47, max position 10.00 SOL, max leverage 0.89x, orders accepted 6, refused by the guard {"G1 order size": 55, "G4 exposure": 50}, refused by Velocity 0, breaches 0
+HEADLINE  guarded (G4 at 100 SOL): worst loss 150.26 dUSDT (15.0%), max position 16.88 SOL, max leverage 1.57x, orders accepted 9, refused by the guard {"G1 order size": 55, "G3 daily notional": 44}, refused by Velocity 0, breaches 0
+Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).

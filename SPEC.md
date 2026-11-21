@@ -19,10 +19,13 @@ with the reason. The owner keeps full control (trade directly, change limits, re
   position + all open orders on that market's side + this order (read from the Velocity User account before the CPI:
   perp positions at offset 424, 80 bytes each, base_asset_amount at +8; use the position's open bid/ask totals if the
   struct has them, otherwise sum the 32 order slots). Refuse if it exceeds the cap.
-- G5 leverage cap on the same worst-case exposure: (worst-case notional at the oracle price) / collateral; refuse above.
-- G6 price band: limit prices and oracle offsets must stay within N bps of the oracle price.
+- G5 (fail closed on borrows: refuse risk-increasing orders if any non-quote spot balance is non-zero or quote is negative)
+  leverage cap on the same worst-case exposure: (worst-case notional at the oracle price) / collateral; refuse above.
+- G6 price band: EVERY price-bearing field (limit price, oracle offset applied to the oracle, auction start/end) must
+  stay within N bps of the oracle price, whatever the order type; stale oracle refused. Applies to exits too.
 - G7 owner-only: set or change limits, rotate or revoke the agent, pause; the agent can never change limits.
-- G9 cancels and reduce-only orders are ALWAYS allowed (a guard must never trap an agent in a losing position); test it.
+- G9 exits (reduce-only, opposing, size <= |position|) skip pause and caps G1/G3/G4/G5 but NOT the G6 band or staleness;
+  cancels are ALWAYS allowed (a guard must never trap an agent in a losing position); test it.
 - G0 setup safety: init_guard requires the Velocity User's authority == the signing owner (no PDA squatting); the agent
   check lives in the account constraints (agent set and equal to the signer).
 - G8 withdraw is impossible through the guard (no such instruction; Velocity Withdraw is has_one = authority).
