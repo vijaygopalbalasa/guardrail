@@ -1,15 +1,35 @@
 # Devnet receipts
 
-Guardrail's guard program on Solana devnet, with the fixed code (audit findings F1 to F4, then the R5 review: order lifetime and placed order ids).
+Guardrail's guard program on Solana devnet, with the fixed code (audit rounds 1 and 2 and the reviews in notes/RED.md).
+Guards created before an upgrade that grew the Guard account are kept here as history; they can no longer trade.
 Velocity's devnet oracle is weeks old, so orders rest on Velocity devnet and do not fill; the demo guards use a loose
 staleness limit for that reason. Fills at moving prices are shown on a local surfpool fork (see the README).
 
 - Program: [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet) (sha256 of the deployed bytes in notes/devnet-guard-so.sha256)
-- Deploy: [P6hr1PaMyMvV6DNZ...](https://explorer.solana.com/tx/P6hr1PaMyMvV6DNZNJyT4NEi3RzbkqouUodY3ShrffjNSHuidXthL81WmshkHU7mfHi27PeZczravpPPVSkYZnr?cluster=devnet) (upgrade in place, Nov 21: G10 baseline at the first call of the day; same program id)
-- Earlier upgrades: G10 [664VGAmNMAg67SuM...](https://explorer.solana.com/tx/664VGAmNMAg67SuM7KT4rJEGZphonZCCVNSuYYaSP9wK6SXKgpSk4iwZ2kpTpK8ReRYNwzgekpGPXLb7jwm8rFgi?cluster=devnet), R5 fixes [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet)
+- Deploy: [53pydz8dEqPa12xx...](https://explorer.solana.com/tx/53pydz8dEqPa12xxVRHmLSURHDoF6MZCYXRHvn7HG2qmRbLQTWzBEjE9UhcKQ5KNg8YENY2qmpRUGpT8c3ng2s2C?cluster=devnet) (upgrade in place after audit round 2, Nov 21; same program id)
+- Earlier upgrades: first-call baseline [P6hr1PaMyMvV6DNZ...](https://explorer.solana.com/tx/P6hr1PaMyMvV6DNZNJyT4NEi3RzbkqouUodY3ShrffjNSHuidXthL81WmshkHU7mfHi27PeZczravpPPVSkYZnr?cluster=devnet), G10 [664VGAmNMAg67SuM...](https://explorer.solana.com/tx/664VGAmNMAg67SuM7KT4rJEGZphonZCCVNSuYYaSP9wK6SXKgpSk4iwZ2kpTpK8ReRYNwzgekpGPXLb7jwm8rFgi?cluster=devnet), R5 fixes [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet)
 - First deploy with the audit fixes: [4c2TQWreEgks7ocw...](https://explorer.solana.com/tx/4c2TQWreEgks7ocw9fr8Hkd2dggPtvoLeAJupWBYTw5yHszuR96ENoPdGXvR7CzpqcexxjCrVxJ3Www2n2CxnTZC?cluster=devnet)
 
-## Guard 4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6 (language-model agent, current program)
+## Guard HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS (language-model agent, current program)
+
+- Guard account: [HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS](https://explorer.solana.com/address/HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS?cluster=devnet); owner 6RUGGjBn2ukgJz2AArmSGy2iJyK3NxNYpk2MwsmeK6Qa
+- init_guard + delegate: [35So5guzQoQXt1tu...](https://explorer.solana.com/tx/35So5guzQoQXt1tuttakZiQ1QKDhATsBUEmyPXU4vXYj3wuSQF3qiWQSoxjaNCLTcSPTvoT2upYfzMfmKLUSBrdx?cluster=devnet)
+- refused by G1 order size (OrderTooLarge): [2aAo16cBhBBTZo2i...](https://explorer.solana.com/tx/2aAo16cBhBBTZo2iZC99Dvft1iHgsmoWNVCeQrUd6mqCbFSE1bBCyZuz1bJoLUBi53oHrbiAhzS272sJX5gwYcGV?cluster=devnet)
+- accepted order: [2wssxLyA9vMgSpk7...](https://explorer.solana.com/tx/2wssxLyA9vMgSpk7bBvMWG9Kegixo5ZUc5F1YDMExVLmrLRmTAbTN8GmZfCukMBjuRrST6NRnQsEi49VVvYJRVH7?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded): [5jUcyfq8grHbYCvq...](https://explorer.solana.com/tx/5jUcyfq8grHbYCvq5vbvMdoqBsfod3Dxts9jthnXD81PgjJKn2xwh2JMiuCBwwJAJgn9igBUWfWH7rq67USvw9Sc?cluster=devnet)
+
+## Guard J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb (runaway agent, current program)
+
+- Guard account: [J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb](https://explorer.solana.com/address/J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb?cluster=devnet); owner 7QPUUqz8EBHhoWoUbifXBVdehyauaWsLDCH2ZzxKhoEU
+- init_guard + delegate: [3BsrSpmeQF86qDMC...](https://explorer.solana.com/tx/3BsrSpmeQF86qDMCoMKuynH57PkUKCgYEPYjv2XbdnBLLyHsX4dj6Qe6Ti61NZ9L4fBhDQG1FdmhUKtjHvz1WzGr?cluster=devnet)
+- accepted order: [XvdjZLGgvMJkyXDJ...](https://explorer.solana.com/tx/XvdjZLGgvMJkyXDJZVozDcxo3RvZ7uK3obQyeyq1fcEr8YTvZjAHw2jRsAvfKjq44NsY4nJCf7Xn1y2iBhKRZfL?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded): [3j3LapDchu6Ek27u...](https://explorer.solana.com/tx/3j3LapDchu6Ek27uw5WvWBA5RoU8S4pbWoTTN2ZaVwAVrL15Uqkv1x1i28S2yuC8oSCGz11omwX14RVWGxJ4Cofm?cluster=devnet)
+- cancel of a guard-placed order: [mLQcoM1QfnmBGQXz...](https://explorer.solana.com/tx/mLQcoM1QfnmBGQXzmvpQEdUcwP9pCv7MSn9JVpvuM5W9NxZfUKxBZrhS8uiaQLn3vrBktDUenaW6PjnAW2v6p5G?cluster=devnet)
+- refused by G1 order size (OrderTooLarge): [4bJVdAXpc5ZMVePP...](https://explorer.solana.com/tx/4bJVdAXpc5ZMVePPJ4qXJr9Guc3doHoDceHnNHYu9KpfpGYLt9q6qdKvevicEstsmxRpvFhF1WKyqntJKkPi58Uw?cluster=devnet)
+- refused by G3 daily notional (DailyNotionalExceeded): [3Pd8hKa7hLf2L635...](https://explorer.solana.com/tx/3Pd8hKa7hLf2L635pk9U6gngstnSY9DUCiLN3cy2o5rpWqCiy6us1kP7UFmMA9ZX66FU6uDvM9HTy7QmQzSYP8QP?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand): [2sw8PxEAL9Vk2pkf...](https://explorer.solana.com/tx/2sw8PxEAL9Vk2pkfbiUbp4njpPF7GbA58issn6Kt32eMFQBZMM9frrbkscEjCvDiJEfSSwxJm73BwtXPio9wY1Hj?cluster=devnet)
+
+## Guard 4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6 (language-model agent, after the G10 upgrade)
 
 - Guard account: [4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6](https://explorer.solana.com/address/4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6?cluster=devnet); owner DSQHLMYr6diFQ14jDfmK5FADZb8bh3raHyvy1CAcPGRC
 - init_guard + delegate: [5WeMKXQmbhFHHC9z...](https://explorer.solana.com/tx/5WeMKXQmbhFHHC9zS6Y8gJqkPrnn9SxxExNQcEZWLMmRfEzLnmJ1Me3S2E9BWQmRjHdW4nTEB3vHyUYejXoSSjwj?cluster=devnet)
@@ -17,7 +37,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - accepted order: [4ffUA5jfmcXwCvDA...](https://explorer.solana.com/tx/4ffUA5jfmcXwCvDAZALHYydg9LFYrXc4qPHZ1at3bYwgqwYaux6dEvu1n2mE3hyUGL9i6tzM8Mzrwt4813AjTWYP?cluster=devnet)
 - refused by G4 exposure (ExposureExceeded): [3dX8o9rK6KDftjj6...](https://explorer.solana.com/tx/3dX8o9rK6KDftjj6PCDQnRfgMRTTZQ8dsyNBhPgiymqTN22CseGuwhKn8ps2MMdRxK2PLBzteA2mmmQTThnEA9aT?cluster=devnet)
 
-## Guard HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM (runaway agent, G10 set to 50 dUSDT a day)
+## Guard HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM (runaway agent, after the G10 upgrade)
 
 - Guard account: [HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM](https://explorer.solana.com/address/HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM?cluster=devnet); owner 82mnXnUarcheQHgknMG3uYGwxJ7ghQN1L7VrS8BqdRhX
 - init_guard + delegate: [268B2cxLEeABm4mt...](https://explorer.solana.com/tx/268B2cxLEeABm4mtPWiLEQDtCNrxmX9nhpSDcAsCtqpo44KMpAHBwecvsSRnj2gzqA1zmEpd3FMTgiP7QK73j3QQ?cluster=devnet)
