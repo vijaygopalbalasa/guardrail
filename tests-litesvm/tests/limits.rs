@@ -892,3 +892,108 @@ fn accepted_orders_and_exits_count_and_real_errors_record_nothing() {
     let after = env.guard_state(&g);
     assert_eq!((after.accepted_count, after.refused), (before.accepted_count, before.refused), "a failed transaction records nothing");
 }
+
+// ------------------------------------------------------------------ exits with a very stale oracle: owner-favourable side only
+
+/// Gives the guarded account a short position of `size` through a real fill (agent ask lifted by a flow account).
+fn open_short(env: &mut Env, g: &Guarded, size: u64) {
+    let flow = env.trader("flow-s", 1_000_000);
+    assert_ok(&env.gplace("agent: ask to open a short", g, Order::resting(1, size, 91_500_000)));
+    env.step(2, P0);
+    let got = env.cross("flow: buys the agent's ask", &flow, g, 0, 1_000 * BASE, 91_500_000);
+    assert_eq!(got, -(size as i64), "the agent's ask filled in full");
+    env.step(2, P0);
+}
+
+fn stale_exit_setup(short: bool) -> (Env, Guarded) {
+    let mut l = Limits::loose();
+    l.price_band_bps = 200;
+    l.max_oracle_staleness_slots = 10;
+    l.exit_max_staleness_slots = 50;
+    let (mut env, g) = setup(l);
+    if short { open_short(&mut env, &g, BASE) } else { open_long(&mut env, &g, BASE) }
+    env.step(1, P0); // oracle posted now at $91.39
+    env.advance(51); // older than exit_max_staleness_slots
+    (env, g)
+}
+
+#[test]
+fn stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed() {
+    let (mut env, g) = stale_exit_setup(false);
+    let mut bad = Order::resting(1, BASE, 91_000_000); // inside the 2% band, but below the last price
+    bad.reduce_only = true;
+    let r = env.gplace("stale exit SELL at 91.00 (below 91.39)", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::STALE_EXIT_UNFAVOURABLE, rule::G6);
+    let mut good = Order::resting(1, BASE, 91_390_000); // at the last price
+    good.reduce_only = true;
+    let r = env.gplace("stale exit SELL at 91.39", &g, good);
+    accepted(&env, &g, &r, &good, rule::G9);
+}
+
+#[test]
+fn stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed() {
+    let (mut env, g) = stale_exit_setup(true);
+    let mut bad = Order::resting(0, BASE, 91_800_000);
+    bad.reduce_only = true;
+    let r = env.gplace("stale exit BUY at 91.80 (above 91.39)", &g, bad);
+    refused(&env, &g, &r, &bad, gerr::STALE_EXIT_UNFAVOURABLE, rule::G6);
+    let mut good = Order::resting(0, BASE, 91_000_000);
+    good.reduce_only = true;
+    let r = env.gplace("stale exit BUY at 91.00", &g, good);
+    accepted(&env, &g, &r, &good, rule::G9);
+}
+
+#[test]
+fn stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction() {
+    let (mut env, g) = stale_exit_setup(false);
+    let mut mkt = Order::limit(1, BASE, 0);
+    mkt.order_type = 0;
+    mkt.reduce_only = true;
+    let r = env.gplace("stale exit market SELL with no price", &g, mkt);
+    refused(&env, &g, &r, &mkt, gerr::STALE_EXIT_UNFAVOURABLE, rule::G6);
+    let mut off = Order::limit(1, BASE, 0);
+    off.order_type = 4;
+    off.oracle_price_offset = Some(-100_000); // oracle - $0.10
+    off.reduce_only = true;
+    let r = env.gplace("stale exit oracle SELL at oracle - 0.10", &g, off);
+    refused(&env, &g, &r, &off, gerr::STALE_EXIT_UNFAVOURABLE, rule::G6);
+    let mut auc = Order::limit(1, BASE, 91_500_000);
+    auc.auction = Some((10, 91_800_000, 91_200_000)); // ends below the last price
+    auc.reduce_only = true;
+    let r = env.gplace("stale exit SELL with an auction ending at 91.20", &g, auc);
+    refused(&env, &g, &r, &auc, gerr::STALE_EXIT_UNFAVOURABLE, rule::G6);
+    let mut ok = auc;
+    ok.auction = Some((10, 91_800_000, 91_500_000));
+    let r = env.gplace("stale exit SELL with an auction ending at 91.50", &g, ok);
+    assert_ok(&r);
+    assert!(events(&r)[0].accepted, "favourable auction accepted");
+}
+
+#[test]
+fn moderately_stale_exit_still_uses_the_normal_band() {
+    // Older than max_oracle_staleness_slots but within exit_max_staleness_slots: the normal G6 band applies.
+    let mut l = Limits::loose();
+    l.price_band_bps = 200;
+    l.max_oracle_staleness_slots = 10;
+    l.exit_max_staleness_slots = 50;
+    let (mut env, g) = setup(l);
+    open_long(&mut env, &g, BASE);
+    env.step(1, P0);
+    env.advance(30);
+    let mut exit = Order::resting(1, BASE, 91_000_000); // below the last price, inside the band
+    exit.reduce_only = true;
+    let r = env.gplace("exit 30 slots stale at 91.00", &g, exit);
+    accepted(&env, &g, &r, &exit, rule::G9);
+}
+
+#[test]
+fn exit_staleness_limit_must_not_be_below_the_order_staleness_limit() {
+    let (mut env, g) = setup(Limits::loose());
+    let owner = g.owner.insecure_clone();
+    let mut l = Limits::loose();
+    l.max_oracle_staleness_slots = 100;
+    l.exit_max_staleness_slots = 99;
+    assert_code(&env.set_limits("exit staleness below order staleness", &g, &owner, &l), gerr::INVALID_LIMITS);
+    l.exit_max_staleness_slots = 100;
+    assert_ok(&env.set_limits("equal is fine", &g, &owner, &l));
+}

@@ -488,6 +488,7 @@ pub mod gerr {
     pub const BAD_ORACLE_ACCOUNT: u32 = 6023;
     pub const NON_POSITIVE_EQUITY: u32 = 6024;
     pub const INVALID_LIMITS: u32 = 6025;
+    pub const STALE_EXIT_UNFAVOURABLE: u32 = 6028;
 }
 
 pub mod rule {
@@ -516,6 +517,7 @@ pub struct Limits {
     pub max_leverage_bps: u32,
     pub price_band_bps: u32,
     pub max_oracle_staleness_slots: u64,
+    pub exit_max_staleness_slots: u64,
 }
 
 impl Limits {
@@ -531,6 +533,7 @@ impl Limits {
             max_leverage_bps: 1_000_000,
             price_band_bps: 10_000,
             max_oracle_staleness_slots: 1_000_000,
+            exit_max_staleness_slots: 2_000_000,
         }
     }
     pub fn bytes(&self) -> Vec<u8> {
@@ -544,6 +547,7 @@ impl Limits {
         d.extend_from_slice(&self.max_leverage_bps.to_le_bytes());
         d.extend_from_slice(&self.price_band_bps.to_le_bytes());
         d.extend_from_slice(&self.max_oracle_staleness_slots.to_le_bytes());
+        d.extend_from_slice(&self.exit_max_staleness_slots.to_le_bytes());
         d
     }
 }
@@ -773,8 +777,8 @@ impl Env {
     pub fn guard_state(&self, g: &Guarded) -> GuardState {
         let d = self.svm.get_account(&g.guard).expect("guard exists").data;
         let key = |o: usize| Address::new_from_array(d[o..o + 32].try_into().unwrap());
-        // 8 disc, owner 32, velocity_user 32, agent 32, paused 1, limits (8 + 8*10 + 1 + 8 + 4 + 4 + 8 = 113), day, day_notional
-        let o = 8 + 96 + 1 + 113;
+        // 8 disc, owner 32, velocity_user 32, agent 32, paused 1, limits (8 + 8*10 + 1 + 8 + 4 + 4 + 8 + 8 = 121), day, day_notional
+        let o = 8 + 96 + 1 + 121;
         // then bump 1, accepted_count u64, refused_g1..g7 7 x u64, last_refusal {rule u8, reason u32, value i128, cap i128, slot u64}
         let u64_at = |x: usize| u64::from_le_bytes(d[x..x + 8].try_into().unwrap());
         let c = o + 16 + 1;
