@@ -34,4 +34,5 @@ export const GUARD_ERRORS: Record<number, string> = {
   6031: "TooManyOpenOrders",
   6032: "DailyLossExceeded",
   6033: "OrderNotStored",
+  6034: "ReduceOnlyBeyondPosition",
 };

@@ -128,3 +128,19 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
   `g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes` (notes/red-r8-flip.txt). Fix: G4, G5 and G10 are waived
   only for a true exit (opposes the position; size plus every order resting on that side is at most the position),
   the is_exit test without the reduce-only flag. Plants updated: the review case is one of them.
+
+## Round 9 (Nov 21): audit round 2 (guardrail-audit-r2.md), probes ported to tests-litesvm/tests/audit_r2.rs
+
+- N1 (High): already closed by the true-exit rule (round 8 review); the reviewer's exact probe now passes: two plain
+  SELL 5 against a long 5 with G10 tripped, the first (a true exit) accepted, the second refused by G10, the position
+  ends flat, never short. It would fail on 34c3902.
+- N2 (Medium): the guard records the equity it sees on every call (last_seen_equity and the net deposits then). A new
+  day's baseline is the higher of equity now and that last equity adjusted for flows since, so waiting for the low does
+  not lower it. A permissionless `checkpoint` instruction (has_one = velocity_user) takes the day's baseline with
+  fresh prices. "Baseline set" is now loss_day == today, not baseline_equity != 0.
+- N3 (Medium): exits obey max_order_lifetime_secs, before the CPI and in the stored-order check.
+- N4 (Medium): G9 counts only the guard's own resting reduce-only orders. The delist case is documented in Not claimed.
+- N5 (Low): a reduce-only order that is not an exit is refused (ReduceOnlyBeyondPosition, 6034).
+- INFO: README notes the depeg caveat (flows at the quote oracle, collateral 1:1).
+- Red: notes/red-audit-r2.txt (5 of 7 failed before the program change; N1 and the no-drop twin passed).
+- Plants: 5, all caught (notes/planted-bug-r9.txt).

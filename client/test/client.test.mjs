@@ -53,6 +53,7 @@ test("client: accepted order, refused order with its verdict, counters, cancel, 
   assert.equal(await client.wouldOnlyReduce(owner.publicKey, { side: "short", size: toBase(1) }), false, "no position: a sell is not an exit");
   await client.setDailyLoss(owner, 50_000_000n);
   assert.equal((await client.getGuard(owner.publicKey)).dailyLoss.max, 50_000_000n, "the owner sets G10");
+  await client.checkpoint(agent, owner.publicKey); // permissionless: any signer may take the day's baseline
 
   await client.cancelOrder({ agent, owner: owner.publicKey });
   assert.equal((await openOrders(conn, owner.publicKey)).length, 0, "cancelled");

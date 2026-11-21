@@ -12,7 +12,7 @@ export const REASONS = {
   6000: "OrderTooLarge", 6001: "MarketNotAllowed", 6002: "OrderTypeNotAllowed", 6003: "BuilderFieldsRefused",
   6004: "DailyNotionalExceeded", 6005: "ExposureExceeded", 6006: "LeverageExceeded", 6007: "PriceOutsideBand",
   6008: "StaleOracle", 6009: "Paused", 6013: "NotPerp", 6014: "BitFlagsRefused", 6015: "TriggerOrdersRefused",
-  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity", 6028: "StaleExitUnfavourable", 6029: "CancelNotAllowed", 6030: "OrderLifetimeTooLong", 6031: "TooManyOpenOrders", 6032: "DailyLossExceeded", 6033: "OrderNotStored",
+  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity", 6028: "StaleExitUnfavourable", 6029: "CancelNotAllowed", 6030: "OrderLifetimeTooLong", 6031: "TooManyOpenOrders", 6032: "DailyLossExceeded", 6033: "OrderNotStored", 6034: "ReduceOnlyBeyondPosition",
 };
 
 const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";

@@ -1,4 +1,4 @@
-import { renderReplayRun, renderPriceChart, renderLossChart, renderError, runCap } from "./render.js?v=20";
+import { renderReplayRun, renderPriceChart, renderLossChart, renderError, runCap } from "./render.js?v=21";
 import { themeToggle } from "./theme.js?v=4";
 
 const $ = (id) => document.getElementById(id);
@@ -68,7 +68,7 @@ function draw() {
   const st = data.runs[0].steps[i];
   $("final-note").textContent = st.final ? `Final mark: SOL moves 1% more to $${Number(st.price).toFixed(2)} with no new orders, and the worst loss is measured here.` : "";
   $("step").value = String(i);
-  $("stepn").textContent = st.final ? "final mark" : `step ${i + 1} of ${stepsShown()}`;
+  $("stepn").textContent = st.final ? "final mark" : `step ${i + 1} of ${stepsShown()}${i + 1 === stepsShown() ? ", final mark next" : ""}`;
 }
 
 function play() {

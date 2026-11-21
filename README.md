@@ -102,7 +102,10 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 - The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
   `place_and_take`.
 - Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
-- Daily-loss and open-order-count limits are not built.
+- If the owner removes a market from the allowlist while a position is open, the agent can no longer exit it (exits keep
+  G2); the owner exits that position directly.
+- G10 values deposits and withdrawals at the quote oracle and counts collateral 1:1, so a deposit made while the
+  stablecoin is off $1 shows as a small gain or loss (a depeg caveat).
 
 ## Try it in two minutes (the first build takes about 2 minutes more)
 
@@ -167,8 +170,8 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | G6 | Price band | Every price on the order stays within a band around the market's own oracle, and the oracle must be fresh. |
 | G7 | Owner controls | Only the owner sets limits, rotates or revokes the agent, and pauses. |
 | G8 | No withdraw | The guard has no withdraw path and reaches only Velocity's place and cancel instructions. |
-| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position skips G1 to G5, G10 and the pause but stays inside the band, and with a very stale oracle it may only be priced in the owner's favour. |
-| G10 | Daily loss | The owner sets the most the account may lose in one UTC day. The day's baseline (collateral plus unrealized PnL) is taken at the guard's first call that UTC day, an order, an exit or a cancel; a loss before that first call is not counted (no crank). Once the loss since then passes the cap, only exits and cancels go through until the next UTC day. Deposits and withdrawals in between are taken out (Velocity values them at the quote oracle, so to within the stablecoin's distance from $1), so neither hides nor fakes a loss. |
+| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position (counting only the guard's own resting exits) skips G1 to G5, G10 and the pause but stays inside the band and the order lifetime, and with a very stale oracle it may only be priced in the owner's favour. A reduce-only order beyond the position is refused. |
+| G10 | Daily loss | The owner sets the most the account may lose in one UTC day. The day's baseline (collateral plus unrealized PnL) is the higher of the equity at the guard's first call that UTC day and the last equity the guard saw (adjusted for deposits and withdrawals since), so waiting for a low does not help; anyone can checkpoint it at 00:00 UTC with the permissionless `checkpoint` instruction. Once the loss since then passes the cap, only exits and cancels go through until the next UTC day. Deposits and withdrawals in between are taken out (Velocity values them at the quote oracle, so to within the stablecoin's distance from $1), so neither hides nor fakes a loss. |
 
 A refused order is a successful transaction that records the rule, the measured value and the owner's cap, and
 emits an `OrderChecked` event. Nothing reaches Velocity. Real errors (wrong agent, bad accounts, a stale oracle on a

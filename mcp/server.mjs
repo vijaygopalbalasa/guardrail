@@ -19,6 +19,7 @@ import { GuardrailClient, GuardrailError, velocityUserAddress, RULE_NAMES } from
 const HINTS = {
   6030: "Set max_ts in the future, no further out than the cap in seconds",
   6031: "All 32 guard order slots are open; cancel one of your orders first",
+  6034: "A reduce-only order must oppose your position and fit inside it, with your resting exits; leave reduce_only unset and the server decides",
   6032: "Today's loss is over the owner's daily cap; only exits (reduce-only) and cancels pass until the next UTC day",
 };
 

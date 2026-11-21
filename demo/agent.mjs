@@ -78,7 +78,7 @@ export function plain(v) {
   const val = Number(v.value), cap = Number(v.cap);
   const why = {
     1: () => `${val / 1e9} SOL is over the ${cap / 1e9} SOL per-order limit`,
-    2: () => (v.reason === 6030 ? `the order's max_ts must be in the future and at most ${cap} s away` : v.reason === 6031 ? `${cap} orders the guard placed are already open; cancel one first` : `${v.reasonName} (not on the owner's allowlist)`),
+    2: () => (v.reason === 6034 ? "a reduce-only order beyond the position" : v.reason === 6030 ? `the order's max_ts must be in the future and at most ${cap} s away` : v.reason === 6031 ? `${cap} orders the guard placed are already open; cancel one first` : `${v.reasonName} (not on the owner's allowlist)`),
     3: () => `today's notional would be ${(val / 1e6).toFixed(2)} dUSDT, over the ${(cap / 1e6).toFixed(0)} dUSDT daily cap`,
     4: () => `worst-case exposure would be ${val / 1e9} SOL, over the ${cap / 1e9} SOL cap`,
     5: () => `worst-case leverage would be ${(val / 1e4).toFixed(2)}x, over the ${(cap / 1e4).toFixed(2)}x cap`,

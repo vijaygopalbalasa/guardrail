@@ -75,6 +75,36 @@
       ]
     },
     {
+      "name": "checkpoint",
+      "docs": [
+        "G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.",
+        "It can only ever be the higher of equity now and the last equity the guard saw, so nobody gains by its timing."
+      ],
+      "discriminator": [
+        213,
+        200,
+        19,
+        204,
+        240,
+        143,
+        184,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "guard",
+          "writable": true
+        },
+        {
+          "name": "velocity_user",
+          "relations": [
+            "guard"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "init_guard",
       "docs": [
         "The Velocity user's authority creates the guard with an agent and limits. Afterwards the owner sets the guard",
@@ -569,6 +599,11 @@
       "code": 6033,
       "name": "OrderNotStored",
       "msg": "Velocity stored no order for this call"
+    },
+    {
+      "code": 6034,
+      "name": "ReduceOnlyBeyondPosition",
+      "msg": "a reduce-only order must oppose the position and, with the guard's resting exits, fit inside it"
     }
   ],
   "types": [
@@ -767,6 +802,22 @@
                 "name": "LastRefusal"
               }
             }
+          },
+          {
+            "name": "last_seen_equity",
+            "docs": [
+              "The last equity the guard saw on any call, Velocity's net deposits then, and whether it has seen one: a new",
+              "day's baseline is never below it (audit round 2, N2). loss_day == today means the day's baseline is set."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "last_seen_flows",
+            "type": "i64"
+          },
+          {
+            "name": "has_last_seen",
+            "type": "bool"
           }
         ]
       }
