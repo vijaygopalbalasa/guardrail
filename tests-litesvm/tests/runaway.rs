@@ -35,6 +35,8 @@ struct Run {
     end_equity: i128,
     max_position: i64,
     max_leverage_bps: i128,
+    /// Per-step state for the dashboard's playback (price, position, open orders, PnL, each decision and its rule).
+    steps: Vec<serde_json::Value>,
 }
 
 fn equity(env: &Env, owner: &Address, price: u64) -> i128 {
@@ -93,6 +95,7 @@ fn run(guarded: bool, limits: Limits) -> Run {
         let mut left = size;
         let mut chunk = size;
         let mut attempts: Vec<String> = vec![];
+        let mut decisions: Vec<serde_json::Value> = vec![];
         for _ in 0..12 {
             if left == 0 || chunk < BASE / 10 {
                 break;
@@ -116,6 +119,8 @@ fn run(guarded: bool, limits: Limits) -> Run {
             if let Some(c) = refused_reason {
                 *out.refused_by.entry(name(c)).or_default() += 1;
                 attempts.push(format!("{}x{}", this as f64 / 1e9, &name(c)[..2]));
+                let e = events(&r)[0].clone();
+                decisions.push(serde_json::json!({"size": this as f64 / 1e9, "result": "refused", "by": name(c), "reason": c, "value": e.value as f64, "cap": e.cap as f64, "rule": e.rule}));
                 chunk /= 2;
                 continue;
             }
@@ -134,12 +139,14 @@ fn run(guarded: bool, limits: Limits) -> Run {
                     let filled = env.cross(&format!("step {step}: flow sells into the bid"), &flow, &g, 1, 5_000 * BASE, bid_price);
                     left = left.saturating_sub(filled.max(0) as u64);
                     attempts.push(format!("{}ok", this as f64 / 1e9));
+                    decisions.push(serde_json::json!({"size": this as f64 / 1e9, "result": "accepted", "filled": filled as f64 / 1e9}));
                 }
                 Err(_) => {
                     let c = code(&r);
                     assert!(!(guarded && (6000..6100).contains(&c)), "a guard error (not a refusal) in the replay: {c}");
                     out.velocity_refused += 1;
                     attempts.push(format!("{}xV", this as f64 / 1e9));
+                    decisions.push(serde_json::json!({"size": this as f64 / 1e9, "result": "velocity", "by": "Velocity margin check", "reason": c}));
                     chunk /= 2;
                 }
             }
@@ -151,6 +158,15 @@ fn run(guarded: bool, limits: Limits) -> Run {
         out.max_position = out.max_position.max(base);
         out.max_leverage_bps = out.max_leverage_bps.max(lev);
         out.min_equity = out.min_equity.min(eq);
+        let (b2, q2, bids2, asks2) = env.totals(&owner);
+        let coll = env.raw_collateral(&owner);
+        out.steps.push(serde_json::json!({
+            "step": step, "price": price as f64 / 1e6, "wants": size as f64 / 1e9, "decisions": decisions,
+            "position": b2 as f64 / 1e9, "openBids": bids2 as f64 / 1e9, "openAsks": (asks2 as f64 / 1e9).abs(),
+            "collateral": coll as f64 / 1e6, "upnl": (b2 as i128 * price as i128 / BASE as i128 + q2 as i128) as f64 / 1e6,
+            "equity": eq as f64 / 1e6, "leverage": lev as f64 / 1e4,
+            "lossPct": ((out.start_equity - eq) as f64 / out.start_equity as f64 * 100.0),
+        }));
         out.lines.push(format!(
             "step {:>2} price ${:>6.2} wants +{:>7.2} SOL, tries: {:<44} position {:>7.3} SOL equity {:>9.2} leverage {:>5.2}x",
             step, price as f64 / 1e6, size as f64 / 1e9, outcome, base as f64 / 1e9, eq as f64 / 1e6, lev as f64 / 1e4
@@ -222,4 +238,37 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
     assert_eq!(g2.breaches, 0, "zero breaches guarded (second limit set)");
     assert!(loss(&g2) < loss(&u));
     assert!(loss(&g) < loss(&u), "guarded loses less");
+}
+
+/// Limits where only leverage can bind: order size, exposure and daily notional are loose, G5 is 2x.
+fn leverage_limits() -> Limits {
+    let mut l = guarded_limits();
+    l.max_order_base = 100 * BASE;
+    l.markets[0] = (0, 1_000 * BASE);
+    l.daily_notional_cap = 1_000_000_000_000;
+    l.max_leverage_bps = 20_000;
+    l
+}
+
+#[test]
+fn replay_leverage_cap_binds_when_losses_shrink_equity() {
+    // The same runaway agent and price path, with every limit loose except G5 (2x). As the long loses, equity falls,
+    // and the leverage cap is what stops the agent; it never breaches, and it loses less than unguarded.
+    let u = run(false, guarded_limits());
+    let g = run(true, leverage_limits());
+    let loss = |r: &Run| (r.start_equity - r.min_equity) as f64 / 1e6;
+    println!(
+        "G5 REPLAY guarded: worst loss {:.2} dUSDT, max position {:.2} SOL, max leverage {:.2}x, accepted {}, refused {:?}, breaches {}; unguarded worst loss {:.2}",
+        loss(&g), g.max_position as f64 / 1e9, g.max_leverage_bps as f64 / 1e4, g.accepted, g.refused_by, g.breaches, loss(&u)
+    );
+    for l in &g.lines {
+        println!("{l}");
+    }
+    assert!(g.refused_by.get("G5 leverage").copied().unwrap_or(0) >= 1, "G5 is the binding refusal: {:?}", g.refused_by);
+    for other in ["G1 order size", "G3 daily notional", "G4 exposure"] {
+        assert_eq!(g.refused_by.get(other).copied().unwrap_or(0), 0, "{other} does not bind here");
+    }
+    assert_eq!(g.velocity_refused, 0, "the guard stops it before Velocity's own margin check");
+    assert_eq!(g.breaches, 0);
+    assert!(loss(&g) < loss(&u));
 }
