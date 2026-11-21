@@ -4,6 +4,9 @@
 //! program; every order is checked against limits the owner froze on chain, and an order that breaks one is refused
 //! with its reason. The guard exposes only place_perp_order and cancel_order to the agent; there is no withdraw.
 
+// Anchor 0.31's #[program] macro calls the deprecated AccountInfo::realloc in generated code.
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 
 pub mod math;

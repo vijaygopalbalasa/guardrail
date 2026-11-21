@@ -21,3 +21,7 @@ anchor-lang = "0.31.1"
 
 [dev-dependencies]
 proptest = "1"
+
+[lints.rust]
+# Anchor 0.31's macros reference cfg features (anchor-debug, custom-heap, custom-panic) this crate does not declare.
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(target_os, values("solana"))'] }
