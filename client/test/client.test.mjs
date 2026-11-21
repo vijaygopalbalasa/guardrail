@@ -51,6 +51,8 @@ test("client: accepted order, refused order with its verdict, counters, cancel, 
   assert.equal(g.agent.toBase58(), agent.publicKey.toBase58());
   assert.equal(g.dailyLoss.max, 0n, "the daily loss brake starts off");
   assert.equal(await client.wouldOnlyReduce(owner.publicKey, { side: "short", size: toBase(1) }), false, "no position: a sell is not an exit");
+  await assert.rejects(client.setDailyLoss(owner, 50_000_000n), (e) => e instanceof GuardrailError && e.codeName === "KeeperRequired", "a cap needs a keeper");
+  await client.setKeeper(owner, owner.publicKey);
   await client.setDailyLoss(owner, 50_000_000n);
   assert.equal((await client.getGuard(owner.publicKey)).dailyLoss.max, 50_000_000n, "the owner sets G10");
   await client.checkpoint(agent, owner.publicKey); // permissionless: any signer may take the day's baseline
