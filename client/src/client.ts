@@ -128,10 +128,22 @@ export class GuardrailClient {
       tx.feePayer = signers[0].publicKey;
       tx.sign(...signers);
       const signature = await this.connection.sendRawTransaction(tx.serialize(), { preflightCommitment: "confirmed" });
-      const res = await this.connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, "confirmed");
-      const got = await this.connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+      // Poll for confirmation over HTTP (no websocket), which public RPCs rate-limit less.
+      let status: { err: unknown } | null = null;
+      for (let i = 0; i < 120 && !status; i++) {
+        await new Promise((r) => setTimeout(r, 500));
+        const s = (await this.connection.getSignatureStatuses([signature])).value[0];
+        if (s && (s.confirmationStatus === "confirmed" || s.confirmationStatus === "finalized")) status = { err: s.err };
+        else if (i % 10 === 9 && (await this.connection.getBlockHeight("confirmed")) > lastValidBlockHeight) break;
+      }
+      if (!status) throw new Error(`transaction ${signature} was not confirmed`);
+      let got = null;
+      for (let i = 0; i < 20 && !got; i++) {
+        got = await this.connection.getTransaction(signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+        if (!got) await new Promise((r) => setTimeout(r, 500));
+      }
       logs = got?.meta?.logMessages ?? [];
-      if (res.value.err) throw Object.assign(new Error(`transaction ${signature} failed: ${JSON.stringify(res.value.err)}`), { logs });
+      if (status.err) throw Object.assign(new Error(`transaction ${signature} failed: ${JSON.stringify(status.err)}`), { logs });
       return { signature, logs };
     } catch (e: unknown) {
       const err = e as { message?: string; logs?: string[]; getLogs?: (c: Connection) => Promise<string[]> };

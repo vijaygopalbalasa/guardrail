@@ -6,6 +6,9 @@ Guardrail: limits your AI trading agent cannot break. It is a Solana program tha
 perps account. The agent can trade only through it, every order is checked on chain against limits the owner froze,
 and the agent can never withdraw.
 
+Live on Solana devnet: program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet),
+with a guarded agent's accepted order and its refusals by G1, G3, G4 and G6 on chain: `notes/devnet-receipts.md`.
+
 Caveat on this first screen: devnet and local only, no real users. The guard wraps Velocity's `place_perp_order` and
 `cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
 is a missing feature, not a bypass, because the agent's key has no direct path to the account.
@@ -71,6 +74,8 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 |---|---|---|
 | A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
 | When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
+| The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `notes/dashboard-devnet.png` |
+| The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
 | Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
 | Breaking any limit on purpose makes its own tests fail (29 planted bugs, all caught) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |

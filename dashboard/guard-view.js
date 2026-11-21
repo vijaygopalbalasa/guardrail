@@ -148,15 +148,28 @@ export async function accountInfo(url, address) {
   return r.value ? { owner: r.value.owner, data: fromB64(r.value.data[0]) } : null;
 }
 
-export async function loadDashboard(url, guardAddress, limit = 40) {
+// Decoded transactions by signature, so a refresh only fetches new ones (public RPCs rate-limit).
+const txCache = new Map();
+
+export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
   const guard = checkedGuard(await accountInfo(url, guardAddress));
   const velocity = checkedVelocityUser(await accountInfo(url, guard.velocityUser));
   const sigs = await rpc(url, "getSignaturesForAddress", [guardAddress, { limit, commitment: "confirmed" }]);
   const decisions = [];
   for (const s of sigs) {
     if (s.err) continue;
-    const tx = await rpc(url, "getTransaction", [s.signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }]);
-    for (const e of decodeEvents(tx?.meta?.logMessages, guardAddress)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
+    if (!txCache.has(s.signature)) {
+      // On a rate-limited public RPC, show what is decoded so far and pick up the rest on the next refresh.
+      let tx;
+      try {
+        if (paceMs) await new Promise((r) => setTimeout(r, paceMs));
+        tx = await rpc(url, "getTransaction", [s.signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }]);
+      } catch {
+        break;
+      }
+      txCache.set(s.signature, decodeEvents(tx?.meta?.logMessages, guardAddress));
+    }
+    for (const e of txCache.get(s.signature)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
   }
   return { guard, velocity, decisions };
 }

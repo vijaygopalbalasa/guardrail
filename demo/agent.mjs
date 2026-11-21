@@ -68,6 +68,8 @@ const parse = (res) => {
   return { line: i < 0 ? t : t.slice(0, i), data: i < 0 ? null : JSON.parse(t.slice(i + 1)) };
 };
 const sol = (x) => Number(x) / 1e9;
+/** Pause between tool calls (public devnet RPC rate limits): DEMO_PACE_MS. */
+const PACE_MS = Number(process.env.DEMO_PACE_MS ?? 0);
 
 /** The guard's verdict in plain words. */
 export function plain(v) {
@@ -108,6 +110,7 @@ export async function runAgent({ mode, demo, decide = STRATEGIES[mode], oraclePr
         continue;
       }
       summary.toolCalls++;
+      if (PACE_MS) await new Promise((r) => setTimeout(r, PACE_MS));
       if (a.type === "cancel") {
         const r = parse(await mcp.callTool({ name: "guardrail_cancel_order", arguments: {} }));
         summary.cancels++;

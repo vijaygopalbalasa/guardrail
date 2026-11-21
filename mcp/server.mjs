@@ -34,6 +34,9 @@ const text = (t) => ({ content: [{ type: "text", text: t }] });
 const toUnits = (x, scale) => BigInt(Math.round(x * scale));
 
 const server = new McpServer({ name: "guardrail", version: "0.1.0" });
+// A network hiccup (for example a rate-limited public RPC) must never take the server down.
+process.on("unhandledRejection", (e) => console.error("guardrail-mcp: unhandled rejection:", e?.message ?? e));
+const failure = (e) => ({ ...text(`FAILED: ${e instanceof GuardrailError ? e.message : `network or RPC error: ${e?.message ?? e}`}`), isError: true });
 
 server.registerTool(
   "guardrail_place_order",
@@ -72,8 +75,7 @@ server.registerTool(
         : `REFUSED by ${v.ruleName}: ${v.reasonName} (value ${v.value}, cap ${v.cap}). Nothing was sent to Velocity.`;
       return text(`${summary}\n${json(v)}`);
     } catch (e) {
-      if (e instanceof GuardrailError) return { ...text(`FAILED: ${e.message}`), isError: true };
-      throw e;
+      return failure(e);
     }
   },
 );
@@ -90,8 +92,7 @@ server.registerTool(
       if (r.orderId === null) return text("NOTHING TO CANCEL: no open order placed by this agent");
       return text(`${r.accepted ? "CANCELLED" : "REFUSED (only orders this agent placed can be cancelled)"} ${r.orderId}\n${json(r)}`);
     } catch (e) {
-      if (e instanceof GuardrailError) return { ...text(`FAILED: ${e.message}`), isError: true };
-      throw e;
+      return failure(e);
     }
   },
 );
@@ -103,6 +104,11 @@ server.registerTool(
     inputSchema: {},
   },
   async () => {
+    try { return await status(); } catch (e) { return failure(e); }
+  },
+);
+
+async function status() {
     const g = await client.getGuard(owner);
     const d = (await connection.getAccountInfo(velocityUserAddress(owner), "confirmed")).data;
     const positions = [];
@@ -132,7 +138,6 @@ server.registerTool(
       units: "sizes in base units (1e9 = 1 SOL), prices and notional in 1e6 = 1 USD",
     };
     return text(json(status));
-  },
-);
+}
 
 await server.connect(new StdioServerTransport());

@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js";
-import { renderBars, renderError, renderFeed, renderLastRefusal, renderLimits, renderVelocity } from "./render.js";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=3";
+import { renderBars, renderError, renderFeed, renderLastRefusal, renderLimits, renderVelocity } from "./render.js?v=3";
 
 const q = new URLSearchParams(location.search);
 const RPC = allowedRpc(q.get("rpc"));
@@ -40,9 +40,12 @@ function render({ guard: g, velocity, decisions }) {
 async function tick() {
   if (!RPC) { status("rpc not allowed: use a local validator or Solana's public devnet or mainnet RPC", true); return; }
   if (!GUARD) { status("add ?guard=<address>", true); return; }
-  try { render(await loadDashboard(RPC, GUARD)); }
+  const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(RPC);
+  try { render(await loadDashboard(RPC, GUARD, isLocal ? 40 : 25, isLocal ? 0 : 400)); }
   catch (e) { status("error", true); renderError(document, $("feed"), e.message); }
 }
 headline();
 tick();
-setInterval(tick, 3000);
+// Local validators refresh every 3 s; public RPCs every 20 s with fewer transactions (rate limits).
+const local = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(RPC ?? "");
+setInterval(tick, local ? 3000 : 20000);
