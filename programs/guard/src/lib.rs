@@ -637,19 +637,23 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     if g.max_daily_loss > 0 && g.loss_day != today {
         // Without the owner's or keeper's midnight mark the new day's baseline never falls below the last equity seen
         // or the highest equity known for the last day observed (audit round 4): losses carry over until a mark.
-        let carried = if g.has_last_seen { adj(g.last_seen_equity, g.last_seen_flows) } else { eq };
-        let prev_high = if g.day_high_day != 0 { adj(g.day_high_equity, g.day_high_flows) } else { eq };
+        g.baseline_equity = new_day_baseline(eq, flows, direct, last_seen_of(g), day_high_of(g));
         g.loss_day = today;
-        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };
         g.baseline_flows = flows;
     }
-    // The highest equity known for today, starting from today's baseline.
+    // The highest equity known for today: from today's baseline and every reading, and on a guard that has no day high
+    // yet (upgraded or migrated mid-day) also from the last equity it saw earlier today.
     g.day_high_equity = if g.day_high_day == today {
         adj(g.day_high_equity, g.day_high_flows).max(eq)
-    } else if g.loss_day == today {
-        adj(g.baseline_equity, g.baseline_flows).max(eq)
     } else {
-        eq
+        let mut h = eq;
+        if g.loss_day == today {
+            h = h.max(adj(g.baseline_equity, g.baseline_flows));
+        }
+        if g.has_last_seen && g.last_seen_day == today {
+            h = h.max(adj(g.last_seen_equity, g.last_seen_flows));
+        }
+        h
     };
     g.day_high_flows = flows;
     g.day_high_day = today;
@@ -659,6 +663,31 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     g.last_seen_day = today;
     g.has_last_seen = true;
     Ok(())
+}
+
+/// A new day's G10 baseline, one rule for every path: the owner's or keeper's midnight mark is equity now; otherwise it
+/// is the highest of equity now, the last equity seen and the last day's high, each adjusted for deposits since.
+pub fn new_day_baseline(eq: i64, flows: i64, direct: bool, last_seen: Option<(i64, i64)>, day_high: Option<(i64, i64)>) -> i64 {
+    if direct {
+        return eq;
+    }
+    let adj = |(e, f): (i64, i64)| e.saturating_add(flows.saturating_sub(f));
+    let mut b = eq;
+    if let Some(x) = last_seen {
+        b = b.max(adj(x));
+    }
+    if let Some(x) = day_high {
+        b = b.max(adj(x));
+    }
+    b
+}
+
+fn last_seen_of(g: &Guard) -> Option<(i64, i64)> {
+    g.has_last_seen.then_some((g.last_seen_equity, g.last_seen_flows))
+}
+
+fn day_high_of(g: &Guard) -> Option<(i64, i64)> {
+    (g.day_high_day != 0).then_some((g.day_high_equity, g.day_high_flows))
 }
 
 fn net_flows(user: &velocity::UserView) -> i128 {
@@ -797,13 +826,10 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
         let (b_eq, b_flows) = if g.loss_day == today {
             (g.baseline_equity as i128, g.baseline_flows as i128)
         } else {
-            // Normally set by observe() at the start of the call; same rule here: never below the last equity seen.
-            let carried = if g.has_last_seen { g.last_seen_equity as i128 + (flows - g.last_seen_flows as i128) } else { equity };
-            let b = Baseline {
-                day: today,
-                equity: i64::try_from(equity.max(carried)).map_err(|_| GuardError::MathOverflow)?,
-                flows: i64::try_from(flows).map_err(|_| GuardError::MathOverflow)?,
-            };
+            // Normally set by observe() at the start of the call; the same rule (new_day_baseline) here.
+            let eq64 = i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?;
+            let flows64 = i64::try_from(flows).map_err(|_| GuardError::MathOverflow)?;
+            let b = Baseline { day: today, equity: new_day_baseline(eq64, flows64, false, last_seen_of(g), day_high_of(g)), flows: flows64 };
             *baseline = Some(b);
             (b.equity as i128, flows)
         };
@@ -1228,6 +1254,18 @@ mod stored_order_tests {
         // A stale exit SELL (limit 0 bps) must not sit below the last price.
         assert!(stored_breach(&slot(1, 1, 91_000_000, 0, 0, 0, 0), oracle, 0).is_some());
         assert!(stored_breach(&slot(1, 1, 91_390_000, 0, 0, 0, 0), oracle, 0).is_none());
+    }
+
+    #[test]
+    fn a_new_days_baseline_is_one_rule_for_both_paths() {
+        // equity now 950 (no flows since): the last equity seen 980 and the last day's high 1,000 keep it at 1,000
+        assert_eq!(new_day_baseline(950, 0, false, Some((980, 0)), Some((1_000, 0))), 1_000);
+        // a deposit of 500 since the high was seen lifts the carried high by 500
+        assert_eq!(new_day_baseline(1_450, 500, false, Some((980, 0)), Some((1_000, 0))), 1_500);
+        // nothing seen before: equity now
+        assert_eq!(new_day_baseline(950, 0, false, None, None), 950);
+        // the owner's or keeper's midnight mark: equity now
+        assert_eq!(new_day_baseline(950, 0, true, Some((980, 0)), Some((1_000, 0))), 950);
     }
 
     #[test]

@@ -108,3 +108,36 @@ fn r4_2_a_guard_without_a_day_high_still_carries_the_last_equity_seen() {
     env.step(secs_to(&env, 2, 0), dip);
     assert_refused(&env.gplace("next day 02:00: a bid at the dip", &g, small_bid(dip)), gerr::DAILY_LOSS_EXCEEDED);
 }
+
+// ---------------------------------------------------------------- review of day_high: a guard upgraded mid-day
+
+/// Day 1: the long is opened and the baseline taken 2% under the later high; the price then rises to the high and the
+/// guard sees it; then the guard is upgraded (no day-high fields yet). At 23:30 the agent observes at a dip (5% under
+/// the high); the keeper misses midnight; at 02:00 the agent bids at the same dip. The high seen before the upgrade must
+/// still count.
+#[test]
+fn r4_2b_a_guard_upgraded_mid_day_keeps_the_high_it_saw_before() {
+    let mut env = Env::new();
+    env.add_guard_program();
+    let low1 = (P0 as f64 * 0.98) as u64 / 10 * 10;
+    env.step(1, low1);
+    let g = env.guarded(1_000, Limits::loose());
+    env.step(2, low1);
+    let flow = env.trader("flow", 1_000_000);
+    assert_ok(&env.gplace("agent bids 5 SOL", &g, Order::resting(0, 5 * BASE, low1)));
+    env.step(2, low1);
+    env.cross("flow sells", &flow, &g, 1, 1_000 * BASE, low1);
+    env.step(2, low1);
+    let owner = g.owner.insecure_clone();
+    assert_ok(&env.set_daily_loss("keeper named (it will not run) and cap 20", &g, &owner, 20 * QUOTE));
+    assert!(events(&env.gplace("day 1: the baseline", &g, small_bid(low1)))[0].accepted);
+    env.step(5, P0);
+    assert!(events(&env.gplace("day 1: a call at the high (2% up)", &g, small_bid(P0)))[0].accepted);
+    env.clear_day_high(&g); // the upgrade: no day-high fields yet
+    let dip = (P0 as f64 * 0.95) as u64;
+    env.step(secs_to(&env, 23, 30), dip);
+    assert_ok(&env.gcancel("23:30: the agent observes at the dip", &g, Some(999_999)));
+    env.step(secs_to(&env, 0, 1), P0);
+    env.step(secs_to(&env, 2, 0), dip);
+    assert_refused(&env.gplace("02:00: a bid at the dip", &g, small_bid(dip)), gerr::DAILY_LOSS_EXCEEDED);
+}

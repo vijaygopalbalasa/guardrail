@@ -1,0 +1,2 @@
+test r4_2b_a_guard_upgraded_mid_day_keeps_the_high_it_saw_before ... FAILED
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.02s

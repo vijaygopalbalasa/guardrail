@@ -192,3 +192,11 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - 5 (Info): the old-layout devnet guards are labelled "history (old layout, not migrated)" in the receipts and README.
 - Red: notes/red-audit-r4.txt. Plants: 4 new, all caught; the R9 "ignores the last equity seen" plant is caught by a new
   test of a guard from before the day-high fields (notes/planted-bug-run.txt).
+- Review of the day-high change: (a) a guard upgraded or migrated mid-day has no day high yet, so the last equity it saw
+  earlier that day (perhaps a high) was not carried; now a day's high starts from that day's baseline and, on such a
+  guard, from the last equity seen that day (red: notes/red-day-high-review.txt). (b) The order path's fallback baseline
+  now uses the same rule as observe: one function, new_day_baseline (unit-tested), so the two cannot disagree. The
+  fallback branch itself is not reached in the replay tests (observe sets the baseline first in every call); its plant
+  sits on the shared function.
+- Plant sites retargeted to the current code (several older sites had moved and the full run aborted at the first);
+  scripts/planted-bug.sh now has CHECK=1 to confirm every site before a full run.

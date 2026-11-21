@@ -20,6 +20,7 @@ assert s.count(old) == 1, f"plant site not unique: {old!r}"
 open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
+  if [ -n "${CHECK:-}" ]; then restore; return; fi  # CHECK=1: only confirm every plant site is unique, no builds
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
   (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 --test audit_r4 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
@@ -71,29 +72,34 @@ plant "F1 stored-order breach rule broken (unit tests on the audit's stored orde
 plant "F2 exits skip the order-type allowlist" $LIB "        if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
             return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
         }
-        let (oracle, age)" "        let (oracle, age)"
+        // Exits obey the order lifetime too" "        // Exits obey the order lifetime too"
 plant "F3 agent may cancel any order" $LIB "            Some(id) if id != 0 => g.placed_order_ids.contains(&id)," "            Some(_) => true,"
 plant "F3 agent may cancel all" $LIB "            _ => false,
         };" "            None => true,
             _ => false,
         };"
-plant "INFO order lifetime ignored" $LIB "        if life > l.max_order_lifetime_secs as i128 {" "        if false {"
+plant "INFO order lifetime ignored" $LIB "    (life > l.max_order_lifetime_secs as i128).then(|| life.min(i64::MAX as i128))" "    (false && life > 0).then(|| life)"
 plant "INFO last refusal by rule not kept" $LIB "            g.last_refusal_by_rule[(r as usize).min(7)] = lr;" ""
-plant "R5 lifetime: max_ts 0 or in the past passes (life = max_ts - now)" $LIB "            Some(t) if t as i128 > now => t as i128 - now," "            Some(t) => t as i128 - now,"
+plant "R5 lifetime: max_ts 0 or in the past passes (life = max_ts - now)" $LIB "        Some(t) if t as i128 > now as i128 => t as i128 - now as i128," "        Some(t) => t as i128 - now as i128,"
 plant "R5 placed ids never pruned" $LIB "        if *id != 0 && !open.contains(id) {" "        if false && *id != 0 && !open.contains(id) {"
 plant "R5 a new id evicts a live one" $LIB "        match g.placed_order_ids.iter_mut().find(|x| **x == 0) {" "        match g.placed_order_ids.iter_mut().next() {"
 plant "R5 no refusal when 32 guard orders are open" $LIB "        if !matches!(outcome, Outcome::Refuse { .. }) && !ctx.accounts.guard.placed_order_ids.contains(&0) {" "        if false {"
 plant "R5 stored max_ts not checked after the CPI (unit tests)" $LIB "    cap_secs > 0 && (o.max_ts <= now || o.max_ts as i128 - now as i128 > cap_secs as i128)" "    cap_secs > 0 && o.max_ts as i128 - now as i128 > cap_secs as i128" unit
-plant "R6 G10 check removed" $LIB "        if loss > g.max_daily_loss as i128 {" "        if false {"
+plant "R6 G10 check removed" $LIB "        if increases && loss > g.max_daily_loss as i128 {" "        if false {"
 plant "R6 G10 ignores deposits and withdrawals" $LIB "    baseline_equity + (flows - baseline_flows) - equity" "    baseline_equity - equity + 0 * (flows - baseline_flows)" unit
-plant "R6 G10 baseline re-taken on every call" $LIB "        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {" "        let (b_eq, b_flows) = if false {"
-plant "R6 G10 baseline never resets on a new day" $LIB "        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {" "        let (b_eq, b_flows) = if g.baseline_equity != 0 {"
+plant "R6 G10 baseline re-taken on every call" $LIB "    if g.max_daily_loss > 0 && g.loss_day != today {" "    if g.max_daily_loss > 0 {"
+plant "R6 G10 baseline never resets on a new day" $LIB "    if g.max_daily_loss > 0 && g.loss_day != today {" "    if g.max_daily_loss > 0 && g.loss_day == 0 {"
 plant "R6 G10 refusal filed under G7" $LIB "                rule::G10_DAILY_LOSS => g.refused_g10 += 1," "                rule::G10_DAILY_LOSS => g.refused_g7 += 1,"
 plant "R6 an order Velocity did not store counts as accepted" $LIB "        if placed.is_empty() {" "        if false {"
-plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
+plant "R7 G10 baseline not taken on the first cancel of the day" $LIB "        observe(&mut ctx)?;
+        let g = &ctx.accounts.guard;
+        let allowed" "        let g = &ctx.accounts.guard;
+        let allowed"
 plant "R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = true || !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);"
 plant "R8 an order that keeps exposure equal by flipping is waived (the review case)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = exposure > exposure_before;"
-plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried.min(eq)).max(prev_high) };"
+plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "    if let Some(x) = last_seen {
+        b = b.max(adj(x));
+    }" "    let _ = last_seen;"
 plant "R9 N2 checkpoint accepts any Velocity account" $LIB "    #[account(mut, has_one = velocity_user)]
     pub guard: Account<'info, Guard>,
     /// CHECK: read only, bound to the guard by has_one" "    #[account(mut)]
@@ -112,7 +118,11 @@ plant "R10 an observation is skipped when the caller leaves accounts out" $LIB "
     }" "            Err(_) => return Ok(()),
         }
     }"
-plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = eq.max(carried).max(prev_high);"
+plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "    if direct {
+        return eq;
+    }
+    let adj" "    let _ = direct;
+    let adj"
 plant "R11 anyone's first-hour checkpoint marks the day at midnight" $LIB "        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);" "        let trusted = caller != Pubkey::default() || caller == g.owner || g.keeper == Pubkey::default();"
 plant "R11 a state error (stale or unsupported oracle) fails cancels and exits" $LIB "            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
             Err(_) => return Ok(()),
@@ -128,9 +138,12 @@ plant "R12 close keeps the rent" $LIB "        **owner.try_borrow_mut_lamports()
         **guard.try_borrow_mut_lamports()? = 0;" "        let _ = (&owner, lamports);"
 plant "R12 a daily loss cap without a keeper" $LIB "        require!(max_daily_loss == 0 || ctx.accounts.guard.keeper != Pubkey::default(), GuardError::KeeperRequired);" ""
 plant "R13 migrate accepts any shorter length" $LIB "        require!(MIGRATABLE_LENGTHS.contains(&guard.data_len()), GuardError::BadGuardAccount);" "        require!(guard.data_len() < new_len, GuardError::BadGuardAccount);"
-plant "R13 a new day's baseline ignores the previous day's high" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high.min(eq)) };"
-plant "R13 the day's high does not start from its baseline" $LIB "        adj(g.baseline_equity, g.baseline_flows).max(eq)" "        eq"
+plant "R13 a new day's baseline ignores the previous day's high" $LIB "    if let Some(x) = day_high {
+        b = b.max(adj(x));
+    }" "    let _ = day_high;"
+plant "R13 the day's high does not start from its baseline" $LIB "            h = h.max(adj(g.baseline_equity, g.baseline_flows));" ""
 plant "R13 the keeper can be removed while a cap is set" $LIB "        require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);" ""
+plant "R14 a guard upgraded mid-day forgets the high it saw before" $LIB "            h = h.max(adj(g.last_seen_equity, g.last_seen_flows));" ""
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1
