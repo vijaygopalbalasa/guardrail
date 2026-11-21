@@ -1,0 +1,23 @@
+[package]
+name = "guard"
+version = "0.1.0"
+description = "Guardrail: limits your AI trading agent cannot break, as the delegate of a Velocity perps account."
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "guard"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.31.1"
+
+[dev-dependencies]
+proptest = "1"

@@ -1,0 +1,9 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[programs.localnet]
+guard = "BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy"
+
+[provider]
+cluster = "localnet"
+wallet = "keys/dev.json"

@@ -1,0 +1,750 @@
+
+running 30 tests
+test g1_refuses_order_one_unit_over_max_size ... FAILED
+test g2_refuses_order_type_not_allowed ... FAILED
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... FAILED
+test g4_refuses_ask_that_takes_worst_case_short_over_cap ... FAILED
+test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... FAILED
+test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... FAILED
+test g2_refuses_builder_idx_and_builder_fee ... FAILED
+test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
+test g2_refuses_market_not_on_allowlist ... FAILED
+test g4_refuses_bid_that_takes_worst_case_long_over_cap ... FAILED
+test g6_refuses_auction_price_outside_band ... FAILED
+test g7_revoke_and_rotate_agent ... FAILED
+test g8_agent_cannot_withdraw_or_trade_around_the_guard ... ok
+test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
+test g6_refuses_oracle_offset_outside_band ... FAILED
+test g7_limits_are_validated ... FAILED
+test g6_refuses_stale_oracle ... FAILED
+test g6_refuses_limit_price_outside_band ... FAILED
+test g5_refuses_when_an_open_position_market_is_missing ... FAILED
+test g7_only_the_owner_sets_limits ... FAILED
+test g9_exit_allowed_when_leverage_is_over_cap ... FAILED
+test g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale ... FAILED
+test g9_exit_actually_closes_the_position_under_tight_limits ... FAILED
+test init_guard_requires_the_velocity_user_authority ... FAILED
+test g9_exit_allowed_when_exposure_is_over_cap ... FAILED
+test g9_exit_allowed_when_daily_notional_is_spent ... FAILED
+test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... FAILED
+test guard_ignores_a_look_alike_oracle_at_another_address ... FAILED
+test order_shape_refusals_trigger_bitflags_spot_zero ... FAILED
+test g8_guard_binary_contains_only_place_and_cancel_velocity_instructions ... FAILED
+
+failures:
+
+---- g1_refuses_order_one_unit_over_max_size stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G1 over by one] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g1_refuses_order_one_unit_over_max_size' (132773125) panicked at tests/limits.rs:67:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6000
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- g2_refuses_order_type_not_allowed stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G2 market order not allowed] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g2_refuses_order_type_not_allowed' (132773128) panicked at tests/limits.rs:97:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6002
+
+---- g5_refuses_order_that_takes_worst_case_leverage_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G5 one step over 3x] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g5_refuses_order_that_takes_worst_case_leverage_over_cap' (132773134) panicked at tests/limits.rs:256:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6006
+
+---- g4_refuses_ask_that_takes_worst_case_short_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g4_refuses_ask_that_takes_worst_case_short_over_cap' (132773130) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: GqzeR7Ryc13cEPHTLyfB3L4YnfAATB4tihKTnUySH9SA
+    Program log: Right:
+    Program log: 6wN7QnSKCrhyWE4eYthjPzwpDCVwVKTxMgcHosx1jYaL
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room' (132773133) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: GqzeR7Ryc13cEPHTLyfB3L4YnfAATB4tihKTnUySH9SA
+Program log: Right:
+Program log: 6wN7QnSKCrhyWE4eYthjPzwpDCVwVKTxMgcHosx1jYaL
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G3 1 SOL] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day' (132773129) panicked at tests/limits.rs:153:9:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g2_refuses_builder_idx_and_builder_fee stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G2 builder_idx set] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g2_refuses_builder_idx_and_builder_fee' (132773126) panicked at tests/limits.rs:109:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6003
+
+---- g4_sums_every_slot_for_the_market_not_the_first_match stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G4 crafted slot 3: 0.6 more (worst 2.1)] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g4_sums_every_slot_for_the_market_not_the_first_match' (132773132) panicked at tests/limits.rs:230:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6005
+
+---- g2_refuses_market_not_on_allowlist stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G2 market 1 not allowed] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 45AP3ShBuknT4LsjLpWYUizESRY9f3Cv7644BnZ82v3K
+    Program log: Right:
+    Program log: 27Mfm4kCMfcbUbshwgWbYCTa8MKHcuH61vDnZyctF4Z1
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g2_refuses_market_not_on_allowlist' (132773127) panicked at tests/limits.rs:82:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6001
+
+---- g4_refuses_bid_that_takes_worst_case_long_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 849yNjjABMPsttdY3c4nqxGsYyXv9r2DcRTrusz3XWFQ
+    Program log: Right:
+    Program log: 4v86JL2z9jwiRAuveuzwYbidXXVdzzRKiz32NJ4h43yf
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g4_refuses_bid_that_takes_worst_case_long_over_cap' (132773131) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: 849yNjjABMPsttdY3c4nqxGsYyXv9r2DcRTrusz3XWFQ
+Program log: Right:
+Program log: 4v86JL2z9jwiRAuveuzwYbidXXVdzzRKiz32NJ4h43yf
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g6_refuses_auction_price_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G6 auction start outside] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 4b8ASga6ekeHT3VnRCLUrAwuzZHESB3ssD9rFjiuxixp
+    Program log: Right:
+    Program log: E42DiCyY8ujcyZNuXoFGKm4mqZHUwXbkifd8s4vXfMsN
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g6_refuses_auction_price_outside_band' (132773136) panicked at tests/limits.rs:359:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6007
+
+---- g7_revoke_and_rotate_agent stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[agent tries to rotate itself] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetAgent
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: 11111111111111111111111111111111
+    Program log: Right:
+    Program log: 5bAfBEakEQTzxehgh3wkXvV2yYH1XQ6zZVoPVczJ8i5p
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+[owner revokes] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetAgent
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: 11111111111111111111111111111111
+    Program log: Right:
+    Program log: AjxqLPRkobHLgksEaB6RBoL5kcJ34r3kyzXvHxFKBCrn
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+
+thread 'g7_revoke_and_rotate_agent' (132773143) panicked at tests/limits.rs:406:5:
+expected success, got InstructionError(1, Custom(6010)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: SetAgent
+Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+Program log: Left:
+Program log: 11111111111111111111111111111111
+Program log: Right:
+Program log: AjxqLPRkobHLgksEaB6RBoL5kcJ34r3kyzXvHxFKBCrn
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 3185 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+
+---- g7_pause_blocks_new_orders_but_not_cancels stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[before pause] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: BntZ8h7KcJfbFWD6Viiz9qeDKzZBY3iHRaRYF9CCfnsv
+    Program log: Right:
+    Program log: 7LRYfVrUrZm56v4iZjdtVf2QGrrpfCWya4QMeE991Qxe
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g7_pause_blocks_new_orders_but_not_cancels' (132773142) panicked at tests/limits.rs:421:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: BntZ8h7KcJfbFWD6Viiz9qeDKzZBY3iHRaRYF9CCfnsv
+Program log: Right:
+Program log: 7LRYfVrUrZm56v4iZjdtVf2QGrrpfCWya4QMeE991Qxe
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g6_refuses_oracle_offset_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G6 oracle offset -0.92] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 5UwjcQBs3TzCRuqqtcnBh6Ss7G4UsMjhrJoCFc5tiTLB
+    Program log: Right:
+    Program log: 5xbNe1azcXWFLLepBeLFUkVPtTMMAMfuTtXPbYHJT1R9
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g6_refuses_oracle_offset_outside_band' (132773138) panicked at tests/limits.rs:343:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6007
+
+---- g7_limits_are_validated stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[band 0] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetLimits
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: 11111111111111111111111111111111
+    Program log: Right:
+    Program log: 3dMqaSxnEZN2UkkKjYQS6ZBxCEqWNRkJ73uCyu747av7
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+
+thread 'g7_limits_are_validated' (132773140) panicked at tests/limits.rs:442:5:
+assertion `left == right` failed: wrong error code
+  left: 6010
+ right: 6025
+
+---- g6_refuses_stale_oracle stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G6 oracle 11 slots old] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g6_refuses_stale_oracle' (132773139) panicked at tests/limits.rs:376:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6008
+
+---- g6_refuses_limit_price_outside_band stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[G6 bid 0.92 under] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g6_refuses_limit_price_outside_band' (132773137) panicked at tests/limits.rs:321:14:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6007
+
+---- g5_refuses_when_an_open_position_market_is_missing stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g5_refuses_when_an_open_position_market_is_missing' (132773135) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g7_only_the_owner_sets_limits stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[agent tries set_limits] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetLimits
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: 11111111111111111111111111111111
+    Program log: Right:
+    Program log: 9BP9e4CR1RBPywVkyHf5nxjLZZ8cqnVXQXvN1WPZh5p
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+[owner set_limits] FAILED InstructionError(1, Custom(6010))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: SetLimits
+    Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+    Program log: Left:
+    Program log: 11111111111111111111111111111111
+    Program log: Right:
+    Program log: FgVqt61uVX4Tur8pGLJamH2n8JSZ9EbVCSnk5fPsKnGV
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+
+thread 'g7_only_the_owner_sets_limits' (132773141) panicked at tests/limits.rs:394:5:
+expected success, got InstructionError(1, Custom(6010)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: SetLimits
+Program log: AnchorError caused by account: guard. Error Code: NotOwner. Error Number: 6010. Error Message: G7: signer is not the owner.
+Program log: Left:
+Program log: 11111111111111111111111111111111
+Program log: Right:
+Program log: FgVqt61uVX4Tur8pGLJamH2n8JSZ9EbVCSnk5fPsKnGV
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 3393 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x177a
+
+---- g9_exit_allowed_when_leverage_is_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: A8LYzGaPnZzS9G616hR2CdXh7oFPjyc4vLy951EvRThu
+    Program log: Right:
+    Program log: E3ZJZXDNW25nrtfkZ6pD8nYqawKsNi3MfXCTRyZFWmyk
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_exit_allowed_when_leverage_is_over_cap' (132773149) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: A8LYzGaPnZzS9G616hR2CdXh7oFPjyc4vLy951EvRThu
+Program log: Right:
+Program log: E3ZJZXDNW25nrtfkZ6pD8nYqawKsNi3MfXCTRyZFWmyk
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: HCWvwGYxWs85HA4fJHs2oLTsDchyxtMd2u3pH7H7UyA
+    Program log: Right:
+    Program log: 3pRrfnjDBE2Rwc6cuEv5GJ65BeUcrL2WGWCDzUMwQ4JS
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale' (132773150) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: HCWvwGYxWs85HA4fJHs2oLTsDchyxtMd2u3pH7H7UyA
+Program log: Right:
+Program log: 3pRrfnjDBE2Rwc6cuEv5GJ65BeUcrL2WGWCDzUMwQ4JS
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g9_exit_actually_closes_the_position_under_tight_limits stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 6U5mFgRMgCH8vw2mHujBNYq8zoW4HpqSofhczafrXFNr
+    Program log: Right:
+    Program log: EA6TCYjByPVWycmrPNi5qCVVTnvEe8gv165zDVw7Yu5G
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_exit_actually_closes_the_position_under_tight_limits' (132773146) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program log: Left:
+Program log: 6U5mFgRMgCH8vw2mHujBNYq8zoW4HpqSofhczafrXFNr
+Program log: Right:
+Program log: EA6TCYjByPVWycmrPNi5qCVVTnvEe8gv165zDVw7Yu5G
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 7201 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- init_guard_requires_the_velocity_user_authority stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 100 dUSDT] OK
+[stranger: initialize_user_stats + initialize_user] OK
+[stranger: deposit 100 dUSDT] OK
+[stranger init_guard] OK
+
+thread 'init_guard_requires_the_velocity_user_authority' (132773153) panicked at src/lib.rs:621:18:
+expected a refusal, got success. logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: InitGuard
+Program 11111111111111111111111111111111 invoke [2]
+Program 11111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 11714 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy success
+
+---- g9_exit_allowed_when_exposure_is_over_cap stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_exit_allowed_when_exposure_is_over_cap' (132773148) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g9_exit_allowed_when_daily_notional_is_spent stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_exit_allowed_when_daily_notional_is_spent' (132773147) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- g9_reduce_only_that_is_not_an_exit_goes_through_the_limits stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[flow: initialize_user_stats + initialize_user] OK
+[flow: deposit 1000000 dUSDT] OK
+[agent: bid to open a position] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'g9_reduce_only_that_is_not_an_exit_goes_through_the_limits' (132773151) panicked at tests/limits.rs:51:5:
+expected success, got InstructionError(1, Custom(2006)). logs:
+Program ComputeBudget111111111111111111111111111111 invoke [1]
+Program ComputeBudget111111111111111111111111111111 success
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+Program log: Instruction: PlacePerpOrder
+Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy consumed 6683 of 1399850 compute units
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+---- guard_ignores_a_look_alike_oracle_at_another_address stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[look-alike oracle] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program log: Left:
+    Program log: 71Ub7xoAttAbEmMacvfMbk682J4zTJNkESUuQSWv6kDt
+    Program log: Right:
+    Program log: D1yzQD1dJswVFBUe66FXerrV4NuhdZeyJJWwYQnG7ZvB
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'guard_ignores_a_look_alike_oracle_at_another_address' (132773152) panicked at tests/limits.rs:309:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6020
+
+---- order_shape_refusals_trigger_bitflags_spot_zero stdout ----
+[owner: initialize_user_stats + initialize_user] OK
+[owner: deposit 1000 dUSDT] OK
+[owner: init_guard + update_user_delegate -> guard] OK
+[trigger limit] FAILED InstructionError(1, Custom(2006))
+    Program ComputeBudget111111111111111111111111111111 invoke [1]
+    Program ComputeBudget111111111111111111111111111111 success
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy invoke [1]
+    Program log: Instruction: PlacePerpOrder
+    Program log: AnchorError caused by account: guard. Error Code: ConstraintSeeds. Error Number: 2006. Error Message: A seeds constraint was violated.
+    Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy failed: custom program error: 0x7d6
+
+thread 'order_shape_refusals_trigger_bitflags_spot_zero' (132773154) panicked at tests/limits.rs:126:5:
+assertion `left == right` failed: wrong error code
+  left: 2006
+ right: 6015
+
+---- g8_guard_binary_contains_only_place_and_cancel_velocity_instructions stdout ----
+
+thread 'g8_guard_binary_contains_only_place_and_cancel_velocity_instructions' (132773145) panicked at tests/limits.rs:587:5:
+assertion `left == right` failed: only these two Velocity instructions
+  left: []
+ right: ["cancel_order", "place_perp_order"]
+
+
+failures:
+    g1_refuses_order_one_unit_over_max_size
+    g2_refuses_builder_idx_and_builder_fee
+    g2_refuses_market_not_on_allowlist
+    g2_refuses_order_type_not_allowed
+    g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day
+    g4_refuses_ask_that_takes_worst_case_short_over_cap
+    g4_refuses_bid_that_takes_worst_case_long_over_cap
+    g4_sums_every_slot_for_the_market_not_the_first_match
+    g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room
+    g5_refuses_order_that_takes_worst_case_leverage_over_cap
+    g5_refuses_when_an_open_position_market_is_missing
+    g6_refuses_auction_price_outside_band
+    g6_refuses_limit_price_outside_band
+    g6_refuses_oracle_offset_outside_band
+    g6_refuses_stale_oracle
+    g7_limits_are_validated
+    g7_only_the_owner_sets_limits
+    g7_pause_blocks_new_orders_but_not_cancels
+    g7_revoke_and_rotate_agent
+    g8_guard_binary_contains_only_place_and_cancel_velocity_instructions
+    g9_exit_actually_closes_the_position_under_tight_limits
+    g9_exit_allowed_when_daily_notional_is_spent
+    g9_exit_allowed_when_exposure_is_over_cap
+    g9_exit_allowed_when_leverage_is_over_cap
+    g9_exit_allowed_when_paused_or_market_delisted_or_oracle_stale
+    g9_reduce_only_that_is_not_an_exit_goes_through_the_limits
+    guard_ignores_a_look_alike_oracle_at_another_address
+    init_guard_requires_the_velocity_user_authority
+    order_shape_refusals_trigger_bitflags_spot_zero
+
+test result: FAILED. 1 passed; 29 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

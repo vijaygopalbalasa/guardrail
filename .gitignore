@@ -1,0 +1,8 @@
+keys/
+target/
+tests-litesvm/target/
+node_modules/
+out/
+*.log
+.DS_Store
+fixtures/*.so
