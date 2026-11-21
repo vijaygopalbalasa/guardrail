@@ -9,6 +9,14 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - Earlier upgrade (R5 fixes): [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet)
 - First deploy with the audit fixes: [4c2TQWreEgks7ocw...](https://explorer.solana.com/tx/4c2TQWreEgks7ocw9fr8Hkd2dggPtvoLeAJupWBYTw5yHszuR96ENoPdGXvR7CzpqcexxjCrVxJ3Www2n2CxnTZC?cluster=devnet)
 
+## Guard 4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6 (language-model agent, current program)
+
+- Guard account: [4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6](https://explorer.solana.com/address/4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6?cluster=devnet); owner DSQHLMYr6diFQ14jDfmK5FADZb8bh3raHyvy1CAcPGRC
+- init_guard + delegate: [5WeMKXQmbhFHHC9z...](https://explorer.solana.com/tx/5WeMKXQmbhFHHC9zS6Y8gJqkPrnn9SxxExNQcEZWLMmRfEzLnmJ1Me3S2E9BWQmRjHdW4nTEB3vHyUYejXoSSjwj?cluster=devnet)
+- refused by G1 order size (OrderTooLarge): [bjMAmgdfXuzb8Fnr...](https://explorer.solana.com/tx/bjMAmgdfXuzb8Fnr51qRkVLshiNSax5RG4JJM1amqkwiN4fb6NSB4r3WMnzP8mu9UYoaSoEz9Q2LC7KeQ6pDQxe?cluster=devnet)
+- accepted order: [4ffUA5jfmcXwCvDA...](https://explorer.solana.com/tx/4ffUA5jfmcXwCvDAZALHYydg9LFYrXc4qPHZ1at3bYwgqwYaux6dEvu1n2mE3hyUGL9i6tzM8Mzrwt4813AjTWYP?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded): [3dX8o9rK6KDftjj6...](https://explorer.solana.com/tx/3dX8o9rK6KDftjj6PCDQnRfgMRTTZQ8dsyNBhPgiymqTN22CseGuwhKn8ps2MMdRxK2PLBzteA2mmmQTThnEA9aT?cluster=devnet)
+
 ## Guard HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM (runaway agent, G10 set to 50 dUSDT a day)
 
 - Guard account: [HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM](https://explorer.solana.com/address/HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM?cluster=devnet); owner 82mnXnUarcheQHgknMG3uYGwxJ7ghQN1L7VrS8BqdRhX

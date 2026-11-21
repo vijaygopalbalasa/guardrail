@@ -108,7 +108,8 @@ td { padding: 9px 8px; border-bottom: 1px solid var(--grid); font-variant-numeri
 .key { width: 14px; height: 3px; border-radius: 2px; flex: none; }
 .key.un { background: var(--un); } .key.gu { background: var(--gu); }
 .run-title { font-weight: 650; font-size: 15px; }
-.run-limits { color: var(--ink-2); font-size: 13px; margin: 2px 0 12px; }
+.run-limits { color: var(--ink-2); font-size: 13px; margin: 2px 0 12px; min-height: 3em; }
+@media (max-width: 760px) { .run-limits { min-height: 0; } }
 .run-figs { display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: flex-end; margin-bottom: 8px; }
 .chart { position: relative; }
 .chart svg { display: block; width: 100%; overflow: visible; }

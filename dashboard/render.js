@@ -117,7 +117,7 @@ export function renderLimits(doc, box, g) {
   const markets = l.markets.filter((m, i) => i === 0 || num(m.maxExposureBase) > 0);
   const kv = [
     ["G1 per order", `${sol(l.maxOrderBase)} SOL`],
-    ["G2 markets", markets.map((m) => num(m.marketIndex)).join(", ") || "none"],
+    ["G2 markets", markets.map((m) => (num(m.marketIndex) === 0 ? "SOL-PERP (market 0)" : `market ${num(m.marketIndex)}`)).join(", ") || "none"],
     ["G2 order types", types],
     ["G3 per UTC day", `${usd(l.dailyNotionalCap)} dUSDT, ${usd(g.dayNotional)} used`],
     ...markets.map((m) => [`G4 market ${num(m.marketIndex)}`, `${sol(m.maxExposureBase)} SOL worst case`]),
