@@ -64,6 +64,7 @@ fn name(code: u32) -> String {
 
 fn run(guarded: bool, limits: Limits) -> Run {
     let mut env = Env::new();
+    env.quiet = true; // the unguarded run's expected Velocity margin refusals would flood the output
     env.add_guard_program();
     env.step(1, P0);
     let g = if guarded {

@@ -136,6 +136,8 @@ pub struct Env {
     pub oracle_disc: [u8; 8],
     pub usdt_oracle_disc: [u8; 8],
     pub log: Vec<String>,
+    /// When set, transactions print only their label line (expected failures stay out of the output).
+    pub quiet: bool,
 }
 
 fn w(k: Pubkey) -> AccountMeta {
@@ -168,7 +170,7 @@ impl Env {
         let usdt_oracle_disc = svm.get_account(&USDT_ORACLE).unwrap().data[..8].try_into().unwrap();
         let payer = Keypair::new();
         svm.airdrop(&payer.pubkey(), 1_000 * 1_000_000_000).unwrap();
-        let mut env = Self { svm, payer, oracle_disc, usdt_oracle_disc, log: vec![] };
+        let mut env = Self { svm, payer, oracle_disc, usdt_oracle_disc, log: vec![], quiet: false };
         let mut c: Clock = env.svm.get_sysvar();
         c.slot = slot0 + 10;
         c.unix_timestamp = 1_795_230_000;
@@ -226,8 +228,11 @@ impl Env {
             Ok(m) => (true, m.logs.clone()),
             Err(f) => (false, f.meta.logs.clone()),
         };
-        self.note(format!("[{label}] {}", if ok { "OK".to_string() } else { format!("FAILED {:?}", res.as_ref().err().unwrap().err) }));
-        for l in logs {
+        if !self.quiet {
+            self.note(format!("[{label}] {}", if ok { "OK".to_string() } else { format!("FAILED {:?}", res.as_ref().err().unwrap().err) }));
+        }
+        let quiet = self.quiet;
+        for l in logs.iter().filter(|_| !quiet) {
             if l.contains("Program log:") && !l.contains("Instruction:") && l.len() < 300 {
                 self.note(format!("    {l}"));
             } else if !ok && !l.contains("consumed") {
