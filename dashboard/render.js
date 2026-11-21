@@ -190,6 +190,7 @@ function bindingNote(run) {
   for (const st of run.steps) for (const d of st.decisions ?? []) {
     if (d.rule === 5) return `leverage cap ${(num(d.cap) / 1e4).toFixed(1)}x binds`;
     if (d.rule === 3) return `daily cap ${usd(d.cap)} dUSDT binds`;
+    if (d.rule === 10) return `daily loss cap ${usd(d.cap)} dUSDT binds`;
   }
   return run.id === "unguarded" ? "no cap, only Velocity's 5x margin check" : "no position cap";
 }
