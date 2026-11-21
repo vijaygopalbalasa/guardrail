@@ -82,6 +82,8 @@ pub mod guard {
     /// G10, owner only: the most equity (quote units) the account may lose in one UTC day before risk-increasing
     /// orders are refused. 0 turns the brake off.
     pub fn set_daily_loss(ctx: Context<OwnerOnly>, max_daily_loss: u64) -> Result<()> {
+        // G10 needs a reading at midnight, so a cap needs a keeper (the owner's own key is fine; see scripts/keeper.mjs).
+        require!(max_daily_loss == 0 || ctx.accounts.guard.keeper != Pubkey::default(), GuardError::KeeperRequired);
         ctx.accounts.guard.max_daily_loss = max_daily_loss;
         msg!("guard: daily loss cap set to {} by the owner", max_daily_loss);
         Ok(())
@@ -107,6 +109,42 @@ pub mod guard {
     pub fn set_keeper(ctx: Context<OwnerOnly>, keeper: Pubkey) -> Result<()> {
         ctx.accounts.guard.keeper = keeper;
         msg!("guard: keeper set to {}", keeper);
+        Ok(())
+    }
+
+    /// Owner only: grows a guard made under an older (shorter) layout to the current size. Fields are only ever
+    /// appended, so the old bytes keep their meaning and the new ones start at zero (G10 off unless it was set, no last
+    /// equity seen, no keeper). The owner pays the extra rent.
+    pub fn migrate_guard(ctx: Context<GuardByOwner>) -> Result<()> {
+        let guard = ctx.accounts.guard.to_account_info();
+        check_guard_account(&guard, &ctx.accounts.owner.key(), ctx.program_id)?;
+        let new_len = 8 + Guard::INIT_SPACE;
+        require!(guard.data_len() < new_len, GuardError::BadGuardAccount);
+        let need = Rent::get()?.minimum_balance(new_len).saturating_sub(guard.lamports());
+        if need > 0 {
+            anchor_lang::system_program::transfer(
+                CpiContext::new(ctx.accounts.system_program.to_account_info(), anchor_lang::system_program::Transfer { from: ctx.accounts.owner.to_account_info(), to: guard.clone() }),
+                need,
+            )?;
+        }
+        let old_len = guard.data_len();
+        guard.realloc(new_len, true)?;
+        msg!("guard: migrated from {} to {} bytes", old_len, new_len);
+        Ok(())
+    }
+
+    /// Owner only: closes the guard (any layout) and returns its rent to the owner. The owner removes the guard as the
+    /// Velocity account's delegate separately (Velocity's update_user_delegate); init_guard can then run again.
+    pub fn close_guard(ctx: Context<GuardByOwner>) -> Result<()> {
+        let guard = ctx.accounts.guard.to_account_info();
+        check_guard_account(&guard, &ctx.accounts.owner.key(), ctx.program_id)?;
+        let owner = ctx.accounts.owner.to_account_info();
+        let lamports = guard.lamports();
+        **owner.try_borrow_mut_lamports()? += lamports;
+        **guard.try_borrow_mut_lamports()? = 0;
+        guard.realloc(0, false)?;
+        guard.assign(&anchor_lang::solana_program::system_program::ID);
+        msg!("guard: closed, {} lamports back to the owner", lamports);
         Ok(())
     }
 
@@ -525,6 +563,19 @@ fn lifetime_breach(l: &Limits, p: &OrderParams, now: i64) -> Option<i128> {
     (life > l.max_order_lifetime_secs as i128).then(|| life.min(i64::MAX as i128))
 }
 
+/// A guard account of any layout: owned by this program, the Guard discriminator, the signer as its owner, and the
+/// guard PDA of the Velocity user it names.
+fn check_guard_account(acc: &AccountInfo, owner: &Pubkey, program_id: &Pubkey) -> Result<()> {
+    require_keys_eq!(*acc.owner, *program_id, GuardError::BadGuardAccount);
+    let d = acc.try_borrow_data()?;
+    require!(d.len() >= 72 && d[..8] == *<Guard as anchor_lang::Discriminator>::DISCRIMINATOR, GuardError::BadGuardAccount);
+    let guard_owner = Pubkey::try_from(&d[8..40]).map_err(|_| GuardError::BadGuardAccount)?;
+    require_keys_eq!(guard_owner, *owner, GuardError::NotOwner);
+    let (pda, _) = Pubkey::find_program_address(&[b"guard", &d[40..72]], program_id);
+    require_keys_eq!(pda, acc.key(), GuardError::BadGuardAccount);
+    Ok(())
+}
+
 /// G10's baseline for a UTC day: equity and Velocity's net deposits at the day's first risk-increasing check.
 #[derive(Clone, Copy)]
 struct Baseline {
@@ -582,8 +633,13 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
         g.baseline_equity = if direct { eq } else { eq.max(carried) };
         g.baseline_flows = flows;
     }
-    g.last_seen_equity = eq;
+    // In the last hour before 00:00 UTC a reading may only raise the last equity seen that day (audit round 3, R3-2):
+    // a dip just before midnight cannot become the next day's carried baseline.
+    let carried_now = g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows));
+    let last_hour = clock.unix_timestamp.rem_euclid(86_400) >= 82_800;
+    g.last_seen_equity = if last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };
     g.last_seen_flows = flows;
+    g.last_seen_day = today;
     g.has_last_seen = true;
     Ok(())
 }
@@ -920,6 +976,10 @@ pub struct Guard {
     pub has_last_seen: bool,
     /// The owner's keeper: its checkpoint in the first hour of a UTC day marks the day at midnight (default: none).
     pub keeper: Pubkey,
+    /// The UTC day of last_seen_equity.
+    pub last_seen_day: i64,
+    /// Room for future fields, so they need no migration (zero now).
+    pub reserved: [u8; 128],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
@@ -992,6 +1052,17 @@ pub struct InitGuard<'info> {
     pub velocity_user: UncheckedAccount<'info>,
     #[account(init, payer = owner, space = 8 + Guard::INIT_SPACE, seeds = [b"guard", velocity_user.key().as_ref()], bump)]
     pub guard: Account<'info, Guard>,
+    pub system_program: Program<'info, System>,
+}
+
+/// Owner only, for a guard account of any layout (checked in check_guard_account).
+#[derive(Accounts)]
+pub struct GuardByOwner<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
+    /// CHECK: program owner, discriminator, owner field and PDA are checked in check_guard_account.
+    #[account(mut)]
+    pub guard: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -1106,6 +1177,10 @@ pub enum GuardError {
     OrderNotStored,
     #[msg("a reduce-only order must oppose the position and, with the guard's resting exits, fit inside it")]
     ReduceOnlyBeyondPosition,
+    #[msg("G10: name a keeper (set_keeper) before setting a daily loss cap")]
+    KeeperRequired,
+    #[msg("not a guard account of this program for this owner")]
+    BadGuardAccount,
 }
 
 #[cfg(test)]

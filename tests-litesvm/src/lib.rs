@@ -551,6 +551,8 @@ pub mod gerr {
     pub const DAILY_LOSS_EXCEEDED: u32 = 6032;
     pub const ORDER_NOT_STORED: u32 = 6033;
     pub const REDUCE_ONLY_BEYOND_POSITION: u32 = 6034;
+    pub const KEEPER_REQUIRED: u32 = 6035;
+    pub const BAD_GUARD_ACCOUNT: u32 = 6036;
 }
 
 pub mod rule {
@@ -659,6 +661,7 @@ pub struct GuardState {
     pub last_seen_equity: i64,
     pub last_seen_flows: i64,
     pub has_last_seen: bool,
+    pub keeper: Pubkey,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -737,6 +740,14 @@ pub fn assert_code(r: &TxResult, c: u32) {
 
 /// A recorded refusal: the transaction SUCCEEDS, Velocity is not called, and the event names the reason.
 #[track_caller]
+/// The transaction failed with the guard's custom error `code` (a real error, not a recorded refusal).
+pub fn assert_refused_tx(r: &TxResult, code: u32) {
+    match r {
+        Err(f) => assert!(format!("{:?}", f.err).contains(&format!("Custom({code})")), "expected error {code}, got {:?}", f.err),
+        Ok(_) => panic!("expected error {code}, the transaction succeeded"),
+    }
+}
+
 pub fn assert_refused(r: &TxResult, reason: u32) -> OrderEvent {
     assert_ok(r);
     let ev = events(r);
@@ -890,9 +901,48 @@ impl Env {
         let ix = Self::owner_ix("set_agent", &signer.pubkey(), g, agent.as_ref().to_vec());
         self.send(label, vec![ix], &[signer])
     }
+    /// Sets the daily loss cap; a cap above 0 needs a keeper, so when none is set the owner names itself first.
     pub fn set_daily_loss(&mut self, label: &str, g: &Guarded, signer: &Keypair, max_daily_loss: u64) -> TxResult {
+        let mut ixs = vec![];
+        if max_daily_loss > 0 && signer.pubkey() == g.owner.pubkey() && self.guard_state(g).keeper == Pubkey::default() {
+            ixs.push(Self::owner_ix("set_keeper", &signer.pubkey(), g, signer.pubkey().as_ref().to_vec()));
+        }
+        ixs.push(Self::owner_ix("set_daily_loss", &signer.pubkey(), g, max_daily_loss.to_le_bytes().to_vec()));
+        self.send(label, ixs, &[signer])
+    }
+
+    /// set_daily_loss alone, with no keeper step.
+    pub fn set_daily_loss_only(&mut self, label: &str, g: &Guarded, signer: &Keypair, max_daily_loss: u64) -> TxResult {
         let ix = Self::owner_ix("set_daily_loss", &signer.pubkey(), g, max_daily_loss.to_le_bytes().to_vec());
         self.send(label, vec![ix], &[signer])
+    }
+
+    /// Owner-only: grows a guard made under an older (shorter) layout to the current size; the owner pays the rent.
+    pub fn migrate_guard(&mut self, label: &str, g: &Guarded, signer: &Keypair) -> TxResult {
+        let ix = Instruction { program_id: GUARD, accounts: vec![AccountMeta::new(signer.pubkey(), true), w(g.guard), r(SYSTEM)], data: disc("migrate_guard").to_vec() };
+        self.send(label, vec![ix], &[signer])
+    }
+
+    /// Owner-only: closes the guard (any layout) and returns its rent to the owner.
+    pub fn close_guard(&mut self, label: &str, g: &Guarded, signer: &Keypair) -> TxResult {
+        let ix = Instruction { program_id: GUARD, accounts: vec![AccountMeta::new(signer.pubkey(), true), w(g.guard), r(SYSTEM)], data: disc("close_guard").to_vec() };
+        self.send(label, vec![ix], &[signer])
+    }
+
+    /// init_guard again for an existing owner and Velocity account (after close_guard).
+    pub fn init_guard_again(&mut self, label: &str, g: &Guarded, limits: &Limits) -> TxResult {
+        let owner = g.owner.insecure_clone();
+        let ix = Self::init_guard_ix(&owner.pubkey(), &g.agent.pubkey(), limits);
+        self.send(label, vec![ix], &[&owner])
+    }
+
+    /// Cuts the guard account down to `len` bytes: the shape a guard made by an older binary has (fields are only ever
+    /// appended, so an older guard is a prefix of the current one).
+    pub fn truncate_guard(&mut self, g: &Guarded, len: usize) {
+        let mut a = self.svm.get_account(&g.guard).unwrap();
+        a.data.truncate(len);
+        a.lamports = self.svm.minimum_balance_for_rent_exemption(len); // the rent an older guard holds
+        self.svm.set_account(g.guard, a).unwrap();
     }
     pub fn set_paused(&mut self, label: &str, g: &Guarded, signer: &Keypair, paused: bool) -> TxResult {
         let ix = Self::owner_ix("set_paused", &signer.pubkey(), g, vec![paused as u8]);
@@ -937,6 +987,7 @@ impl Env {
             last_seen_equity: if d.len() >= t + 85 + 17 { i64_at(t + 85) } else { 0 },
             last_seen_flows: if d.len() >= t + 85 + 17 { i64_at(t + 93) } else { 0 },
             has_last_seen: d.len() >= t + 85 + 17 && d[t + 101] == 1,
+            keeper: if d.len() >= t + 134 { Address::new_from_array(d[t + 102..t + 134].try_into().unwrap()) } else { Pubkey::default() },
             placed_order_ids,
             cancel_count: u64_at(q),
             refused_cancels: u64_at(q + 8),

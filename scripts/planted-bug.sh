@@ -21,7 +21,7 @@ open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
@@ -120,6 +120,14 @@ plant "R11 a state error (stale or unsupported oracle) fails cancels and exits" 
     }" "            Err(e) => return Err(e.into()),
         }
     }"
+plant "R12 anyone may migrate or close a guard" $LIB "    require_keys_eq!(guard_owner, *owner, GuardError::NotOwner);
+    let (pda, _)" "    let _ = guard_owner;
+    let (pda, _)"
+plant "R12 migrate does not grow the account" $LIB "        guard.realloc(new_len, true)?;" "        guard.realloc(old_len, true)?;"
+plant "R12 close keeps the rent" $LIB "        **owner.try_borrow_mut_lamports()? += lamports;
+        **guard.try_borrow_mut_lamports()? = 0;" "        let _ = (&owner, lamports);"
+plant "R12 a daily loss cap without a keeper" $LIB "        require!(max_daily_loss == 0 || ctx.accounts.guard.keeper != Pubkey::default(), GuardError::KeeperRequired);" ""
+plant "R12 a reading in the last hour before midnight may lower the last equity seen" $LIB "    g.last_seen_equity = if last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };" "    g.last_seen_equity = if false && last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

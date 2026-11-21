@@ -1,0 +1,9 @@
+test r3_1_close_returns_the_rent_and_the_guard_can_be_created_again ... FAILED
+test r3_2_a_daily_loss_cap_needs_a_keeper ... FAILED
+test r3_1_a_guard_made_under_an_older_layout_migrates_and_trades ... FAILED
+test r3_1_only_the_owner_migrates_and_a_current_guard_needs_no_migration ... FAILED
+test r3_1_an_older_guard_can_also_be_closed ... FAILED
+test r3_2_a_pre_midnight_dip_does_not_lower_the_next_days_baseline ... FAILED
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+error: test failed, to rerun pass `--test audit_r3`
+error: 1 target failed:
