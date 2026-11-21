@@ -21,6 +21,7 @@ PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
   (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
 plant "G1 off by one" $LIB "if p.base_asset_amount > l.max_order_base {" "if p.base_asset_amount > l.max_order_base + 1 {"
@@ -64,7 +65,8 @@ plant "post-trade check off by one (refuses at the cap)" $LIB "if exposure > d.e
 plant "stale exit favourable-side check removed" $LIB "            if let Some(what) = unfavourable_for_stale_exit(p, oracle) {" "            if let Some(what) = None::<&str> {"
 plant "stale exit threshold ignored (always the band)" $LIB "        if age > l.exit_max_staleness_slots {" "        if false {"
 plant "F1 oracle order without an offset allowed" $LIB "    if p.order_type == order_type::ORACLE && off0 == 0 {" "    if false {"
-plant "F1 stored-order check after the CPI removed" $LIB "        if let Some(x) = stored_breach(o, oracle, limit) {" "        if let Some(x) = None::<i128> {"
+plant "F1 stored-order check after the CPI removed (defense in depth: the pre-check refuses first)" $LIB "        if let Some(x) = stored_breach(o, oracle, limit) {" "        if let Some(x) = None::<i128> {"
+plant "F1 stored-order breach rule broken (unit tests on the audit's stored orders)" $LIB "    prices.into_iter().find(|&x| if o.direction == 0 { x > oracle as i128 + edge } else { x < oracle as i128 - edge })" "    prices.into_iter().find(|&x| if o.direction == 0 { x > oracle as i128 + edge * 100 } else { x < oracle as i128 - edge })" unit
 plant "F2 exits skip the order-type allowlist" $LIB "        if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
             return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
         }

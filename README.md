@@ -6,10 +6,15 @@ Guardrail: limits your AI trading agent cannot break. It is a Solana program tha
 perps account. The agent can trade only through it, every order is checked on chain against limits the owner froze,
 and the agent can never withdraw.
 
+Caveat on this first screen: devnet and local only, no real users. The guard wraps Velocity's `place_perp_order` and
+`cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
+is a missing feature, not a bypass, because the agent's key has no direct path to the account.
+
 ## Headline (REPLAY on Velocity's real program)
 
 The same runaway agent, the same falling market, run twice. The agent doubles a losing long every step and retries
-with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps. Collateral: 1,000 dUSDT.
+with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps. Collateral: 1,000 dUSDT. The
+unguarded run was stopped only by Velocity's own 5x margin check, after it had already reached 55 SOL.
 
 | | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
 |---|---|---|---|---|---|
@@ -23,7 +28,7 @@ accepted order that left order size, worst-case exposure, leverage or daily noti
 measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`
 (recorded); step 3 below writes a fresh copy to `out/runaway-replay.txt`.
 
-## Try it in two minutes (after the first build)
+## Try it in two minutes (the first build takes about 2 minutes more)
 
 Needs Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and network
 access to Solana devnet. Run every command from the repository root.
