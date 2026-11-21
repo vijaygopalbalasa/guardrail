@@ -216,7 +216,8 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
     report.push("Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).".to_string());
     let text = report.join("\n");
     println!("{text}");
-    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../notes/runaway-replay.txt"), &text).unwrap();
+    { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
+    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/runaway-replay.txt"), &text).unwrap();
     assert_eq!(g.breaches, 0, "zero breaches guarded");
     assert_eq!(g2.breaches, 0, "zero breaches guarded (second limit set)");
     assert!(loss(&g2) < loss(&u));

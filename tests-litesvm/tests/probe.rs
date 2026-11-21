@@ -64,7 +64,8 @@ fn probe_reduce_only_and_fill_split() {
     env.step(2, p0);
     let r = env.place_and_take("flow BUY 50 limit 91.60 with agent as maker", &flow, Order::limit(0, 50 * BASE, 91_600_000), &[&ap]);
     env.note(format!("flow ok={} agent pos after exits={:?} orders={:?}", r.is_ok(), pos(&env, &a), env.user(&a.pubkey()).open_orders));
-    std::fs::write(format!("{}/../notes/probe-velocity.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
+    { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
+    std::fs::write(format!("{}/../out/probe-velocity.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
 }
 
 /// Can a reduce-only exit be sold far under the oracle to a partner? (Decides whether G9 exits need the price band.)
@@ -100,5 +101,6 @@ fn probe_exit_price_far_under_oracle() {
         ));
         let _ = env.gcancel_raw(&a);
     }
-    std::fs::write(format!("{}/../notes/probe-exit-price.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
+    { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
+    std::fs::write(format!("{}/../out/probe-exit-price.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
 }

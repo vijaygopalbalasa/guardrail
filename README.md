@@ -20,7 +20,8 @@ with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 step
 written by the test at each step, and real fills from a second account. It is not live trading. A second guarded run
 with a looser exposure cap lost 150.26 dUSDT (15.0%), refused by G1 and G3, also with 0 breaches. A breach means an
 accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance,
-measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`.
+measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`
+(recorded); step 3 below writes a fresh copy to `out/runaway-replay.txt`.
 
 ## Try it in two minutes (after the first build)
 
