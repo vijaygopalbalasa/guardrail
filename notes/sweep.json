@@ -46,31 +46,31 @@
     30
   ],
   "medianWorstLossPct": {
-    "guarded": 1.466895951466896,
-    "unguarded": 1.466895951466896
+    "guarded": 1.107740901107741,
+    "unguarded": 1.107740901107741
   },
   "refusedBy": {
-    "G5 leverage": 110,
-    "G6 price band": 314
+    "G5 leverage": 111,
+    "G6 price band": 493
   },
   "rows": [
     {
       "endPct": 26.126184484079218,
       "guarded": {
-        "accepted": 5,
+        "accepted": 16,
         "breaches": 0,
-        "maxPosition": 7.0,
+        "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 8
+          "G6 price band": 12
         },
-        "worstLossPct": 1.0864596010864596
+        "worstLossPct": 1.0851206010851207
       },
       "lowPct": -4.003381113907437,
       "seed": 1,
       "unguarded": {
-        "maxPosition": 7.0,
+        "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.0864596010864596
+        "worstLossPct": 1.0851206010851207
       }
     },
     {
@@ -95,119 +95,119 @@
     {
       "endPct": -17.719236240288865,
       "guarded": {
-        "accepted": 8,
+        "accepted": 24,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 20,
-          "G6 price band": 12
+          "G6 price band": 19
         },
-        "worstLossPct": 19.301906519301905
+        "worstLossPct": 18.353324918353326
       },
       "lowPct": -17.719236240288865,
       "seed": 3,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 22.299913922299915
+        "worstLossPct": 20.782996720782997
       }
     },
     {
       "endPct": -3.469646569646571,
       "guarded": {
-        "accepted": 8,
+        "accepted": 31,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 17,
-          "G6 price band": 14
+          "G6 price band": 25
         },
-        "worstLossPct": 12.34708091234708
+        "worstLossPct": 11.96787001196787
       },
       "lowPct": -12.962960936645146,
       "seed": 4,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 13.606384313606384
+        "worstLossPct": 13.037484513037484
       }
     },
     {
       "endPct": 6.502363497100333,
       "guarded": {
-        "accepted": 3,
+        "accepted": 4,
         "breaches": 0,
         "maxPosition": 2.0,
         "refusedBy": {
-          "G6 price band": 8
+          "G6 price band": 10
         },
-        "worstLossPct": 0.08130380008130379
+        "worstLossPct": 0.104509000104509
       },
       "lowPct": -1.5915745705219422,
       "seed": 5,
       "unguarded": {
         "maxPosition": 2.0,
         "velocityRefused": 0,
-        "worstLossPct": 0.08130380008130379
+        "worstLossPct": 0.104509000104509
       }
     },
     {
       "endPct": -4.450880840354515,
       "guarded": {
-        "accepted": 6,
+        "accepted": 26,
         "breaches": 0,
         "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 13
+          "G6 price band": 21
         },
-        "worstLossPct": 1.7001925017001924
+        "worstLossPct": 1.1303612011303612
       },
       "lowPct": -4.844807965860596,
       "seed": 6,
       "unguarded": {
         "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.7001925017001924
+        "worstLossPct": 1.1303612011303612
       }
     },
     {
       "endPct": -2.242105263157896,
       "guarded": {
-        "accepted": 8,
+        "accepted": 31,
         "breaches": 0,
         "maxPosition": 14.0,
         "refusedBy": {
           "G5 leverage": 3,
-          "G6 price band": 16
+          "G6 price band": 24
         },
-        "worstLossPct": 5.066386005066386
+        "worstLossPct": 4.496403504496403
       },
       "lowPct": -7.978892657840035,
       "seed": 7,
       "unguarded": {
         "maxPosition": 14.0,
         "velocityRefused": 0,
-        "worstLossPct": 5.066386005066386
+        "worstLossPct": 4.496403504496403
       }
     },
     {
       "endPct": -11.008370718897027,
       "guarded": {
-        "accepted": 8,
+        "accepted": 23,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 5,
-          "G6 price band": 19
+          "G6 price band": 25
         },
-        "worstLossPct": 9.488988209488989
+        "worstLossPct": 8.729536908729536
       },
       "lowPct": -11.008370718897027,
       "seed": 8,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 10.033771610033773
+        "worstLossPct": 9.27432040927432
       }
     },
     {
@@ -232,115 +232,115 @@
     {
       "endPct": -4.1753255279571135,
       "guarded": {
-        "accepted": 6,
+        "accepted": 21,
         "breaches": 0,
         "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 9
+          "G6 price band": 14
         },
-        "worstLossPct": 1.3428479013428478
+        "worstLossPct": 0.8314605008314605
       },
       "lowPct": -4.436185578290846,
       "seed": 10,
       "unguarded": {
         "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.3428479013428478
+        "worstLossPct": 0.8314605008314605
       }
     },
     {
       "endPct": -3.964449064449056,
       "guarded": {
-        "accepted": 5,
+        "accepted": 18,
         "breaches": 0,
         "maxPosition": 6.0,
         "refusedBy": {
-          "G6 price band": 10
+          "G6 price band": 12
         },
-        "worstLossPct": 1.0665565010665565
+        "worstLossPct": 0.7543234007543234
       },
       "lowPct": -3.964449064449056,
       "seed": 11,
       "unguarded": {
         "maxPosition": 6.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.0665565010665565
+        "worstLossPct": 0.7543234007543234
       }
     },
     {
       "endPct": 8.844797023744391,
       "guarded": {
-        "accepted": 4,
+        "accepted": 10,
         "breaches": 0,
-        "maxPosition": 3.0617,
+        "maxPosition": 4.0,
         "refusedBy": {
-          "G6 price band": 3
+          "G6 price band": 5
         },
-        "worstLossPct": 0.3107475003107475
+        "worstLossPct": 0.350048000350048
       },
       "lowPct": -2.476649524017944,
       "seed": 12,
       "unguarded": {
-        "maxPosition": 3.0617,
+        "maxPosition": 4.0,
         "velocityRefused": 0,
-        "worstLossPct": 0.3107475003107475
+        "worstLossPct": 0.350048000350048
       }
     },
     {
       "endPct": -2.9900755006018187,
       "guarded": {
-        "accepted": 4,
+        "accepted": 12,
         "breaches": 0,
         "maxPosition": 4.0,
         "refusedBy": {
-          "G6 price band": 8
+          "G6 price band": 12
         },
-        "worstLossPct": 0.5376375005376375
+        "worstLossPct": 0.2964649002964649
       },
       "lowPct": -2.9900755006018187,
       "seed": 13,
       "unguarded": {
         "maxPosition": 4.0,
         "velocityRefused": 0,
-        "worstLossPct": 0.5376375005376375
+        "worstLossPct": 0.2964649002964649
       }
     },
     {
       "endPct": 10.293566035671304,
       "guarded": {
-        "accepted": 6,
+        "accepted": 14,
         "breaches": 0,
-        "maxPosition": 6.424,
+        "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 5
+          "G6 price band": 6
         },
-        "worstLossPct": 1.228235101228235
+        "worstLossPct": 1.2606406012606406
       },
       "lowPct": -4.243451143451139,
       "seed": 14,
       "unguarded": {
-        "maxPosition": 6.424,
+        "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.228235101228235
+        "worstLossPct": 1.2606406012606406
       }
     },
     {
       "endPct": 5.057183499288769,
       "guarded": {
-        "accepted": 6,
+        "accepted": 15,
         "breaches": 0,
-        "maxPosition": 7.0312,
+        "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 12
+          "G6 price band": 16
         },
-        "worstLossPct": 1.22694990122695
+        "worstLossPct": 1.0549708010549708
       },
       "lowPct": -4.222092132618442,
       "seed": 15,
       "unguarded": {
-        "maxPosition": 7.0312,
+        "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.22694990122695
+        "worstLossPct": 1.0549708010549708
       }
     },
     {
@@ -365,60 +365,60 @@
     {
       "endPct": 9.646307035780708,
       "guarded": {
-        "accepted": 5,
+        "accepted": 11,
         "breaches": 0,
         "maxPosition": 6.0,
         "refusedBy": {
           "G6 price band": 8
         },
-        "worstLossPct": 0.6029356006029356
+        "worstLossPct": 0.6137247006137247
       },
       "lowPct": -3.138428712112912,
       "seed": 17,
       "unguarded": {
         "maxPosition": 6.0,
         "velocityRefused": 0,
-        "worstLossPct": 0.6029356006029356
+        "worstLossPct": 0.6137247006137247
       }
     },
     {
       "endPct": -20.468333515701943,
       "guarded": {
-        "accepted": 8,
+        "accepted": 23,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 1,
-          "G6 price band": 19
+          "G6 price band": 26
         },
-        "worstLossPct": 23.321726123321724
+        "worstLossPct": 22.562345822562346
       },
       "lowPct": -20.468333515701943,
       "seed": 18,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 27.324693427324693
+        "worstLossPct": 26.565313326565317
       }
     },
     {
       "endPct": -8.1352554984134,
       "guarded": {
-        "accepted": 8,
+        "accepted": 38,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
-          "G5 leverage": 21,
-          "G6 price band": 20
+          "G5 leverage": 13,
+          "G6 price band": 36
         },
-        "worstLossPct": 10.22137011022137
+        "worstLossPct": 7.030472807030473
       },
       "lowPct": -11.509235146077259,
       "seed": 19,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 10.94924951094925
+        "worstLossPct": 8.482673008482672
       }
     },
     {
@@ -481,157 +481,157 @@
     {
       "endPct": -9.063617463617462,
       "guarded": {
-        "accepted": 8,
+        "accepted": 28,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
-          "G5 leverage": 30,
-          "G6 price band": 22
+          "G5 leverage": 39,
+          "G6 price band": 37
         },
-        "worstLossPct": 8.873006908873007
+        "worstLossPct": 8.873114008873113
       },
       "lowPct": -10.837060947587261,
       "seed": 23,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 9.656196109656195
+        "worstLossPct": 9.720760309720761
       }
     },
     {
       "endPct": 2.0816391290075416,
       "guarded": {
-        "accepted": 6,
+        "accepted": 19,
         "breaches": 0,
         "maxPosition": 8.0,
         "refusedBy": {
-          "G6 price band": 9
+          "G6 price band": 16
         },
-        "worstLossPct": 1.5909440015909442
+        "worstLossPct": 1.021085101021085
       },
       "lowPct": -4.695349600612758,
       "seed": 24,
       "unguarded": {
         "maxPosition": 8.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.5909440015909442
+        "worstLossPct": 1.021085101021085
       }
     },
     {
       "endPct": -5.699835868256926,
       "guarded": {
-        "accepted": 8,
+        "accepted": 33,
         "breaches": 0,
-        "maxPosition": 12.6582,
+        "maxPosition": 14.0,
         "refusedBy": {
           "G5 leverage": 2,
-          "G6 price band": 23
+          "G6 price band": 50
         },
-        "worstLossPct": 5.2207763052207765
+        "worstLossPct": 3.658799103658799
       },
       "lowPct": -8.214126272021005,
       "seed": 25,
       "unguarded": {
-        "maxPosition": 14.0562,
+        "maxPosition": 16.0,
         "velocityRefused": 0,
-        "worstLossPct": 5.368385505368386
+        "worstLossPct": 3.6945740036945742
       }
     },
     {
       "endPct": 3.1729292045081507,
       "guarded": {
-        "accepted": 6,
+        "accepted": 17,
         "breaches": 0,
-        "maxPosition": 9.0072,
+        "maxPosition": 10.0,
         "refusedBy": {
-          "G6 price band": 16
+          "G6 price band": 28
         },
-        "worstLossPct": 1.8535125018535124
+        "worstLossPct": 1.6666051016666052
       },
       "lowPct": -5.050497866287344,
       "seed": 26,
       "unguarded": {
-        "maxPosition": 9.0072,
+        "maxPosition": 10.0,
         "velocityRefused": 0,
-        "worstLossPct": 1.853512801853513
+        "worstLossPct": 1.6666051016666052
       }
     },
     {
       "endPct": 3.388904694167863,
       "guarded": {
-        "accepted": 7,
+        "accepted": 23,
         "breaches": 0,
-        "maxPosition": 8.4752,
+        "maxPosition": 10.0,
         "refusedBy": {
-          "G6 price band": 8
+          "G6 price band": 16
         },
-        "worstLossPct": 2.1829083021829083
+        "worstLossPct": 2.246934002246934
       },
       "lowPct": -5.477776561987085,
       "seed": 27,
       "unguarded": {
-        "maxPosition": 8.4752,
+        "maxPosition": 10.0,
         "velocityRefused": 0,
-        "worstLossPct": 2.1829083021829083
+        "worstLossPct": 2.246934002246934
       }
     },
     {
       "endPct": -12.36486486486487,
       "guarded": {
-        "accepted": 8,
+        "accepted": 31,
         "breaches": 0,
         "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 8,
-          "G6 price band": 15
+          "G6 price band": 26
         },
-        "worstLossPct": 15.309788015309788
+        "worstLossPct": 13.791142413791144
       },
       "lowPct": -14.989112594375754,
       "seed": 28,
       "unguarded": {
         "maxPosition": 20.0,
         "velocityRefused": 0,
-        "worstLossPct": 17.30977131730977
+        "worstLossPct": 15.601729415601728
       }
     },
     {
       "endPct": 7.867567567567562,
       "guarded": {
-        "accepted": 7,
+        "accepted": 20,
         "breaches": 0,
         "maxPosition": 10.0,
         "refusedBy": {
-          "G6 price band": 12
+          "G6 price band": 21
         },
-        "worstLossPct": 2.0968534020968534
+        "worstLossPct": 1.9070584019070584
       },
       "lowPct": -5.313677645256604,
       "seed": 29,
       "unguarded": {
         "maxPosition": 10.0,
         "velocityRefused": 0,
-        "worstLossPct": 2.0968534020968534
+        "worstLossPct": 1.9070584019070584
       }
     },
     {
       "endPct": -5.2541087646350775,
       "guarded": {
-        "accepted": 8,
+        "accepted": 22,
         "breaches": 0,
-        "maxPosition": 14.9136,
+        "maxPosition": 16.0,
         "refusedBy": {
           "G5 leverage": 3,
-          "G6 price band": 14
+          "G6 price band": 17
         },
-        "worstLossPct": 5.561386105561386
+        "worstLossPct": 5.213901205213902
       },
       "lowPct": -8.344490644490648,
       "seed": 30,
       "unguarded": {
-        "maxPosition": 14.9136,
+        "maxPosition": 16.0,
         "velocityRefused": 0,
-        "worstLossPct": 5.561386105561386
+        "worstLossPct": 5.213901205213902
       }
     }
   ],
@@ -639,7 +639,7 @@
   "sigma": 0.012,
   "steps": 60,
   "worstLossPct": {
-    "guarded": 23.321726123321724,
-    "unguarded": 27.324693427324693
+    "guarded": 22.562345822562346,
+    "unguarded": 26.565313326565317
   }
 }

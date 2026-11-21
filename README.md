@@ -5,7 +5,7 @@
 ![The same runaway agent, unguarded and guarded, on Velocity's real program](docs/replay.png)
 
 The same runaway agent on a 12% fall loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
-random price paths loses the same median (1.5%) either way, 27.3% vs 23.3% on its worst path, with **0 limit
+random price paths loses the same median (1.1%) either way, 26.6% vs 22.6% on its worst path, with **0 limit
 breaches** in every run.
 
 For anyone who lets an AI agent trade their perps account: set the limits once; the agent can trade, can never
@@ -51,12 +51,14 @@ step), unguarded and guarded, on Velocity's real binary with fills when the pric
 
 | | Median worst loss | Worst path | Limit breaches |
 |---|---|---|---|
-| Unguarded | 1.5% | 27.3% (seed 18, SOL -20.5%) | n/a |
-| Guarded (G1 4 SOL, G4 30 SOL, G5 1.5x, G6 2%, G10 100 dUSDT a day) | 1.5% | 23.3% | **0** |
+| Unguarded | 1.1% | 26.6% (seed 18, SOL -20.5%) | n/a |
+| Guarded (G1 4 SOL, G4 30 SOL, G5 1.5x, G6 2%, G10 100 dUSDT a day) | 1.1% | 22.6% | **0** |
 
-On calm paths the guard changes nothing; it refused 314 orders by G6 (the bot asked for levels 2 to 3% away, on all
-30 paths) and 110 by G5 (leverage, on seeds 3, 4, 7, 8, 18, 19, 23, 25, 28 and 30, the paths that fell 8% or more).
-G10 did not bind: once the price was below the grid, the bot stopped buying on its own. Full table: `notes/sweep.txt`.
+On calm paths the guard changes nothing, so the honest headline is the same median loss. It refused 493 orders by G6
+on all 30 paths, by construction: the bot keeps orders up to 3% away and the band is 2% (119 of those were sells). It
+refused 111 buys by G5 (leverage) on seeds 3, 4, 7, 8, 18, 19, 23, 25, 28 and 30, the paths that fell 8% or more; no
+sell was refused by G5. G10 did not bind: once the price was below the grid, the bot stopped buying on its own. Full
+table with fills per run: `notes/sweep.txt`.
 
 ## What is real, with receipts
 
@@ -65,7 +67,7 @@ G10 did not bind: once the price was below the grid, the bot stopped buying on i
 | A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
 | When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
 | The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
-| A normal grid bot on 30 seeded random paths keeps the same median loss guarded and unguarded (1.5%), 23.3% vs 27.3% on the worst path, 0 breaches on every path; G5 binds on the 10 paths that fell 8% or more, G6 on all 30 | `sweep_grid_agent_on_30_random_paths` | `tests-litesvm/tests/sweep.rs`, `notes/sweep.txt`, `notes/sweep.json` |
+| A normal grid bot on 30 seeded random paths keeps the same median loss guarded and unguarded (1.1%), 22.6% vs 26.6% on the worst path, 0 breaches on every path; G5 binds on the 10 paths that fell 8% or more, G6 on all 30 (the bot's 3% window is wider than the 2% band) | `sweep_grid_agent_on_30_random_paths` | `tests-litesvm/tests/sweep.rs`, `notes/sweep.txt`, `notes/sweep.json` |
 | The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `notes/dashboard-devnet.png` |
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |

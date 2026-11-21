@@ -93,6 +93,8 @@ struct Run {
     velocity_refused: u32,
     breaches: u32,
     fills: u32,
+    /// Refusals of the grid's sells (which only reduce the long it bought), by rule.
+    refused_sells: BTreeMap<String, u32>,
 }
 
 /// One grid level: buying at level k, then selling at level k + 1.
@@ -129,13 +131,13 @@ fn run(seed: u64, guarded: bool) -> Run {
     let mut out = Run::default();
     // Per level k in 1..=LEVELS (price level(-k)): what the agent wants there and the resting order's price, if any.
     let mut want: Vec<Want> = vec![Want::Buy; LEVELS as usize + 1];
-    let mut resting: Vec<Option<u64>> = vec![None; LEVELS as usize + 1];
+    let mut resting: Vec<Option<(u64, u32)>> = vec![None; LEVELS as usize + 1]; // (price, order id)
     let mut day_notional: i128 = 0;
     for (step, &price) in prices.iter().enumerate() {
         env.step(10, price);
         // 1. Fills: a resting order fills when the price has passed through it.
         for k in 1..=LEVELS as usize {
-            let Some(px) = resting[k] else { continue };
+            let Some((px, id)) = resting[k] else { continue };
             let crossed = match want[k] {
                 Want::Buy => price <= px,
                 Want::Sell => price >= px,
@@ -144,11 +146,12 @@ fn run(seed: u64, guarded: bool) -> Run {
                 continue;
             }
             let dir = if want[k] == Want::Buy { 1 } else { 0 }; // the flow takes the other side
-            let moved = env.cross(&format!("seed {seed} step {step}: flow fills level {k}"), &flow, &g, dir, SIZE, px);
+            // The flow takes everything at the level or better (Velocity's AMM first, then the agent's order).
+            env.cross(&format!("seed {seed} step {step}: flow fills level {k}"), &flow, &g, dir, 1_000 * BASE, px);
             if !raw_orders(&env, &flow.pubkey()).is_empty() {
                 assert_ok(&env.gcancel_raw(&flow)); // the flow keeps no resting remainder
             }
-            if moved.unsigned_abs() >= SIZE {
+            if !raw_orders(&env, &owner).iter().any(|o| o.order_id == id) {
                 out.fills += 1;
                 resting[k] = None;
                 want[k] = if want[k] == Want::Buy { Want::Sell } else { Want::Buy };
@@ -188,6 +191,9 @@ fn run(seed: u64, guarded: bool) -> Run {
             };
             if let Some(c) = refused {
                 *out.refused_by.entry(name(c)).or_default() += 1;
+                if dir == 1 {
+                    *out.refused_sells.entry(name(c)).or_default() += 1;
+                }
                 continue;
             }
             if r.is_err() {
@@ -195,7 +201,8 @@ fn run(seed: u64, guarded: bool) -> Run {
                 continue;
             }
             out.accepted += 1;
-            resting[k] = Some(px);
+            let id = raw_orders(&env, &owner).iter().map(|o| o.order_id).max().expect("the order rests");
+            resting[k] = Some((px, id));
             if guarded {
                 // Breach check at acceptance, from raw bytes: size, exposure, leverage, notional, band, daily loss.
                 day_notional += SIZE as i128 * price as i128 / BASE as i128;
@@ -261,12 +268,12 @@ fn sweep_grid_agent_on_30_random_paths() {
         format!("Agent: a fixed-size grid bot (2 SOL at each 1% level below $91.39, 10 levels; after a buy it sells that 2 SOL one level up). It keeps orders within 3% of the price and never doubles. {SEEDS} seeded paths of {STEPS} steps, {:.1}% volatility a step; an order fills when the price passes through it.", SIGMA * 100.0),
         "Guard limits: G1 4 SOL, G4 30 SOL worst case, G3 100,000 dUSDT a day, G5 1.5x, G6 2% band, G10 100 dUSDT daily loss. Collateral 1,000 dUSDT.".to_string(),
         String::new(),
-        format!("{:>4} {:>8} {:>8} | {:>10} {:>8} {:>6} | {:>10} {:>8} {:>6} {:>8} | refused by the guard", "seed", "end", "low", "unguarded", "max pos", "Vel.", "guarded", "max pos", "acc.", "breach"),
+        format!("{:>4} {:>8} {:>8} | {:>10} {:>8} {:>6} {:>6} | {:>10} {:>8} {:>6} {:>6} {:>8} | refused by the guard", "seed", "end", "low", "unguarded", "max pos", "fills", "Vel.", "guarded", "max pos", "fills", "acc.", "breach"),
     ];
     for (seed, end, low, u, g) in &rows {
         lines.push(format!(
-            "{:>4} {:>7.1}% {:>7.1}% | {:>9.1}% {:>7.0} {:>6} | {:>9.1}% {:>7.0} {:>6} {:>8} | {:?}",
-            seed, end, low, u.worst_loss_pct, u.max_position, u.velocity_refused, g.worst_loss_pct, g.max_position, g.accepted, g.breaches, g.refused_by
+            "{:>4} {:>7.1}% {:>7.1}% | {:>9.1}% {:>7.0} {:>6} {:>6} | {:>9.1}% {:>7.0} {:>6} {:>6} {:>8} | {:?}",
+            seed, end, low, u.worst_loss_pct, u.max_position, u.fills, u.velocity_refused, g.worst_loss_pct, g.max_position, g.fills, g.accepted, g.breaches, g.refused_by
         ));
     }
     let um = median(rows.iter().map(|r| r.3.worst_loss_pct).collect());
@@ -274,11 +281,17 @@ fn sweep_grid_agent_on_30_random_paths() {
     let uw = rows.iter().map(|r| r.3.worst_loss_pct).fold(0.0, f64::max);
     let gw = rows.iter().map(|r| r.4.worst_loss_pct).fold(0.0, f64::max);
     let breaches: u32 = rows.iter().map(|r| r.4.breaches).sum();
+    let mut sells: BTreeMap<String, u32> = BTreeMap::new();
+    for r in &rows {
+        for (k, n) in &r.4.refused_sells {
+            *sells.entry(k.clone()).or_default() += n;
+        }
+    }
     lines.push(String::new());
     lines.push(format!("SWEEP  worst loss, median over {SEEDS} paths: unguarded {um:.1}%, guarded {gm:.1}%. Worst single path: unguarded {uw:.1}%, guarded {gw:.1}%."));
-    lines.push(format!("SWEEP  refusals by rule (all paths): {total_refused:?}. Breaches: {breaches}."));
+    lines.push(format!("SWEEP  refusals by rule (all paths): {total_refused:?}; of those, the grid's sells: {sells:?}. Breaches: {breaches}."));
     lines.push(format!("SWEEP  G5 (leverage) bound on seeds {g5_runs:?}; G6 (price band) on seeds {g6_runs:?}; G10 (daily loss) on seeds {g10_runs:?}."));
-    lines.push("For contrast, the runaway (martingale) replay on a path where SOL falls 12% in 14 steps (tests/runaway.rs, notes/runaway-replay.txt): unguarded 41.2% worst loss, stopped only by Velocity's own 5x margin check after reaching 55 SOL; guarded 9.4%, 0 breaches.".to_string());
+    lines.push("For contrast, the runaway (martingale) replay on a path where SOL falls 12% in 14 steps is one more row, in tests/runaway.rs and notes/runaway-replay.txt; there the unguarded run was stopped only by Velocity's own 5x margin check.".to_string());
     lines.push("Breach = an accepted order over G1, G4, G3 or the band, or a risk-increasing order accepted over G5 or while the day's loss was over G10, at acceptance, measured from raw account bytes.".to_string());
     let text = lines.join("\n");
     println!("{text}");
