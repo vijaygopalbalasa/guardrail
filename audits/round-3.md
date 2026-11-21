@@ -181,14 +181,14 @@ fn n2_residual_dips_around_midnight() {
 
 fn q4_old_layout_guard_under_head() {
     let mut env = Env::new();
-    env.svm.add_program_from_file(GUARD, "a temporary directory").unwrap();
+    env.svm.add_program_from_file(GUARD, "guard-31afb12.so").unwrap();
     env.step(1, P0);
     let g = env.guarded(1_000, tight());
     env.step(2, P0);
     let size_old = env.svm.get_account(&g.guard).unwrap().data.len();
     let r = env.gplace("old binary: agent bid", &g, small_bid(P0));
     env.note(format!("old binary bid {} size {}", ev(&r), size_old));
-    env.svm.add_program_from_file(GUARD, "a temporary directory").unwrap();
+    env.svm.add_program_from_file(GUARD, "guard-head.so").unwrap();
     env.step(2, P0);
     let ok = g.owner.insecure_clone();
     let r = env.gcancel("HEAD: agent cancel", &g, env.last_guard_order_raw(&g));
