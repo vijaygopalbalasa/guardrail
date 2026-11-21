@@ -18,6 +18,8 @@ export interface Verdict {
   reason: number;
   reasonName: string | null;
   signature: string;
+  /** Whether the order went in as reduce-only (set automatically for an order that only shrinks the position). */
+  reduceOnly: boolean;
 }
 
 /** A transaction the guard (or Velocity) rejected outright: wrong agent, bad accounts, stale oracle, Velocity error. */
@@ -160,7 +162,37 @@ export class GuardrailClient {
    * Places an order through the guard as the agent. Resolves with the guard's verdict: refused orders are recorded
    * successes (Velocity is not called), so `accepted: false` comes back with the rule, value, cap and reason.
    */
+  /**
+   * True when `order` opposes the current position on its market and, together with the reduce-only orders already
+   * resting on that side, is no larger than the position: an exit that only shrinks it.
+   */
+  async wouldOnlyReduce(owner: PublicKey, order: OrderInput): Promise<boolean> {
+    const info = await this.connection.getAccountInfo(this.guardFor(owner).velocityUser, "confirmed");
+    if (!info) return false;
+    const d = info.data;
+    const market = order.marketIndex ?? 0;
+    let base = 0n;
+    for (let i = 0; i < 8; i++) {
+      const o = 424 + i * 80;
+      if (d.readUInt16LE(o + 76) === market) base += d.readBigInt64LE(o + 8);
+    }
+    const dir = order.side === "long" ? 0 : 1;
+    if (base === 0n || (base > 0n ? dir !== 1 : dir !== 0)) return false;
+    let resting = 0n;
+    for (let i = 0; i < 32; i++) {
+      const o = 1064 + i * 104;
+      if (d[o + 86] === 1 && d.readUInt16LE(o + 84) === market && d[o + 91] === dir && d[o + 92] === 1) resting += d.readBigUInt64LE(o + 16) - d.readBigUInt64LE(o + 24);
+    }
+    const abs = base < 0n ? -base : base;
+    return order.size + resting <= abs;
+  }
+
+  /**
+   * Places an order through the guard. When `order.reduceOnly` is left unset, an order that only shrinks the position
+   * goes in as reduce-only (an exit the guard always lets through inside the band).
+   */
   async placeOrder(args: { agent: Keypair; owner: PublicKey; order: OrderInput; payer?: Keypair }): Promise<Verdict> {
+    if (args.order.reduceOnly === undefined) args = { ...args, order: { ...args.order, reduceOnly: await this.wouldOnlyReduce(args.owner, args.order) } };
     const { velocityUser } = this.guardFor(args.owner);
     const extra = await this.remainingAccounts(velocityUser, args.order.marketIndex ?? 0);
     const ix = new TransactionInstruction({
@@ -174,7 +206,7 @@ export class GuardrailClient {
     if (!ev) throw new GuardrailError("no OrderChecked event in the transaction logs", null, null, logs);
     return {
       accepted: ev.accepted, rule: ev.rule, ruleName: RULE_NAMES[ev.rule] ?? `rule ${ev.rule}`, value: ev.value, cap: ev.cap,
-      reason: ev.reason, reasonName: ev.reason ? (GUARD_ERRORS[ev.reason] ?? null) : null, signature,
+      reason: ev.reason, reasonName: ev.reason ? (GUARD_ERRORS[ev.reason] ?? null) : null, signature, reduceOnly: ev.reduceOnly,
     };
   }
 

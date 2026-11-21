@@ -160,8 +160,8 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | G1 | Order size | No single order larger than the owner's maximum. |
 | G2 | Allowlists | Only the owner's markets and order types (Limit, Market, Oracle); no trigger orders, no builder fees, no odd order flags. |
 | G3 | Daily notional | Total order value per UTC day stays under the cap; a new day starts a new total. |
-| G4 | Worst-case exposure | Position plus every open order on one side plus this order stays under the cap for that market. |
-| G5 | Leverage | Worst-case notional across the account, over collateral plus unrealized PnL, stays under the cap. |
+| G4 | Worst-case exposure | Position plus every open order on one side plus this order stays under the cap for that market. Only orders that raise worst-case exposure are checked, so an order that shrinks the position is never trapped. |
+| G5 | Leverage | Worst-case notional across the account, over collateral plus unrealized PnL, stays under the cap. Like G4 and G10, it applies only to orders that raise worst-case exposure. |
 | G6 | Price band | Every price on the order stays within a band around the market's own oracle, and the oracle must be fresh. |
 | G7 | Owner controls | Only the owner sets limits, rotates or revokes the agent, and pauses. |
 | G8 | No withdraw | The guard has no withdraw path and reaches only Velocity's place and cancel instructions. |

@@ -415,7 +415,10 @@ struct Decision {
     day: i64,
     day_notional_after: u64,
     exposure_cap: u64,
+    exposure_before: i128,
     exposure_after: i128,
+    /// Whether the order raised worst-case exposure (only then do G4, G5 and G10 apply).
+    increases: bool,
     leverage_bps: i128,
     prices: Vec<(u16, i64)>,
 }
@@ -632,6 +635,13 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
     }
     let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
 
+    // Risk direction: G4, G5 and G10 refuse only orders that raise this market's worst-case exposure. An order that
+    // leaves it no higher (a plain sell that shrinks a long, not flagged reduce-only) is never trapped by them; it still
+    // meets the shape rules, G1, G2, G3 and the G6 band.
+    let exposure_before = math::worst_case_base(pos.base, pos.open_bids, pos.open_asks);
+    let exposure = math::worst_case_after(pos.base, pos.open_bids, pos.open_asks, p.direction, p.base_asset_amount);
+    let increases = exposure > exposure_before;
+
     // G10 daily loss: the day's first risk-increasing check stores a baseline; past the cap, only exits pass.
     if g.max_daily_loss > 0 {
         let equity = match account_leverage(ra, &user, &prices, None) {
@@ -653,7 +663,7 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
             (equity, flows)
         };
         let loss = daily_loss(b_eq, b_flows, equity, flows);
-        if loss > g.max_daily_loss as i128 {
+        if increases && loss > g.max_daily_loss as i128 {
             return refuse(rule::G10_DAILY_LOSS, loss, g.max_daily_loss as i128, GuardError::DailyLossExceeded);
         }
     }
@@ -672,30 +682,36 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
     }
 
     // G4 worst-case exposure on this market, this order included.
-    let exposure = math::worst_case_after(pos.base, pos.open_bids, pos.open_asks, p.direction, p.base_asset_amount);
-    if exposure > row.max_exposure_base as i128 {
+    if increases && exposure > row.max_exposure_base as i128 {
         return refuse(rule::G4_EXPOSURE, exposure, row.max_exposure_base as i128, GuardError::ExposureExceeded);
     }
 
-    // G5 worst-case leverage over the whole account.
-    let (notional, equity) = match account_leverage(ra, &user, &prices, Some((p,))) {
-        Ok(v) => v,
-        Err(GuardError::OtherSpotBalance) => return refuse(rule::G5_LEVERAGE, 0, 0, GuardError::OtherSpotBalance),
-        Err(e) => return Err(e.into()),
+    // G5 worst-case leverage over the whole account (only for orders that raise worst-case exposure).
+    let lev = if increases {
+        let (notional, equity) = match account_leverage(ra, &user, &prices, Some((p,))) {
+            Ok(v) => v,
+            Err(GuardError::OtherSpotBalance) => return refuse(rule::G5_LEVERAGE, 0, 0, GuardError::OtherSpotBalance),
+            Err(e) => return Err(e.into()),
+        };
+        let lev = match math::leverage_bps(notional, equity) {
+            Some(v) => v,
+            None => return refuse(rule::G5_LEVERAGE, equity, 0, GuardError::NonPositiveEquity),
+        };
+        if lev > l.max_leverage_bps as i128 {
+            return refuse(rule::G5_LEVERAGE, lev, l.max_leverage_bps as i128, GuardError::LeverageExceeded);
+        }
+        lev
+    } else {
+        0
     };
-    let lev = match math::leverage_bps(notional, equity) {
-        Some(v) => v,
-        None => return refuse(rule::G5_LEVERAGE, equity, 0, GuardError::NonPositiveEquity),
-    };
-    if lev > l.max_leverage_bps as i128 {
-        return refuse(rule::G5_LEVERAGE, lev, l.max_leverage_bps as i128, GuardError::LeverageExceeded);
-    }
 
     Ok(Outcome::Accept(Decision {
         day,
         day_notional_after: u64::try_from(after).map_err(|_| GuardError::MathOverflow)?,
         exposure_cap: row.max_exposure_base,
+        exposure_before,
         exposure_after: exposure,
+        increases,
         leverage_bps: lev,
         prices,
     }))
@@ -706,6 +722,14 @@ fn post_check(ctx: &Context<AgentTrade>, p: &OrderParams, d: &Decision) -> Resul
     let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
     let t = user.perp_totals(p.market_index);
     let exposure = math::worst_case_base(t.base, t.open_bids, t.open_asks);
+    if !d.increases {
+        // A non-increasing order must not have raised worst-case exposure after all.
+        if exposure > d.exposure_before {
+            msg!("guard POST-TRADE CHECK FAILED: exposure {} rose above {} on a non-increasing order", exposure, d.exposure_before);
+            return err!(GuardError::PostTradeCheckFailed);
+        }
+        return Ok(());
+    }
     let (notional, equity) = account_leverage(ctx.remaining_accounts, &user, &d.prices, None).map_err(|e| -> Error { e.into() })?;
     let lev = math::leverage_bps(notional, equity).ok_or(GuardError::PostTradeCheckFailed)?;
     let l = &ctx.accounts.guard.limits;

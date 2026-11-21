@@ -49,7 +49,7 @@ server.registerTool(
   "guardrail_place_order",
   {
     description:
-      "Place a Velocity perp order through the Guardrail guard. The guard checks the owner's limits (order size, allowed markets and order types, daily notional, worst-case exposure, leverage, price band) and either forwards the order to Velocity or refuses it. A refusal is not an error: the result says accepted=false with the rule, the measured value and the cap. Sizes are in the market's base asset (SOL for market 0), prices in USD.",
+      "Place a Velocity perp order through the Guardrail guard. The guard checks the owner's limits (order size, allowed markets and order types, daily notional, worst-case exposure, leverage, price band) and either forwards the order to Velocity or refuses it. A refusal is not an error: the result says accepted=false with the rule, the measured value and the cap. Sizes are in the market's base asset (SOL for market 0), prices in USD. An order that opposes your position and fits inside it is sent as reduce-only automatically, so an exit is never blocked by the caps.",
     inputSchema: {
       side: z.enum(["long", "short"]),
       size: z.number().positive().describe("base asset amount, e.g. 1.5 for 1.5 SOL"),
@@ -57,7 +57,7 @@ server.registerTool(
       order_type: z.enum(["limit", "market", "oracle"]).default("limit"),
       oracle_offset: z.number().optional().describe("USD offset from the oracle price (oracle orders)"),
       market_index: z.number().int().nonnegative().default(0).describe("Velocity perp market index (0 = SOL-PERP)"),
-      reduce_only: z.boolean().default(false).describe("an exit that only shrinks the position (allowed even when limits are hit or the guard is paused, if its price is inside the band)"),
+      reduce_only: z.boolean().optional().describe("an exit that only shrinks the position (allowed even when limits are hit or the guard is paused, if its price is inside the band). Leave it unset and the server sets it for you whenever the order opposes your position and fits inside it."),
       post_only: z.boolean().default(false),
     },
   },
@@ -78,7 +78,7 @@ server.registerTool(
         },
       });
       const summary = v.accepted
-        ? `ACCEPTED (${v.ruleName}): ${a.side} ${a.size} on market ${a.market_index} sent to Velocity.`
+        ? `ACCEPTED (${v.ruleName}): ${a.side} ${a.size} on ${a.market_index === 0 ? "SOL-PERP" : `market ${a.market_index}`} sent to Velocity${v.reduceOnly && a.reduce_only === undefined ? " as a reduce-only exit (it only shrinks your position)" : ""}.`
         : `REFUSED by ${v.ruleName}: ${v.reasonName} (value ${v.value}, cap ${v.cap})${HINTS[v.reason] ? `. ${HINTS[v.reason]}` : ""}. Nothing was sent to Velocity.`;
       return text(`${summary}\n${json(v)}`);
     } catch (e) {

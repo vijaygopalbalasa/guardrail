@@ -338,5 +338,28 @@ fn r5_ids_the_owner_cancelled_directly_are_forgotten_so_new_orders_still_fit() {
     assert_eq!(st.placed_order_ids.iter().filter(|x| **x != 0).count(), 1, "only the live id is remembered");
 }
 
+// ------------------------------------------------------------------ R8: a plain risk-reducing sell is never trapped
+
+/// With leverage already over the cap (the owner tightened G5 after a long was opened), a plain sell that only
+/// shrinks the position (not flagged reduce-only) must pass; a buy, or a sell that flips past flat, is still refused.
+#[test]
+fn r8_a_plain_sell_that_reduces_risk_passes_when_leverage_is_over_the_cap() {
+    let mut l = tight();
+    l.max_order_base = 100 * BASE;
+    let (mut env, g) = setup(l);
+    let flow = env.trader("flow", 1_000_000);
+    assert_ok(&env.gplace("agent bids 10 SOL", &g, Order::resting(0, 10 * BASE, 91_300_000)));
+    env.step(2, P0);
+    assert_eq!(env.cross("flow sells", &flow, &g, 1, 1_000 * BASE, 91_300_000), 10 * BASE as i64);
+    env.step(2, P0);
+    let mut tighter = l;
+    tighter.max_leverage_bps = 500; // 0.05x on 10,000 dUSDT: the 10 SOL long (about 0.09x) is now over the cap
+    tighten(&mut env, &g, &tighter);
+    let r = env.gplace("plain sell of half the position (not reduce-only)", &g, Order::resting(1, 5 * BASE, 91_500_000));
+    assert!(events(&r)[0].accepted, "a sell that only reduces worst-case exposure passes G4 and G5");
+    assert_refused(&env.gplace("a buy of 1 SOL", &g, Order::resting(0, BASE, 91_000_000)), gerr::LEVERAGE_EXCEEDED);
+    assert_refused(&env.gplace("a sell that flips 10 SOL short past flat", &g, Order::resting(1, 20 * BASE, 91_510_000)), gerr::LEVERAGE_EXCEEDED);
+}
+
 #[allow(dead_code)]
 fn _unused(_: Keypair) {}
