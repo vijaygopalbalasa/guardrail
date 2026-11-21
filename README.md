@@ -106,16 +106,18 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 
 ## Try it in two minutes (the first build takes about 2 minutes more)
 
-Needs Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and network
-access to Solana devnet. Run every command from the repository root.
+Row Q needs only Node 22 or newer and a devnet wallet keypair file with about 0.2 devnet SOL (faucet.solana.com).
+Steps 0 to 7 need Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and
+network access to Solana devnet. Run every command from the repository root.
 
 | Step | Command | What you should see |
 |---|---|---|
+| Q. Your own guard on devnet, Node only | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && node demo/quickstart.mjs --keypair <your devnet wallet.json>` | a Velocity account with 1,000 test dUSDT from Velocity's devnet faucet, a guard with the demo limits as its delegate, a fresh agent key, the cost (about 0.05 SOL, including 0.02 SOL for the agent's fees) and a link to your guard on the live dashboard |
 | 0. Local key and config | `./scripts/init-local.sh` | a throwaway key in `keys/dev.json` and `config.yml` (your own solana config is not touched) |
 | 1. Get Velocity's devnet binary | `solana -C config.yml program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so && (sha256sum fixtures/velocity-devnet.so 2>/dev/null || shasum -a 256 fixtures/velocity-devnet.so)` | the same hash as in `fixtures/velocity-devnet.so.sha256` |
 | 2. Build the guard | `./scripts/build.sh` | ends with `Finished`; `target/deploy/guard.so` exists |
 | 3. The headline replay | `(cd tests-litesvm && cargo test --release --test runaway -- --nocapture)` | both runs step by step, then the HEADLINE lines (41.2% vs 9.4%, breaches 0) |
-| 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `46 passed` for the limit tests, plus the probes and the replay |
+| 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `47 passed` for the limit tests, plus the audit, daily-loss, probe, replay and sweep tests |
 | 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
 | 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
 | 7. A language-model agent with a bad mandate | `OPENROUTER_API_KEY=... node demo/agent-llm.mjs runaway` (after step 6's setup) | each turn: the model's one-line reason, its tool call and the guard's verdict; logged to `out/llm-run-*.jsonl` |

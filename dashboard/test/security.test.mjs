@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
+import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, equityOf, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
 import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed, explorerUrl, link } from "../render.js";
 
 const GUARD = "ihYBqnzinaqysQcbmYetzXkVAVDXM7wWkYr1xWRGZVU";
@@ -159,4 +159,19 @@ test("explorer links: only base58 values, only devnet or mainnet, only explorer.
   const walk = (e) => { if (e.tag === "a") anchors.push(e); (e.children ?? []).forEach(walk); };
   walk(feed);
   assert.equal(anchors.length, 0, "no link for a hostile signature");
+});
+
+test("the G10 meter's equity matches the guard's formula: deposits at cumulative interest plus base x oracle + quote", () => {
+  const sm = new Uint8Array(800), smv = new DataView(sm.buffer);
+  smv.setBigUint64(328, 10_000_000_000n, true); // cumulative deposit interest 1.0 (1e10)
+  smv.setUint32(696, 6, true); // 6 decimals
+  const or = new Uint8Array(48), ov = new DataView(or.buffer);
+  ov.setBigInt64(8, 9_000_000_000n, true); // $90.00 at exponent -8
+  ov.setInt32(32, -8, true);
+  // 1,000 dUSDT deposited (scaled 1e9 = 1 token); 2 SOL long bought for 182 dUSDT
+  const velocity = { positions: [{ marketIndex: 0, base: 2_000_000_000n, quote: -182_000_000n }], spot: [{ scaledBalance: 1_000_000_000_000n, marketIndex: 0, balanceType: 0 }], totalDeposits: 1_000_000_000n, totalWithdraws: 0n };
+  const e = equityOf(velocity, sm, or);
+  assert.equal(e.equity, 1_000_000_000n + 180_000_000n - 182_000_000n, "998 dUSDT");
+  assert.equal(e.flows, 1_000_000_000n);
+  assert.equal(equityOf({ ...velocity, positions: [{ marketIndex: 1, base: 1n, quote: 0n }] }, sm, or), null, "other markets are not priced");
 });

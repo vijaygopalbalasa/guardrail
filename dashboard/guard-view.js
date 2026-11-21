@@ -139,7 +139,55 @@ export function decodeVelocityUser(u8) {
     const o = 1064 + i * 104;
     if (u8[o + 86] === 1) orders.push({ orderId: v.getUint32(o + 80, true), marketIndex: v.getUint16(o + 84, true), side: u8[o + 91] === 0 ? "long" : "short", price: v.getBigUint64(o + 8, true), size: v.getBigUint64(o + 16, true), filled: v.getBigUint64(o + 24, true) });
   }
-  return { positions, orders };
+  const spot = [];
+  for (let i = 0; i < 8; i++) {
+    const o = 104 + i * 40;
+    const sp = { scaledBalance: v.getBigUint64(o, true), marketIndex: v.getUint16(o + 32, true), balanceType: u8[o + 34] };
+    if (sp.scaledBalance) spot.push(sp);
+  }
+  const totalDeposits = u8.length >= 4408 ? v.getBigUint64(4392, true) : 0n;
+  const totalWithdraws = u8.length >= 4408 ? v.getBigUint64(4400, true) : 0n;
+  return { positions, orders, spot, totalDeposits, totalWithdraws };
+}
+
+// Velocity's spot market 0 (dUSDT) and perp market 0 (SOL-PERP): the same PDAs on devnet and mainnet.
+export const SPOT0 = "2QpHj5vzgCdWaGM2KSoGtYJWeSkx24cMyzUDHDrucvRc";
+export const PERP0 = "FDejXbUrSy6zayBCL5xuk2SXLHZgr8ppfFTLcHbyJorY";
+
+/**
+ * Equity (collateral + unrealized PnL, quote units 1e6) and net deposits, computed the way the guard does it:
+ * dUSDT deposits at the spot market's cumulative interest, plus base x oracle price + quote on SOL-PERP.
+ * Returns null for anything the page cannot price (other markets, other spot balances, a bad oracle).
+ */
+export function equityOf(velocity, spotMarketU8, oracleU8) {
+  if (velocity.positions.some((p) => p.marketIndex !== 0)) return null;
+  if (velocity.spot.some((x) => x.marketIndex !== 0 || x.balanceType === 1)) return null;
+  const sv = new DataView(spotMarketU8.buffer, spotMarketU8.byteOffset, spotMarketU8.byteLength);
+  const cdiLo = sv.getBigUint64(328, true), cdiHi = sv.getBigUint64(336, true);
+  const cdi = (cdiHi << 64n) + cdiLo;
+  const decimals = sv.getUint32(696, true);
+  if (decimals > 19) return null;
+  let collateral = 0n;
+  for (const x of velocity.spot) collateral += (x.scaledBalance * cdi) / 10n ** BigInt(19 - decimals);
+  const ov = new DataView(oracleU8.buffer, oracleU8.byteOffset, oracleU8.byteLength);
+  const price = ov.getBigInt64(8, true), exponent = ov.getInt32(32, true);
+  if (price <= 0n || exponent < -18 || exponent > 18) return null;
+  const shift = exponent + 6;
+  const p6 = shift >= 0 ? price * 10n ** BigInt(shift) : price / 10n ** BigInt(-shift);
+  let upnl = 0n;
+  for (const p of velocity.positions) upnl += (p.base * p6) / 1_000_000_000n + p.quote;
+  return { equity: collateral + upnl, flows: velocity.totalDeposits - velocity.totalWithdraws };
+}
+
+async function loadEquity(url, velocity) {
+  const r = await rpc(url, "getMultipleAccounts", [[SPOT0, PERP0], { encoding: "base64", commitment: "confirmed" }]);
+  const [sm, pm] = r.value;
+  if (!sm || !pm || sm.owner !== VELOCITY_PROGRAM_ID || pm.owner !== VELOCITY_PROGRAM_ID) return null;
+  const pmU8 = fromB64(pm.data[0]);
+  const oracle = b58encode(pmU8.subarray(312, 344));
+  const o = await accountInfo(url, oracle);
+  if (!o || o.owner !== VELOCITY_PROGRAM_ID || o.data.length < 48) return null;
+  return equityOf(velocity, fromB64(sm.data[0]), o.data);
 }
 
 // ---- RPC
@@ -177,6 +225,11 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
     }
     for (const e of txCache.get(s.signature)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
   }
+  let equity = null;
+  if (guard.dailyLoss && guard.dailyLoss.max > 0n) {
+    try { equity = await loadEquity(url, velocity); } catch { /* the G10 meter is skipped */ }
+  }
+  velocity.equity = equity;
   let slot = null;
   try { slot = await rpc(url, "getSlot", [{ commitment: "confirmed" }]); } catch { /* shown without a slot */ }
   return { guard, velocity, decisions, slot };

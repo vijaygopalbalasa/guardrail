@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=19";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=19";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=20";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=20";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -25,6 +25,13 @@ if (headline) {
   $("replay-strip").hidden = false;
 }
 
+/** "14 min ago", or the date once the last order is more than 2 hours old. */
+function lastOrder(t, now) {
+  if (now - Number(t) <= 7200) return ago(t, now);
+  const d = new Date(Number(t) * 1000);
+  return `${d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}, ${d.toISOString().slice(11, 16)} UTC`;
+}
+
 function status(text, bad) {
   $("status").textContent = text;
   $("status").className = `pill ${bad ? "no" : "ok"}`;
@@ -40,7 +47,9 @@ function heroLine(g, velocity) {
   const held = base === 0
     ? `left ${sol(bids)} SOL of bids resting${bids >= cap && cap > 0 ? ` at the owner's ${sol(cap)} SOL cap` : ""}. None has filled${CLUSTER === "devnet" ? " (devnet's oracle is stale)" : ""}`
     : `holds ${sol(Math.abs(base))} SOL with ${sol(bids)} SOL bid, against a ${sol(cap)} SOL cap`;
-  $("hero").textContent = `The agent ${ask}. Guardrail refused ${ref} of its orders on chain and ${held}.`;
+  $("hero").textContent = acc + ref === 0
+    ? "This guard is live. The agent has sent no orders yet; each one it sends is checked here, on chain, against the owner's limits."
+    : `The agent ${ask}. Guardrail refused ${ref} of its orders on chain and ${held}.`;
 }
 
 function verify(decisions) {
@@ -57,7 +66,7 @@ function render({ guard: g, velocity, decisions, slot }) {
   const revoked = g.agent === "11111111111111111111111111111111";
   const last = decisions.find((d) => d.blockTime);
   const state = revoked ? "agent revoked" : g.paused ? "paused by the owner" : "guard active";
-  status(`Live on ${NET}, ${state}${slot ? `, slot ${Number(slot).toLocaleString("en-US")}` : ""}${last ? `, last order ${ago(last.blockTime, now)}` : ""}`, revoked || g.paused);
+  status(`Live on ${NET}, ${state}${slot ? `, slot ${Number(slot).toLocaleString("en-US")}` : ""}${last ? `, last order ${lastOrder(last.blockTime, now)}` : ", no orders yet"}`, revoked || g.paused);
   heroLine(g, velocity);
   verify(decisions);
   $("c-acc").textContent = String(Number(g.acceptedCount));

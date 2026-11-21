@@ -125,7 +125,13 @@ export function renderHeadroom(doc, box, g, velocity, decisions, nowSec) {
   const biggest = Math.max(0, ...decisions.filter((d) => d.accepted).map((d) => num(d.size)));
   meter("G1 largest accepted order", biggest, num(l.maxOrderBase), `${sol(biggest)} of ${sol(l.maxOrderBase)} SOL`);
   if (g.dailyLoss && num(g.dailyLoss.max)) {
-    rows.push(h(doc, "p", { className: "note" }, `G10 daily loss cap ${usd(g.dailyLoss.max)} dUSDT; the day's baseline is taken at the guard's first call that UTC day.`));
+    const dl = g.dailyLoss, eq = velocity.equity;
+    if (eq && num(dl.day) === today && num(dl.baselineEquity) !== 0) {
+      const lost = Math.max(0, num(dl.baselineEquity) + (num(eq.flows) - num(dl.baselineFlows)) - num(eq.equity));
+      meter("G10 lost today", lost, num(dl.max), `${usd(lost)} of ${usd(dl.max)} dUSDT`);
+    } else {
+      rows.push(h(doc, "p", { className: "note" }, `G10 daily loss cap ${usd(dl.max)} dUSDT. ${num(dl.day) === today ? "" : "No guard call yet today: "}the day's baseline is taken at the guard's first call that UTC day.`));
+    }
   }
   box.replaceChildren(...rows);
 }
