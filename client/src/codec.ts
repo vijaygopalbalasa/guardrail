@@ -120,6 +120,9 @@ export interface GuardAccount {
   refusedCancels: bigint;
   /** The last refusal for each rule code 0..7. */
   lastRefusalByRule: LastRefusal[];
+  /** G10 daily-loss brake (absent on guards created before G10): the cap in quote units (0 = off), the UTC day of
+   * the baseline, the baseline equity and net deposits then, the G10 refusal count and the last G10 refusal. */
+  dailyLoss?: { max: bigint; day: bigint; baselineEquity: bigint; baselineFlows: bigint; refused: bigint; lastRefusal: LastRefusal };
 }
 
 function readLimits(r: Reader): Limits {
@@ -160,7 +163,11 @@ export function decodeGuard(data: Buffer): GuardAccount {
   const cancelCount = r.u64();
   const refusedCancels = r.u64();
   const lastRefusalByRule = Array.from({ length: 8 }, readLr);
-  return { owner, velocityUser, agent, paused, limits, day, dayNotional, acceptedCount, refused, lastRefusal, placedOrderIds, cancelCount, refusedCancels, lastRefusalByRule };
+  const g: GuardAccount = { owner, velocityUser, agent, paused, limits, day, dayNotional, acceptedCount, refused, lastRefusal, placedOrderIds, cancelCount, refusedCancels, lastRefusalByRule };
+  if (data.length >= r.o + 8 * 5 + 45) {
+    g.dailyLoss = { max: r.u64(), day: r.i64(), baselineEquity: r.i64(), baselineFlows: r.i64(), refused: r.u64(), lastRefusal: readLr() };
+  }
+  return g;
 }
 
 export interface OrderChecked {

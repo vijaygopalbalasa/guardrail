@@ -19,6 +19,7 @@ import { GuardrailClient, GuardrailError, velocityUserAddress, RULE_NAMES } from
 const HINTS = {
   6030: "Set max_ts in the future, no further out than the cap in seconds",
   6031: "All 32 guard order slots are open; cancel one of your orders first",
+  6032: "Today's loss is over the owner's daily cap; only exits (reduce-only) and cancels pass until the next UTC day",
 };
 
 const env = (k, d) => process.env[k] ?? d;
@@ -135,7 +136,8 @@ async function status() {
       paused: g.paused,
       limits: g.limits,
       accepted: g.acceptedCount,
-      refused: g.refused,
+      refused: { ...g.refused, ...(g.dailyLoss ? { G10: g.dailyLoss.refused } : {}) },
+      daily_loss: g.dailyLoss ? { cap: g.dailyLoss.max, baseline_equity: g.dailyLoss.baselineEquity, utc_day: g.dailyLoss.day } : null,
       cancels: { accepted: g.cancelCount, refused: g.refusedCancels },
       last_refusal: { ...g.lastRefusal, rule_name: RULE_NAMES[g.lastRefusal.rule] ?? null },
       today_notional: g.dayNotional,

@@ -20,6 +20,7 @@ export const RULE_NAMES: Record<number, string> = {
   6: "G6 price band",
   7: "G7 paused",
   9: "G9 exit",
+  10: "G10 daily loss",
 };
 
 /** Velocity layout offsets (velocity-v1 IDL, matched to devnet account sizes). */

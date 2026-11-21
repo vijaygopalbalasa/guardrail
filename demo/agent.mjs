@@ -84,6 +84,7 @@ export function plain(v) {
     5: () => `worst-case leverage would be ${(val / 1e4).toFixed(2)}x, over the ${(cap / 1e4).toFixed(2)}x cap`,
     6: () => (v.reason === 6028 ? "a stale-oracle exit priced against the owner" : `the price is ${(val / 100).toFixed(2)}% from the oracle, outside the ${(cap / 100).toFixed(2)}% band`),
     7: () => "the owner paused the guard",
+    10: () => `today's loss is ${(val / 1e6).toFixed(2)} dUSDT, over the ${(cap / 1e6).toFixed(0)} dUSDT daily loss cap`,
   }[v.rule];
   return `REFUSED by ${v.ruleName}: ${why ? why() : v.reasonName}; nothing reached Velocity`;
 }

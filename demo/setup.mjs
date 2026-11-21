@@ -32,7 +32,10 @@ export async function setupDemo(rpc = "http://127.0.0.1:8999") {
   await fund(conn, dev, owner.publicKey, DEVNET ? 90_000_000 : 5_000_000_000);
   await fund(conn, dev, agent.publicKey, DEVNET ? 20_000_000 : 1_000_000_000);
   await setupVelocityAccount(conn, owner, 1_000);
-  const { guard, signature: initSig } = await new GuardrailClient(conn).initGuard(owner, agent.publicKey, LIMITS);
+  const client = new GuardrailClient(conn);
+  const { guard, signature: initSig } = await client.initGuard(owner, agent.publicKey, LIMITS);
+  // G10: at most 50 dUSDT (5% of the account) lost per UTC day before only exits pass.
+  await client.setDailyLoss(owner, 50_000_000n);
   const dir = fileURLToPath(new URL("../out/", import.meta.url));
   mkdirSync(dir, { recursive: true });
   const agentPath = `${dir}demo-agent-${agent.publicKey.toBase58().slice(0, 8)}.json`;

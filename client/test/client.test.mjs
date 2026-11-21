@@ -49,6 +49,9 @@ test("client: accepted order, refused order with its verdict, counters, cancel, 
   assert.equal(g.refused.G6, 1n);
   assert.equal(g.lastRefusal.rule, 6);
   assert.equal(g.agent.toBase58(), agent.publicKey.toBase58());
+  assert.equal(g.dailyLoss.max, 0n, "the daily loss brake starts off");
+  await client.setDailyLoss(owner, 50_000_000n);
+  assert.equal((await client.getGuard(owner.publicKey)).dailyLoss.max, 50_000_000n, "the owner sets G10");
 
   await client.cancelOrder({ agent, owner: owner.publicKey });
   assert.equal((await openOrders(conn, owner.publicKey)).length, 0, "cancelled");

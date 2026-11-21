@@ -8,3 +8,4 @@ out/
 fixtures/*.so
 config.yml
 docker/guardrail.bundle
+notes/idl-build.log

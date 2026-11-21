@@ -246,6 +246,42 @@
       ]
     },
     {
+      "name": "set_daily_loss",
+      "docs": [
+        "G10, owner only: the most equity (quote units) the account may lose in one UTC day before risk-increasing",
+        "orders are refused. 0 turns the brake off."
+      ],
+      "discriminator": [
+        223,
+        218,
+        56,
+        74,
+        160,
+        3,
+        50,
+        35
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "guard",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "max_daily_loss",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "set_limits",
       "docs": [
         "G7: owner only."
@@ -523,6 +559,16 @@
       "code": 6031,
       "name": "TooManyOpenOrders",
       "msg": "32 orders the guard placed are already open; cancel one first"
+    },
+    {
+      "code": 6032,
+      "name": "DailyLossExceeded",
+      "msg": "G10: today's loss is over the owner's daily loss cap; only exits and cancels pass until the next UTC day"
+    },
+    {
+      "code": 6033,
+      "name": "OrderNotStored",
+      "msg": "Velocity stored no order for this call"
     }
   ],
   "types": [
@@ -688,6 +734,38 @@
                 },
                 8
               ]
+            }
+          },
+          {
+            "name": "max_daily_loss",
+            "docs": [
+              "G10 (appended so earlier fields keep their offsets): the owner's daily loss cap in quote units (0 = off),",
+              "the UTC day of the baseline, the baseline equity and Velocity's net deposits at that moment."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "loss_day",
+            "type": "i64"
+          },
+          {
+            "name": "baseline_equity",
+            "type": "i64"
+          },
+          {
+            "name": "baseline_flows",
+            "type": "i64"
+          },
+          {
+            "name": "refused_g10",
+            "type": "u64"
+          },
+          {
+            "name": "last_refusal_g10",
+            "type": {
+              "defined": {
+                "name": "LastRefusal"
+              }
             }
           }
         ]

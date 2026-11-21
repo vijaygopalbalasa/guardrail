@@ -55,6 +55,7 @@ export function measure(rule, v, cap, reason) {
     case 5: return `worst-case leverage ${(num(v) / 1e4).toFixed(2)}x, cap ${(num(cap) / 1e4).toFixed(2)}x`;
     case 6: return `${(num(v) / 100).toFixed(2)}% from the oracle, band ${(num(cap) / 100).toFixed(2)}%`;
     case 7: return "the owner paused the guard";
+    case 10: return `${usd(v)} dUSDT lost today, cap ${usd(cap)}`;
     default: return "";
   }
 }
@@ -66,7 +67,7 @@ export function renderError(doc, box, message) {
 }
 
 export function renderBars(doc, box, refused) {
-  const names = { G1: "G1 order size", G2: "G2 allowlist", G3: "G3 daily notional", G4: "G4 exposure", G5: "G5 leverage", G6: "G6 price band", G7: "G7 paused" };
+  const names = { G1: "G1 order size", G2: "G2 allowlist", G3: "G3 daily notional", G4: "G4 exposure", G5: "G5 leverage", G6: "G6 price band", G7: "G7 paused", G10: "G10 daily loss" };
   const max = Math.max(1, ...Object.values(refused).map(num));
   box.replaceChildren(...Object.entries(refused).map(([k, n]) =>
     h(doc, "div", { className: `bar${num(n) ? "" : " off"}` },
@@ -122,6 +123,7 @@ export function renderLimits(doc, box, g) {
     ...markets.map((m) => [`G4 market ${num(m.marketIndex)}`, `${sol(m.maxExposureBase)} SOL worst case`]),
     ["G5 leverage", `${(num(l.maxLeverageBps) / 1e4).toFixed(2)}x worst case`],
     ["G6 price band", `${(num(l.priceBandBps) / 100).toFixed(2)}% of the oracle`],
+    ...(g.dailyLoss ? [["G10 daily loss", num(g.dailyLoss.max) ? `${usd(g.dailyLoss.max)} dUSDT a UTC day` : "off"]] : []),
     ["G9 exits", "always allowed inside the band"],
     ["Withdraw", "impossible for the agent"],
   ];
@@ -206,6 +208,7 @@ export function plainDecision(d) {
     4: () => `would put ${sol(d.value)} SOL at risk, cap ${sol(d.cap)} SOL`,
     5: () => `would lift worst-case leverage to ${(num(d.value) / 1e4).toFixed(2)}x, cap ${(num(d.cap) / 1e4).toFixed(2)}x`,
     6: () => `price too far from the oracle`,
+    10: () => `today's loss is ${usd(d.value)} dUSDT, over the ${usd(d.cap)} daily loss cap`,
   }[rule];
   return { kind: "no", tag: `Refused by ${String(d.by ?? `G${rule}`)}`, text: `buy ${size}: ${why ? why() : "over a limit"}` };
 }

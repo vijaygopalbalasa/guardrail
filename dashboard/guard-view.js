@@ -6,13 +6,13 @@ const DISC_EVENT = "5e423129c86171fa"; // sha256("event:OrderChecked")[0..8]
 
 export const RULES = {
   0: "accepted", 1: "G1 order size", 2: "G2 allowlist", 3: "G3 daily notional", 4: "G4 exposure",
-  5: "G5 leverage", 6: "G6 price band", 7: "G7 paused", 9: "G9 exit",
+  5: "G5 leverage", 6: "G6 price band", 7: "G7 paused", 9: "G9 exit", 10: "G10 daily loss",
 };
 export const REASONS = {
   6000: "OrderTooLarge", 6001: "MarketNotAllowed", 6002: "OrderTypeNotAllowed", 6003: "BuilderFieldsRefused",
   6004: "DailyNotionalExceeded", 6005: "ExposureExceeded", 6006: "LeverageExceeded", 6007: "PriceOutsideBand",
   6008: "StaleOracle", 6009: "Paused", 6013: "NotPerp", 6014: "BitFlagsRefused", 6015: "TriggerOrdersRefused",
-  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity", 6028: "StaleExitUnfavourable", 6029: "CancelNotAllowed", 6030: "OrderLifetimeTooLong", 6031: "TooManyOpenOrders",
+  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity", 6028: "StaleExitUnfavourable", 6029: "CancelNotAllowed", 6030: "OrderLifetimeTooLong", 6031: "TooManyOpenOrders", 6032: "DailyLossExceeded", 6033: "OrderNotStored",
 };
 
 const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -66,6 +66,12 @@ export function decodeGuard(u8) {
   r.u8();
   g.cancelCount = r.u64();
   g.refusedCancels = r.u64();
+  r.o += 8 * 45; // last refusal by rule
+  // G10 fields, absent on guards created before G10.
+  if (u8.length >= r.o + 8 * 5 + 45) {
+    g.dailyLoss = { max: r.u64(), day: r.i64(), baselineEquity: r.i64(), baselineFlows: r.i64() };
+    g.refused.G10 = r.u64();
+  }
   return g;
 }
 

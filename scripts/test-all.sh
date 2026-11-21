@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./scripts/build.sh > notes/build.log 2>&1
+./scripts/idl.sh
 (cd tests-litesvm && cargo test --release 2>&1 | grep -E "^test result")
 cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "^test result" | head -1
 (cd client && npm run build >/dev/null)
