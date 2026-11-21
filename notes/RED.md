@@ -115,8 +115,8 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 
 - Red (notes/red-r8.txt): with leverage over the cap (the owner tightened G5 after a 10 SOL long), a plain sell of 5 SOL
   that is not flagged reduce-only was refused by G5.
-- Fix: G4, G5 and G10 now refuse only orders that raise the market's worst-case exposure (position plus resting orders
-  on the worse side plus this order). An order that leaves it no higher passes them and still meets the shape rules,
+- Fix (first version, tightened below): G4, G5 and G10 refused only orders that raise the market's worst-case exposure
+  (position plus resting orders on the worse side plus this order). An order that leaves it no higher passes them and still meets the shape rules,
   G1, G2, G3 and the G6 band. After the CPI, such an order must not have raised worst-case exposure (else the
   transaction fails). Twins in the same test: a 1 SOL buy and a sell that flips past flat are still refused by G5.
 - Client and MCP: when reduce_only is left unset, an order that opposes the position and fits inside it (with the
