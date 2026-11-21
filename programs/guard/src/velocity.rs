@@ -78,11 +78,34 @@ pub struct SpotPos {
     pub balance_type: u8,
 }
 
+/// One open order slot (User + 1064 + i*104).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct OrderSlot {
+    pub order_id: u32,
+    pub market_index: u16,
+    pub order_type: u8,
+    pub direction: u8,
+    pub reduce_only: bool,
+    pub price: u64,
+    pub base: u64,
+    pub filled: u64,
+    pub auction_start: i64,
+    pub auction_end: i64,
+    pub oracle_price_offset: i64,
+    pub auction_duration: u8,
+}
+
+pub const USER_ORDERS: usize = 1064;
+pub const ORDER_LEN: usize = 104;
+pub const NUM_ORDERS: usize = 32;
+
 pub struct UserView {
     pub authority: Pubkey,
     pub delegate: Pubkey,
     pub perp: [PerpPos; NUM_POSITIONS],
     pub spot: [SpotPos; NUM_POSITIONS],
+    /// Open orders only (status Open).
+    pub orders: Vec<OrderSlot>,
 }
 
 impl UserView {
@@ -116,11 +139,33 @@ impl UserView {
             let o = USER_SPOT_POSITIONS + i * SPOT_POSITION_LEN;
             *s = SpotPos { scaled_balance: u64_at(d, o), market_index: u16_at(d, o + 32), balance_type: d[o + 34] };
         }
+        let mut orders = vec![];
+        for i in 0..NUM_ORDERS {
+            let o = USER_ORDERS + i * ORDER_LEN;
+            if d[o + 86] != 1 {
+                continue;
+            }
+            orders.push(OrderSlot {
+                price: u64_at(d, o + 8),
+                base: u64_at(d, o + 16),
+                filled: u64_at(d, o + 24),
+                auction_start: i64_at(d, o + 48),
+                auction_end: i64_at(d, o + 56),
+                oracle_price_offset: i64_at(d, o + 72),
+                order_id: u32::from_le_bytes(d[o + 80..o + 84].try_into().unwrap()),
+                market_index: u16_at(d, o + 84),
+                order_type: d[o + 87],
+                direction: d[o + 91],
+                reduce_only: d[o + 92] == 1,
+                auction_duration: d[o + 96],
+            });
+        }
         UserView {
             authority: Pubkey::try_from(&d[USER_AUTHORITY..USER_AUTHORITY + 32]).unwrap(),
             delegate: Pubkey::try_from(&d[USER_DELEGATE..USER_DELEGATE + 32]).unwrap(),
             perp,
             spot,
+            orders,
         }
     }
 
@@ -135,6 +180,15 @@ impl UserView {
             t.open_orders = t.open_orders.saturating_add(p.open_orders);
         }
         t
+    }
+
+    /// Unfilled size of the open reduce-only orders on one side of a market (for G9 stacking).
+    pub fn resting_reduce_only(&self, market_index: u16, direction: u8) -> u64 {
+        self.orders
+            .iter()
+            .filter(|o| o.reduce_only && o.market_index == market_index && o.direction == direction)
+            .map(|o| o.base.saturating_sub(o.filled))
+            .sum()
     }
 
     /// Distinct markets with an active perp slot.

@@ -102,14 +102,25 @@ pub mod guard {
                 rule::G6_PRICE_BAND => g.refused_g6 += 1,
                 _ => g.refused_g7 += 1,
             }
-            g.last_refusal = LastRefusal { rule: r, reason: u32::from(reason), value, cap, slot };
+            let lr = LastRefusal { rule: r, reason: u32::from(reason), value, cap, slot };
+            g.last_refusal = lr;
+            g.last_refusal_by_rule[(r as usize).min(7)] = lr;
             msg!("guard REFUSED (rule {}): {} (value {}, cap {})", r, reason, value, cap);
             emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
             return Ok(());
         }
+        let before: Vec<u32> = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info())
+            .ok_or(GuardError::NotVelocityUser)?
+            .orders
+            .iter()
+            .map(|o| o.order_id)
+            .collect();
         let mut data = velocity::IX_PLACE_PERP_ORDER.to_vec();
         params.serialize(&mut data)?;
         forward(&ctx, data)?;
+        // Re-check what Velocity actually stored for the new order (it can write its own auction prices), then record
+        // its id so the agent can later cancel it (and only it).
+        let placed = stored_order_check(&ctx, &params, &outcome, &before)?;
         match outcome {
             Outcome::Accept(d) => {
                 // A cap exceeded after the CPI would be a guard bug, not a refusal: fail the transaction.
@@ -118,11 +129,13 @@ pub mod guard {
                 g.day = d.day;
                 g.day_notional = d.day_notional_after;
                 g.accepted_count += 1;
+                record_placed(g, &placed);
                 emit_checked(g.key(), &params, true, rule::ACCEPTED, d.leverage_bps, g.limits.max_leverage_bps as i128, 0);
             }
             _ => {
                 let g = &mut ctx.accounts.guard;
                 g.accepted_count += 1;
+                record_placed(g, &placed);
                 emit_checked(g.key(), &params, true, rule::G9_EXIT, 0, 0, 0);
             }
         }
@@ -130,15 +143,35 @@ pub mod guard {
         Ok(())
     }
 
-    /// G9: cancels are always allowed, even while paused.
+    /// G9: the agent may always cancel an order the guard placed, even while paused. It may not cancel the owner's
+    /// own orders or cancel everything (None); such a request is a recorded refusal.
     pub fn cancel_order<'info>(
         ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         order_id: Option<u32>,
     ) -> Result<()> {
+        let g = &ctx.accounts.guard;
+        let allowed = match order_id {
+            Some(id) if id != 0 => g.placed_order_ids.contains(&id),
+            _ => false,
+        };
+        if !allowed {
+            let g = &mut ctx.accounts.guard;
+            g.refused_cancels += 1;
+            msg!("guard REFUSED cancel {:?}: only orders the guard placed can be cancelled by id", order_id);
+            emit!(CancelChecked { guard: g.key(), order_id: order_id.unwrap_or(0), accepted: false, reason: u32::from(GuardError::CancelNotAllowed) });
+            return Ok(());
+        }
+        let id = order_id.unwrap();
         let mut data = velocity::IX_CANCEL_ORDER.to_vec();
         order_id.serialize(&mut data)?;
         forward(&ctx, data)?;
-        msg!("guard: cancel {:?} forwarded", order_id);
+        let g = &mut ctx.accounts.guard;
+        if let Some(slot) = g.placed_order_ids.iter_mut().find(|x| **x == id) {
+            *slot = 0;
+        }
+        g.cancel_count += 1;
+        emit!(CancelChecked { guard: g.key(), order_id: id, accepted: true, reason: 0 });
+        msg!("guard: cancel {} forwarded", id);
         Ok(())
     }
 }
@@ -172,6 +205,15 @@ fn band_breach(p: &OrderParams, oracle: i64, band: u32) -> Option<(i128, &'stati
     if p.order_type == order_type::MARKET && p.price == 0 {
         return Some((math::BPS, "market order without a worst price"));
     }
+    let off0 = p.oracle_price_offset.unwrap_or(0);
+    if p.order_type == order_type::ORACLE && off0 == 0 {
+        // Velocity forbids a price on Oracle orders, so the offset is the only limit; without it the order fills at
+        // any price after the auction (audit F1).
+        return Some((math::BPS, "oracle order without an offset"));
+    }
+    if p.order_type == order_type::LIMIT && p.price == 0 && off0 == 0 {
+        return Some((math::BPS, "limit order without a price"));
+    }
     if p.price != 0 && !math::within_band(p.price as i128, oracle, band) {
         return Some((dev(p.price as i128), "price"));
     }
@@ -198,7 +240,7 @@ fn unfavourable_for_stale_exit(p: &OrderParams, oracle: i64) -> Option<&'static 
     let ok_abs = |x: i128| if sell { x >= oracle as i128 } else { x <= oracle as i128 };
     let ok_rel = |x: i128| if sell { x >= 0 } else { x <= 0 };
     let offset = p.oracle_price_offset.unwrap_or(0);
-    if p.price == 0 && offset == 0 && p.order_type != order_type::ORACLE {
+    if p.price == 0 && offset == 0 {
         return Some("missing price");
     }
     if p.price != 0 && !ok_abs(p.price as i128) {
@@ -215,6 +257,68 @@ fn unfavourable_for_stale_exit(p: &OrderParams, oracle: i64) -> Option<&'static 
         }
     }
     None
+}
+
+/// The absolute prices an order stored on Velocity can execute at: its limit price or oracle offset, and its
+/// auction prices (relative for Oracle orders and offset Limit orders). None if the order has no worst price.
+fn stored_prices(o: &velocity::OrderSlot, oracle: i64) -> Option<Vec<i128>> {
+    let orc = oracle as i128;
+    let relative = o.order_type == order_type::ORACLE || (o.order_type == order_type::LIMIT && o.oracle_price_offset != 0);
+    let mut v = vec![];
+    if o.oracle_price_offset != 0 {
+        v.push(orc + o.oracle_price_offset as i128);
+    } else if o.order_type == order_type::ORACLE || o.price == 0 {
+        return None;
+    } else {
+        v.push(o.price as i128);
+    }
+    if o.auction_duration > 0 || o.auction_start != 0 || o.auction_end != 0 {
+        for a in [o.auction_start, o.auction_end] {
+            v.push(if relative { orc + a as i128 } else { a as i128 });
+        }
+    }
+    Some(v)
+}
+
+/// The first stored price on the owner-unfavourable side of `limit_bps` around the oracle (a buy above the band, a
+/// sell below it). With `limit_bps` 0 the bound is the oracle price itself.
+pub fn stored_breach(o: &velocity::OrderSlot, oracle: i64, limit_bps: u32) -> Option<i128> {
+    let prices = match stored_prices(o, oracle) {
+        Some(p) => p,
+        None => return Some(0),
+    };
+    let edge = oracle as i128 * limit_bps as i128 / math::BPS;
+    prices.into_iter().find(|&x| if o.direction == 0 { x > oracle as i128 + edge } else { x < oracle as i128 - edge })
+}
+
+/// After the CPI: the orders Velocity stored for this call (ids not present before) must have a worst price inside
+/// the band on the owner-unfavourable side; for a very stale exit, on the owner-favourable side of the last price.
+fn stored_order_check(ctx: &Context<AgentTrade>, p: &OrderParams, outcome: &Outcome, before: &[u32]) -> Result<Vec<u32>> {
+    let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
+    let l = &ctx.accounts.guard.limits;
+    let (oracle, age) = market_price(ctx.remaining_accounts, p.market_index, Clock::get()?.slot)?;
+    let limit = match outcome {
+        Outcome::Exit if age > l.exit_max_staleness_slots => 0,
+        _ => l.price_band_bps,
+    };
+    let mut placed = vec![];
+    for o in user.orders.iter().filter(|o| !before.contains(&o.order_id)) {
+        if let Some(x) = stored_breach(o, oracle, limit) {
+            msg!("guard POST-TRADE CHECK FAILED: stored order {} can execute at {} (oracle {}, limit {} bps)", o.order_id, x, oracle, limit);
+            return err!(GuardError::PostTradeCheckFailed);
+        }
+        placed.push(o.order_id);
+    }
+    Ok(placed)
+}
+
+/// Remembers order ids the guard placed (ring buffer of 32, the size of Velocity's order book per user).
+fn record_placed(g: &mut Guard, ids: &[u32]) {
+    for id in ids {
+        let i = (g.placed_cursor as usize) % g.placed_order_ids.len();
+        g.placed_order_ids[i] = *id;
+        g.placed_cursor = ((i + 1) % g.placed_order_ids.len()) as u8;
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -347,10 +451,18 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
     let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
     let pos = user.perp_totals(p.market_index);
 
-    // G9: a true exit skips G1 to G5, the pause and the staleness limit (a stale oracle must never trap a position),
-    // but its price must stay inside the band computed from the oracle's last price, so an exit cannot hand the
-    // position's value to a partner far from the market.
-    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {
+    // G9: a true exit (reduce-only, opposite to the position, and with the exits already resting no larger than it)
+    // skips G1, G3, G4, G5 and the pause, and is never blocked by staleness. It keeps G2, and its price must stay
+    // inside the band (or, with a very stale oracle, on the owner-favourable side of the last price).
+    let resting = user.resting_reduce_only(p.market_index, p.direction);
+    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base, resting) {
+        // Exits keep G2 (audit F2): only allowed markets and order types.
+        if !l.markets.iter().any(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {
+            return refuse(rule::G2_ALLOWLIST, p.market_index as i128, 0, GuardError::MarketNotAllowed);
+        }
+        if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
+            return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
+        }
         let (oracle, age) = market_price(ra, p.market_index, clock.slot)?;
         if age > l.exit_max_staleness_slots {
             // Very stale: the band would be centred on an old price, so only owner-favourable prices are allowed.
@@ -381,6 +493,13 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
     // G1
     if p.base_asset_amount > l.max_order_base {
         return refuse(rule::G1_ORDER_SIZE, p.base_asset_amount as i128, l.max_order_base as i128, GuardError::OrderTooLarge);
+    }
+    // Order lifetime: a resting order must expire within the owner's bound, so a stale price cannot rest forever.
+    if l.max_order_lifetime_secs > 0 {
+        let life = p.max_ts.map(|t| t as i128 - clock.unix_timestamp as i128).unwrap_or(i128::MAX);
+        if life > l.max_order_lifetime_secs as i128 {
+            return refuse(rule::G2_ALLOWLIST, life.min(i64::MAX as i128), l.max_order_lifetime_secs as i128, GuardError::OrderLifetimeTooLong);
+        }
     }
 
     // Prices: the order's market and every market with an open position or order, each from its own oracle.
@@ -518,6 +637,8 @@ pub struct Limits {
     /// G9: exits with an oracle older than this may only be priced on the owner-favourable side of the last oracle
     /// price (sell at or above it, buy at or below it). Must be at least max_oracle_staleness_slots.
     pub exit_max_staleness_slots: u64,
+    /// Non-exit orders must carry max_ts no later than now + this many seconds (0: no bound).
+    pub max_order_lifetime_secs: u64,
 }
 
 #[account]
@@ -545,6 +666,13 @@ pub struct Guard {
     pub refused_g6: u64,
     pub refused_g7: u64,
     pub last_refusal: LastRefusal,
+    /// Order ids the guard placed (ring buffer; 0 = empty). The agent may cancel only these.
+    pub placed_order_ids: [u32; 32],
+    pub placed_cursor: u8,
+    pub cancel_count: u64,
+    pub refused_cancels: u64,
+    /// The last refusal for each rule (index = rule code, 0..=7), so a later refusal cannot bury an earlier one.
+    pub last_refusal_by_rule: [LastRefusal; 8],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
@@ -597,6 +725,15 @@ pub struct OrderChecked {
     /// The owner's cap for the rule.
     pub cap: i128,
     /// The GuardError code naming the refusal (0 when accepted).
+    pub reason: u32,
+}
+
+/// Emitted for every cancel the agent asks for.
+#[event]
+pub struct CancelChecked {
+    pub guard: Pubkey,
+    pub order_id: u32,
+    pub accepted: bool,
     pub reason: u32,
 }
 
@@ -700,4 +837,34 @@ pub enum GuardError {
     MathOverflow,
     #[msg("G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price")]
     StaleExitUnfavourable,
+    #[msg("the agent may cancel only orders the guard placed, by id")]
+    CancelNotAllowed,
+    #[msg("the order's max_ts is later than the owner's order lifetime allows")]
+    OrderLifetimeTooLong,
+}
+
+#[cfg(test)]
+mod stored_order_tests {
+    use super::*;
+
+    fn slot(order_type: u8, direction: u8, price: u64, offset: i64, start: i64, end: i64, duration: u8) -> velocity::OrderSlot {
+        velocity::OrderSlot { order_type, direction, price, oracle_price_offset: offset, auction_start: start, auction_end: end, auction_duration: duration, base: 1, ..Default::default() }
+    }
+
+    #[test]
+    fn audit_stored_orders() {
+        let oracle = 91_390_000;
+        // F1: what Velocity stored for an Oracle BUY with no offset and no auction params: no limit at all.
+        assert!(stored_breach(&slot(4, 0, 0, 0, 723_020, 15_293_060, 180), oracle, 100).is_some());
+        // Oracle BUY with offset +0.50: Velocity's own auction 0.27 to 0.50, inside a 1% band.
+        assert!(stored_breach(&slot(4, 0, 0, 500_000, 271_520, 500_000, 15), oracle, 100).is_none());
+        // Market BUY at 92.30 with Velocity's auction 92.11 to 92.30: inside the band.
+        assert!(stored_breach(&slot(0, 0, 92_300_000, 0, 92_113_020, 92_300_000, 13), oracle, 100).is_none());
+        // A BUY whose auction ends 2% above the oracle breaches a 1% band; the same SELL does not (owner-favourable).
+        assert!(stored_breach(&slot(1, 0, 91_000_000, 0, 91_000_000, 93_220_000, 10), oracle, 100).is_some());
+        assert!(stored_breach(&slot(1, 1, 93_220_000, 0, 93_500_000, 93_220_000, 10), oracle, 100).is_none());
+        // A stale exit SELL (limit 0 bps) must not sit below the last price.
+        assert!(stored_breach(&slot(1, 1, 91_000_000, 0, 0, 0, 0), oracle, 0).is_some());
+        assert!(stored_breach(&slot(1, 1, 91_390_000, 0, 0, 0, 0), oracle, 0).is_none());
+    }
 }

@@ -4,55 +4,70 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 
-running 46 tests
-test every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter ... ok
-test g4_refuses_ask_that_takes_worst_case_short_over_cap ... ok
-test exit_staleness_limit_must_not_be_below_the_order_staleness_limit ... ok
-test g2_refuses_market_not_on_allowlist ... ok
-test accepted_orders_and_exits_count_and_real_errors_record_nothing ... ok
-test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... ok
-test g4_sums_every_slot_for_the_market_not_the_first_match ... ok
-test g1_refuses_order_one_unit_over_max_size ... ok
+running 9 tests
+test info_order_lifetime_bound ... ok
+test f3_agent_cannot_cancel_the_owners_orders_or_cancel_all ... ok
+test f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle ... ok
+test info_last_refusal_is_also_kept_per_rule ... ok
+test f1_oracle_order_without_offset_is_refused ... ok
+test f2_exit_must_use_an_allowed_order_type ... ok
+test f1_stale_exit_oracle_without_offset_is_refused ... ok
+test f1_oracle_exit_without_offset_is_refused_even_while_paused ... ok
+test f4_exits_beyond_the_position_counting_resting_exits_are_not_exits ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 47 tests
 test g2_refuses_order_type_not_allowed ... ok
+test g2_refuses_market_not_on_allowlist ... ok
 test g2_refuses_builder_idx_and_builder_fee ... ok
+test exit_staleness_limit_must_not_be_below_the_order_staleness_limit ... ok
+test g1_refuses_order_one_unit_over_max_size ... ok
+test accepted_orders_and_exits_count_and_real_errors_record_nothing ... ok
+test every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter ... ok
 test g4_refuses_bid_that_takes_worst_case_long_over_cap ... ok
+test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... ok
+test g4_refuses_ask_that_takes_worst_case_short_over_cap ... ok
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... ok
+test g4_sums_every_slot_for_the_market_not_the_first_match ... ok
 test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... ok
 test g6_refuses_auction_price_outside_band ... ok
-test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... ok
 test g6_refuses_limit_order_whose_oracle_offset_is_outside_band ... ok
-test g6_refuses_market_order_without_a_worst_price ... ok
-test g6_refuses_oracle_offset_outside_band ... ok
-test g5_refuses_when_an_open_position_market_is_missing ... ok
-test g6_refuses_oracle_order_with_a_far_price_field ... ok
-test g7_only_the_owner_sets_limits ... ok
 test g6_refuses_limit_price_outside_band ... ok
-test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... ok
-test g7_limits_are_validated ... ok
+test g6_refuses_oracle_order_with_a_far_price_field ... ok
+test g6_refuses_oracle_offset_outside_band ... ok
+test g6_refuses_market_order_without_a_worst_price ... ok
+test g5_refuses_when_an_open_position_market_is_missing ... ok
 test g6_refuses_stale_oracle ... ok
-test g7_pause_blocks_new_orders_but_not_cancels ... ok
+test g7_limits_are_validated ... ok
+test g7_only_the_owner_sets_limits ... ok
+test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... ok
 test g8_agent_cannot_withdraw_or_trade_around_the_guard ... ok
+test g7_pause_blocks_new_orders_but_not_cancels ... ok
 test g8_guard_has_no_withdraw_or_delegate_instruction ... ok
 test g7_revoke_and_rotate_agent ... ok
 test g9_exit_allowed_when_exposure_is_over_cap ... ok
-test g9_exit_price_must_stay_in_band ... ok
 test g9_exit_actually_closes_the_position_under_tight_limits ... ok
-test g9_exit_allowed_when_paused_or_market_delisted ... ok
-test g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band ... ok
-test init_guard_requires_the_velocity_user_authority ... ok
-test g9_exit_allowed_when_daily_notional_is_spent ... ok
-test guard_ignores_a_look_alike_oracle_at_another_address ... ok
-test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... ok
+test g9_exit_in_a_delisted_market_is_refused_by_the_allowlist ... ok
 test g9_exit_allowed_when_leverage_is_over_cap ... ok
+test g9_exit_allowed_when_daily_notional_is_spent ... ok
+test init_guard_requires_the_velocity_user_authority ... ok
+test guard_ignores_a_look_alike_oracle_at_another_address ... ok
+test g9_exit_allowed_when_paused ... ok
+test g9_exit_price_must_stay_in_band ... ok
+test g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band ... ok
 test refuses_unsupported_oracle_source_bad_market_and_bad_oracle ... ok
-test stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed ... ok
+test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... ok
+test moderately_stale_exit_still_uses_the_normal_band ... ok
 test order_shape_refusals_trigger_bitflags_spot_zero ... ok
 test refuses_when_equity_is_not_positive ... ok
-test moderately_stale_exit_still_uses_the_normal_band ... ok
+test stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed ... ok
+test stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction ... ok
 test stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed ... ok
 test refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative ... ok
-test stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction ... ok
 
-test result: ok. 46 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
 
 
 running 2 tests
@@ -62,10 +77,11 @@ test probe_exit_price_far_under_oracle ... ok
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
 
-running 1 test
+running 2 tests
+test replay_leverage_cap_binds_when_losses_shrink_equity ... ok
 test replay_runaway_agent_unguarded_vs_guarded ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
 
 
 running 0 tests

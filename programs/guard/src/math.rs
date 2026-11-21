@@ -67,13 +67,14 @@ pub fn token_amount(scaled_balance: u64, cumulative_interest: u128, decimals: u3
     i128::try_from(v).ok()
 }
 
-/// G9: a reduce-only order opposite to the position and no larger than it.
-pub fn is_exit(reduce_only: bool, direction: u8, size: u64, position_base: i64) -> bool {
+/// G9: a reduce-only order opposite to the position whose size, plus the reduce-only orders already resting on
+/// that side, is no larger than the position.
+pub fn is_exit(reduce_only: bool, direction: u8, size: u64, position_base: i64, resting_exits: u64) -> bool {
     if !reduce_only || size == 0 || position_base == 0 {
         return false;
     }
     let opposes = (position_base > 0 && direction == 1) || (position_base < 0 && direction == 0);
-    opposes && (size as u128) <= position_base.unsigned_abs() as u128
+    opposes && (size as u128 + resting_exits as u128) <= position_base.unsigned_abs() as u128
 }
 
 /// G3: UTC day number.
@@ -93,7 +94,8 @@ mod props {
         fn every_true_exit_is_recognised(dir in 0u8..2, pos_abs in 1i64..i64::MAX, frac in 1u64..=1_000) {
             let pos = if dir == 1 { pos_abs } else { -pos_abs };
             let size = ((pos_abs as u128 * frac as u128) / 1_000).max(1) as u64;
-            prop_assert!(is_exit(true, dir, size, pos));
+            prop_assert!(is_exit(true, dir, size, pos, 0));
+            prop_assert!(!is_exit(true, dir, size, pos, pos_abs as u64 - size + 1), "resting exits count");
         }
 
         #[test]
@@ -138,7 +140,7 @@ mod props {
 
         #[test]
         fn exit_never_exceeds_or_follows_the_position(reduce in any::<bool>(), dir in 0u8..2, size in any::<u64>(), pos in any::<i64>()) {
-            if is_exit(reduce, dir, size, pos) {
+            if is_exit(reduce, dir, size, pos, 0) {
                 prop_assert!(reduce);
                 prop_assert!(size as u128 <= pos.unsigned_abs() as u128);
                 prop_assert!((pos > 0 && dir == 1) || (pos < 0 && dir == 0));
@@ -173,7 +175,8 @@ mod props {
         assert!(!within_band(90_470_000, 91_390_000, 100));
         assert_eq!(leverage_bps(3_000, 1_000), Some(30_000));
         assert_eq!(token_amount(999_999_976_700, 10_000_000_232, 6), Some(999_999_999));
-        assert!(is_exit(true, 1, 1, 5) && !is_exit(true, 0, 1, 5) && !is_exit(true, 1, 6, 5) && !is_exit(false, 1, 1, 5));
+        assert!(is_exit(true, 1, 1, 5, 0) && !is_exit(true, 0, 1, 5, 0) && !is_exit(true, 1, 6, 5, 0) && !is_exit(false, 1, 1, 5, 0));
+        assert!(is_exit(true, 1, 2, 5, 3) && !is_exit(true, 1, 3, 5, 3));
         assert_eq!(utc_day(86_399), 0);
         assert_eq!(utc_day(-1), -1);
     }

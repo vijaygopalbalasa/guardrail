@@ -20,7 +20,7 @@ open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit 2>&1) | grep -E "\.\.\. FAILED|^test result"
   restore
 }
 plant "G1 off by one" $LIB "if p.base_asset_amount > l.max_order_base {" "if p.base_asset_amount > l.max_order_base + 1 {"
@@ -52,13 +52,27 @@ plant "a refusal fails the transaction instead of being recorded" $LIB "        
             return Ok(());" "            emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
             return Err(reason.into());"
 plant "refusal counter for G1 not bumped" $LIB "rule::G1_ORDER_SIZE => g.refused_g1 += 1," "rule::G1_ORDER_SIZE => {}"
-plant "G9 exit does not need to oppose the position" $MATH "    opposes && (size as u128) <= position_base.unsigned_abs() as u128" "    (size as u128) <= position_base.unsigned_abs() as u128"
-plant "G9 exits blocked by limits (no bypass)" $LIB "    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {" "    if false {"
+plant "G9 exit does not need to oppose the position" $MATH "    opposes && (size as u128 + resting_exits as u128) <= position_base.unsigned_abs() as u128" "    (size as u128 + resting_exits as u128) <= position_base.unsigned_abs() as u128"
+plant "F4 resting exits ignored" $MATH "    opposes && (size as u128 + resting_exits as u128) <= position_base.unsigned_abs() as u128" "    opposes && (size as u128) <= position_base.unsigned_abs() as u128"
+plant "G9 exits blocked by limits (no bypass)" $LIB "    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base, resting) {" "    if false {"
 plant "G8 a third Velocity instruction (withdraw) appears" $VEL "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];" "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];
 pub const IX_WITHDRAW: [u8; 8] = [183, 18, 70, 156, 148, 109, 161, 34];"
 plant "post-trade check off by one (refuses at the cap)" $LIB "if exposure > d.exposure_cap as i128 || lev > l.max_leverage_bps as i128 {" "if exposure >= d.exposure_cap as i128 || lev > l.max_leverage_bps as i128 {"
 plant "stale exit favourable-side check removed" $LIB "            if let Some(what) = unfavourable_for_stale_exit(p, oracle) {" "            if let Some(what) = None::<&str> {"
 plant "stale exit threshold ignored (always the band)" $LIB "        if age > l.exit_max_staleness_slots {" "        if false {"
+plant "F1 oracle order without an offset allowed" $LIB "    if p.order_type == order_type::ORACLE && off0 == 0 {" "    if false {"
+plant "F1 stored-order check after the CPI removed" $LIB "        if let Some(x) = stored_breach(o, oracle, limit) {" "        if let Some(x) = None::<i128> {"
+plant "F2 exits skip the order-type allowlist" $LIB "        if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
+            return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
+        }
+        let (oracle, age)" "        let (oracle, age)"
+plant "F3 agent may cancel any order" $LIB "            Some(id) if id != 0 => g.placed_order_ids.contains(&id)," "            Some(_) => true,"
+plant "F3 agent may cancel all" $LIB "            _ => false,
+        };" "            None => true,
+            _ => false,
+        };"
+plant "INFO order lifetime ignored" $LIB "        if life > l.max_order_lifetime_secs as i128 {" "        if false {"
+plant "INFO last refusal by rule not kept" $LIB "            g.last_refusal_by_rule[(r as usize).min(7)] = lr;" ""
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1
