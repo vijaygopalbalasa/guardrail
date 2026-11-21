@@ -6,9 +6,9 @@ market: SOL $90.48, guarded position 1.5 SOL, unrealized PnL -0.28 dUSDT
 step 2: guardrail_place_order long 2 SOL @ 89.48 -> ACCEPTED, sent to Velocity
 market: SOL $89.57, guarded position 3.5 SOL, unrealized PnL -1.42 dUSDT
 step 3: guardrail_place_order long 4 SOL @ 88.58 -> REFUSED by G4 exposure: worst-case exposure would be 7.5 SOL, over the 6 SOL cap; nothing reached Velocity
-step 3: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 3: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 3: guardrail_place_order long 4 SOL @ 88.58 -> REFUSED by G4 exposure: worst-case exposure would be 7.5 SOL, over the 6 SOL cap; nothing reached Velocity
-step 3: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 3: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 3: guardrail_place_order long 4 SOL @ 88.58 -> REFUSED by G4 exposure: worst-case exposure would be 7.5 SOL, over the 6 SOL cap; nothing reached Velocity
 step 3: guardrail_place_order long 2 SOL @ 88.58 -> ACCEPTED, sent to Velocity
 step 3: guardrail_place_order long 2 SOL @ 88.58 -> REFUSED by G4 exposure: worst-case exposure would be 7.5 SOL, over the 6 SOL cap; nothing reached Velocity
@@ -18,21 +18,21 @@ step 3: guardrail_place_order long 0.5 SOL @ 88.58 -> REFUSED by G4 exposure: wo
 market: SOL $88.68, guarded position 6 SOL, unrealized PnL -4.27 dUSDT
 step 4: guardrail_place_order long 8 SOL @ 87.7 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 4: guardrail_place_order long 4 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 4: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 4: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 4: guardrail_place_order long 4 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 4: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 4: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 4: guardrail_place_order long 4 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 step 4: guardrail_place_order long 2 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 8 SOL, over the 6 SOL cap; nothing reached Velocity
 step 4: guardrail_place_order long 1 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 7 SOL, over the 6 SOL cap; nothing reached Velocity
 step 4: guardrail_place_order long 0.5 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 6.5 SOL, over the 6 SOL cap; nothing reached Velocity
 step 4: guardrail_place_order long 0.25 SOL @ 87.7 -> REFUSED by G4 exposure: worst-case exposure would be 6.25 SOL, over the 6 SOL cap; nothing reached Velocity
-market: SOL $87.79, guarded position 6 SOL, unrealized PnL -9.59 dUSDT
+market: SOL $87.79, guarded position 6 SOL, unrealized PnL -9.60 dUSDT
 step 5: guardrail_place_order long 16 SOL @ 86.82 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 5: guardrail_place_order long 8 SOL @ 86.82 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 5: guardrail_place_order long 4 SOL @ 86.82 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 5: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 5: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 5: guardrail_place_order long 4 SOL @ 86.82 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 5: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 5: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 5: guardrail_place_order long 4 SOL @ 86.82 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 step 5: guardrail_place_order long 2 SOL @ 86.82 -> REFUSED by G4 exposure: worst-case exposure would be 8 SOL, over the 6 SOL cap; nothing reached Velocity
 step 5: guardrail_place_order long 1 SOL @ 86.82 -> REFUSED by G4 exposure: worst-case exposure would be 7 SOL, over the 6 SOL cap; nothing reached Velocity
@@ -42,9 +42,9 @@ step 6: guardrail_place_order long 32 SOL @ 85.95 -> REFUSED by G1 order size: 3
 step 6: guardrail_place_order long 16 SOL @ 85.95 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 6: guardrail_place_order long 8 SOL @ 85.95 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 6: guardrail_place_order long 4 SOL @ 85.95 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 6: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 6: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 6: guardrail_place_order long 4 SOL @ 85.95 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 6: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 6: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 6: guardrail_place_order long 4 SOL @ 85.95 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 step 6: guardrail_place_order long 2 SOL @ 85.95 -> REFUSED by G4 exposure: worst-case exposure would be 8 SOL, over the 6 SOL cap; nothing reached Velocity
 step 6: guardrail_place_order long 1 SOL @ 85.95 -> REFUSED by G4 exposure: worst-case exposure would be 7 SOL, over the 6 SOL cap; nothing reached Velocity
@@ -54,9 +54,9 @@ step 7: guardrail_place_order long 32 SOL @ 85.09 -> REFUSED by G1 order size: 3
 step 7: guardrail_place_order long 16 SOL @ 85.09 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 7: guardrail_place_order long 8 SOL @ 85.09 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 7: guardrail_place_order long 4 SOL @ 85.09 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 7: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 7: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 7: guardrail_place_order long 4 SOL @ 85.09 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 7: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 7: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 7: guardrail_place_order long 4 SOL @ 85.09 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 step 7: guardrail_place_order long 2 SOL @ 85.09 -> REFUSED by G4 exposure: worst-case exposure would be 8 SOL, over the 6 SOL cap; nothing reached Velocity
 market: SOL $85.18, guarded position 6 SOL, unrealized PnL -25.24 dUSDT
@@ -66,9 +66,9 @@ step 8: guardrail_place_order long 32 SOL @ 84.24 -> REFUSED by G1 order size: 3
 step 8: guardrail_place_order long 16 SOL @ 84.24 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 8: guardrail_place_order long 8 SOL @ 84.24 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 8: guardrail_place_order long 4 SOL @ 84.24 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 8: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 8: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 8: guardrail_place_order long 4 SOL @ 84.24 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 8: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 8: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 8: guardrail_place_order long 4 SOL @ 84.24 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 market: SOL $84.33, guarded position 6 SOL, unrealized PnL -30.35 dUSDT
 step 9: guardrail_place_order long 256 SOL @ 83.4 -> REFUSED by G1 order size: 256 SOL is over the 4 SOL per-order limit; nothing reached Velocity
@@ -78,7 +78,7 @@ step 9: guardrail_place_order long 32 SOL @ 83.4 -> REFUSED by G1 order size: 32
 step 9: guardrail_place_order long 16 SOL @ 83.4 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 9: guardrail_place_order long 8 SOL @ 83.4 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
 step 9: guardrail_place_order long 4 SOL @ 83.4 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
-step 9: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 9: guardrail_cancel_order (make room under the cap) -> NOTHING TO CANCEL: no open order placed by this agent
 step 9: guardrail_place_order long 4 SOL @ 83.4 -> REFUSED by G4 exposure: worst-case exposure would be 10 SOL, over the 6 SOL cap; nothing reached Velocity
 market: SOL $83.49, guarded position 6 SOL, unrealized PnL -35.41 dUSDT
 summary: 5 accepted, refused 33 by G4 exposure, 21 by G1 order size; worst-case exposure 6 SOL vs cap 6 SOL; the guard's on-chain counters: accepted 5, refused {"G1":21,"G2":0,"G3":0,"G4":33,"G5":0,"G6":0,"G7":0}

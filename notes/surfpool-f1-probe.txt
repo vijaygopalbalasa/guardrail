@@ -1,0 +1,2 @@
+ATTACK (Oracle BUY, no offset, no worst price): REFUSED by G6 price band (PriceOutsideBand); orders on Velocity: 0; tx 56jZqphnPrkA8ivGiLCaG1rPa1nHdfCdNigGoxJuNj49uyu5fyf58Wwuus826kEZ95PQTB1cA6FjNwZBBFF9k2VM
+TWIN (Oracle BUY, offset +0.50, inside the 1% band): ACCEPTED; orders on Velocity: 1; tx 2bz22kENKyXLASeKiY5LcvZXxisez8ko3YA2GuJ3yJEPQcQvXXJCB51iwHr4VNarJrePXgVtGXVMgeeVZ4ULK8o8
