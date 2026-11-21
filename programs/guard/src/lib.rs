@@ -43,41 +43,377 @@ pub mod guard {
 
     /// The Velocity user's authority creates the guard with an agent and limits. Afterwards the owner sets the guard
     /// PDA as the user's delegate with Velocity's own update_user_delegate.
-    pub fn init_guard(_ctx: Context<InitGuard>, _agent: Pubkey, _limits: Limits) -> Result<()> {
+    pub fn init_guard(ctx: Context<InitGuard>, agent: Pubkey, limits: Limits) -> Result<()> {
+        validate_limits(&limits)?;
+        let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info())
+            .ok_or(GuardError::NotVelocityUser)?;
+        require_keys_eq!(user.authority, ctx.accounts.owner.key(), GuardError::NotUserAuthority);
+        let g = &mut ctx.accounts.guard;
+        g.owner = user.authority;
+        g.velocity_user = ctx.accounts.velocity_user.key();
+        g.agent = agent;
+        g.paused = false;
+        g.limits = limits;
+        g.day = math::utc_day(Clock::get()?.unix_timestamp);
+        g.day_notional = 0;
+        g.bump = ctx.bumps.guard;
+        msg!("guard created: agent {}", agent);
         Ok(())
     }
 
     /// G7: owner only.
-    pub fn set_limits(_ctx: Context<OwnerOnly>, _limits: Limits) -> Result<()> {
+    pub fn set_limits(ctx: Context<OwnerOnly>, limits: Limits) -> Result<()> {
+        validate_limits(&limits)?;
+        ctx.accounts.guard.limits = limits;
+        msg!("guard: limits updated by the owner");
         Ok(())
     }
 
     /// G7: owner only. Pubkey::default() revokes the agent.
-    pub fn set_agent(_ctx: Context<OwnerOnly>, _agent: Pubkey) -> Result<()> {
+    pub fn set_agent(ctx: Context<OwnerOnly>, agent: Pubkey) -> Result<()> {
+        ctx.accounts.guard.agent = agent;
+        msg!("guard: agent set to {}", agent);
         Ok(())
     }
 
     /// G7: owner only. While paused, only cancels and exits (G9) go through.
-    pub fn set_paused(_ctx: Context<OwnerOnly>, _paused: bool) -> Result<()> {
+    pub fn set_paused(ctx: Context<OwnerOnly>, paused: bool) -> Result<()> {
+        ctx.accounts.guard.paused = paused;
+        msg!("guard: paused = {}", paused);
         Ok(())
     }
 
     /// The agent's only way to trade. Remaining accounts are Velocity's account maps (oracles, then spot markets,
     /// then perp markets); the guard reads the ones it needs and forwards all of them.
     pub fn place_perp_order<'info>(
-        _ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
-        _params: OrderParams,
+        ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
+        params: OrderParams,
     ) -> Result<()> {
+        check_agent(&ctx)?;
+        let decision = check_order(&ctx, &params)?;
+        let mut data = velocity::IX_PLACE_PERP_ORDER.to_vec();
+        params.serialize(&mut data)?;
+        forward(&ctx, data)?;
+        if let Some(d) = decision {
+            post_check(&ctx, &params, &d)?;
+            let g = &mut ctx.accounts.guard;
+            g.day = d.day;
+            g.day_notional = d.day_notional_after;
+            emit_checked(g.key(), &params, true, rule::ACCEPTED, d.leverage_bps, g.limits.max_leverage_bps as i128);
+        } else {
+            emit_checked(ctx.accounts.guard.key(), &params, true, rule::G9_EXIT, 0, 0);
+        }
+        msg!("guard: order accepted, size {} market {}", params.base_asset_amount, params.market_index);
         Ok(())
     }
 
     /// G9: cancels are always allowed, even while paused.
     pub fn cancel_order<'info>(
-        _ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
-        _order_id: Option<u32>,
+        ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
+        order_id: Option<u32>,
     ) -> Result<()> {
+        check_agent(&ctx)?;
+        let mut data = velocity::IX_CANCEL_ORDER.to_vec();
+        order_id.serialize(&mut data)?;
+        forward(&ctx, data)?;
+        msg!("guard: cancel {:?} forwarded", order_id);
         Ok(())
     }
+}
+
+fn validate_limits(l: &Limits) -> Result<()> {
+    let allowed = (1 << order_type::MARKET) | (1 << order_type::LIMIT) | (1 << order_type::ORACLE);
+    require!(l.max_order_base > 0, GuardError::InvalidLimits);
+    require!(l.allowed_order_types != 0 && l.allowed_order_types & !allowed == 0, GuardError::InvalidLimits);
+    require!((1..=10_000).contains(&l.price_band_bps), GuardError::InvalidLimits);
+    require!(l.max_leverage_bps >= 1, GuardError::InvalidLimits);
+    require!(l.max_oracle_staleness_slots >= 1, GuardError::InvalidLimits);
+    for (i, a) in l.markets.iter().enumerate() {
+        if a.max_exposure_base == 0 {
+            continue;
+        }
+        for b in l.markets.iter().skip(i + 1) {
+            require!(b.max_exposure_base == 0 || b.market_index != a.market_index, GuardError::InvalidLimits);
+        }
+    }
+    Ok(())
+}
+
+fn check_agent(ctx: &Context<AgentTrade>) -> Result<()> {
+    let g = &ctx.accounts.guard;
+    require!(g.agent != Pubkey::default(), GuardError::AgentRevoked);
+    require_keys_eq!(ctx.accounts.agent.key(), g.agent, GuardError::NotAgent);
+    Ok(())
+}
+
+fn emit_checked(guard: Pubkey, p: &OrderParams, accepted: bool, rule_code: u8, value: i128, cap: i128) {
+    emit!(OrderChecked {
+        guard,
+        accepted,
+        rule: rule_code,
+        market_index: p.market_index,
+        direction: p.direction,
+        base_asset_amount: p.base_asset_amount,
+        reduce_only: p.reduce_only,
+        value,
+        cap,
+    });
+}
+
+/// Logs the reason, emits the refusal event (kept in the failed transaction's logs) and returns the error.
+fn refuse(guard: Pubkey, p: &OrderParams, rule_code: u8, value: i128, cap: i128, e: GuardError) -> Result<Option<Decision>> {
+    msg!("guard REFUSED (rule {}): {} (value {}, cap {})", rule_code, e, value, cap);
+    emit_checked(guard, p, false, rule_code, value, cap);
+    Err(e.into())
+}
+
+/// What the pre-check computed, re-asserted after the CPI.
+struct Decision {
+    day: i64,
+    day_notional_after: u64,
+    exposure_cap: u64,
+    exposure_after: i128,
+    leverage_bps: i128,
+    prices: Vec<(u16, i64)>,
+}
+
+fn find<'a, 'info>(ra: &'a [AccountInfo<'info>], key: &Pubkey) -> Option<&'a AccountInfo<'info>> {
+    ra.iter().find(|a| a.key == key)
+}
+
+/// The perp market's own oracle price (1e6) and its age in slots, from the remaining accounts.
+fn market_price(ra: &[AccountInfo], market_index: u16, slot: u64) -> std::result::Result<(i64, u64), GuardError> {
+    let pm_acc = find(ra, &velocity::perp_market_address(market_index)).ok_or(GuardError::MissingMarketAccount)?;
+    let pm = velocity::load_perp_market(pm_acc, market_index).ok_or(GuardError::BadMarketAccount)?;
+    if pm.oracle_source != velocity::ORACLE_SOURCE_PYTH_LAZER {
+        return Err(GuardError::UnsupportedOracle);
+    }
+    let o_acc = find(ra, &pm.oracle).ok_or(GuardError::MissingMarketAccount)?;
+    let o = velocity::load_oracle(o_acc).ok_or(GuardError::BadOracleAccount)?;
+    let price = math::price_to_1e6(o.price, o.exponent).ok_or(GuardError::BadOracleAccount)?;
+    Ok((price, slot.saturating_sub(o.posted_slot)))
+}
+
+/// Collateral (spot market 0, the quote asset) in quote units. Other spot positions are ignored (conservative).
+fn collateral(ra: &[AccountInfo], user: &velocity::UserView) -> std::result::Result<i128, GuardError> {
+    let sm_acc = find(ra, &velocity::spot_market_address(0)).ok_or(GuardError::MissingMarketAccount)?;
+    let sm = velocity::load_spot_market(sm_acc, 0).ok_or(GuardError::BadMarketAccount)?;
+    let mut total: i128 = 0;
+    for s in user.spot.iter().filter(|s| s.market_index == 0 && s.scaled_balance > 0) {
+        if s.balance_type == 0 {
+            total += math::token_amount(s.scaled_balance, sm.cumulative_deposit_interest, sm.decimals).ok_or(GuardError::MathOverflow)?;
+        } else {
+            total -= math::token_amount(s.scaled_balance, sm.cumulative_borrow_interest, sm.decimals).ok_or(GuardError::MathOverflow)?;
+        }
+    }
+    Ok(total)
+}
+
+/// Worst-case notional over every market with activity (plus this order) and equity (collateral + uPnL).
+fn account_leverage(
+    ra: &[AccountInfo],
+    user: &velocity::UserView,
+    prices: &[(u16, i64)],
+    order: Option<(&OrderParams,)>,
+) -> std::result::Result<(i128, i128), GuardError> {
+    let mut markets = user.active_markets();
+    if let Some((p,)) = order {
+        if !markets.contains(&p.market_index) {
+            markets.push(p.market_index);
+        }
+    }
+    let mut notional: i128 = 0;
+    let mut upnl: i128 = 0;
+    for m in markets {
+        let price = prices.iter().find(|(i, _)| *i == m).map(|(_, p)| *p).ok_or(GuardError::MissingMarketAccount)?;
+        let t = user.perp_totals(m);
+        let wc = match order {
+            Some((p,)) if p.market_index == m => math::worst_case_after(t.base, t.open_bids, t.open_asks, p.direction, p.base_asset_amount),
+            _ => math::worst_case_base(t.base, t.open_bids, t.open_asks),
+        };
+        notional += math::notional(wc, price);
+        upnl += math::notional(t.base as i128, price) + t.quote as i128;
+    }
+    Ok((notional, collateral(ra, user)? + upnl))
+}
+
+/// Pre-CPI checks. Ok(None) means the order is a G9 exit and skips the limits; Ok(Some) carries what to re-check.
+fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Decision>> {
+    let g = &ctx.accounts.guard;
+    let gk = g.key();
+    let l = &g.limits;
+    let ra = ctx.remaining_accounts;
+    let clock = Clock::get()?;
+
+    // Order shape, always enforced (exits included).
+    if p.market_type != 1 {
+        return refuse(gk, p, rule::ORDER_SHAPE, p.market_type as i128, 1, GuardError::NotPerp);
+    }
+    if p.base_asset_amount == 0 {
+        return refuse(gk, p, rule::ORDER_SHAPE, 0, 0, GuardError::ZeroSize);
+    }
+    if p.bit_flags != 0 {
+        return refuse(gk, p, rule::ORDER_SHAPE, p.bit_flags as i128, 0, GuardError::BitFlagsRefused);
+    }
+    if p.order_type == order_type::TRIGGER_MARKET || p.order_type == order_type::TRIGGER_LIMIT || p.trigger_price.is_some() {
+        return refuse(gk, p, rule::ORDER_SHAPE, p.order_type as i128, 0, GuardError::TriggerOrdersRefused);
+    }
+    if p.builder_idx.is_some() || p.builder_fee_tenth_bps.is_some() {
+        return refuse(gk, p, rule::G2_ALLOWLIST, 1, 0, GuardError::BuilderFieldsRefused);
+    }
+
+    let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
+    let pos = user.perp_totals(p.market_index);
+
+    // G9: a true exit always goes through.
+    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {
+        msg!("guard: G9 exit (reduce-only, opposite to a {} position, size {})", pos.base, p.base_asset_amount);
+        return Ok(None);
+    }
+
+    // G7
+    if g.paused {
+        return refuse(gk, p, rule::G7_PAUSED, 1, 0, GuardError::Paused);
+    }
+    // G2
+    let row = match l.markets.iter().find(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {
+        Some(r) => *r,
+        None => return refuse(gk, p, rule::G2_ALLOWLIST, p.market_index as i128, 0, GuardError::MarketNotAllowed),
+    };
+    if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
+        return refuse(gk, p, rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
+    }
+    // G1
+    if p.base_asset_amount > l.max_order_base {
+        return refuse(gk, p, rule::G1_ORDER_SIZE, p.base_asset_amount as i128, l.max_order_base as i128, GuardError::OrderTooLarge);
+    }
+
+    // Prices: the order's market and every market with an open position or order, each from its own oracle.
+    let mut markets = user.active_markets();
+    if !markets.contains(&p.market_index) {
+        markets.push(p.market_index);
+    }
+    let mut prices: Vec<(u16, i64)> = vec![];
+    for m in markets {
+        match market_price(ra, m, clock.slot) {
+            Ok((price, age)) => {
+                // G6 stale oracle
+                if age > l.max_oracle_staleness_slots {
+                    return refuse(gk, p, rule::G6_PRICE_BAND, age as i128, l.max_oracle_staleness_slots as i128, GuardError::StaleOracle);
+                }
+                prices.push((m, price));
+            }
+            Err(e) => return refuse(gk, p, rule::ORDER_SHAPE, m as i128, 0, e),
+        }
+    }
+    let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
+
+    // G6 price band: limit price, oracle offset and auction prices.
+    let band = l.price_band_bps;
+    let dev_bps = |x: i128| (x - oracle as i128).abs() * math::BPS / oracle as i128;
+    let off_bps = |x: i128| x.abs() * math::BPS / oracle as i128;
+    match p.order_type {
+        order_type::LIMIT | order_type::MARKET => {
+            if p.order_type == order_type::MARKET && p.price == 0 {
+                return refuse(gk, p, rule::G6_PRICE_BAND, 0, band as i128, GuardError::PriceOutsideBand);
+            }
+            if !math::within_band(p.price as i128, oracle, band) {
+                return refuse(gk, p, rule::G6_PRICE_BAND, dev_bps(p.price as i128), band as i128, GuardError::PriceOutsideBand);
+            }
+            for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {
+                if !math::within_band(a as i128, oracle, band) {
+                    return refuse(gk, p, rule::G6_PRICE_BAND, dev_bps(a as i128), band as i128, GuardError::PriceOutsideBand);
+                }
+            }
+        }
+        _ => {
+            for o in [p.oracle_price_offset, p.auction_start_price, p.auction_end_price].into_iter().flatten() {
+                if !math::offset_within_band(o as i128, oracle, band) {
+                    return refuse(gk, p, rule::G6_PRICE_BAND, off_bps(o as i128), band as i128, GuardError::PriceOutsideBand);
+                }
+            }
+        }
+    }
+
+    // G3 daily notional at the oracle price.
+    let day = math::utc_day(clock.unix_timestamp);
+    let used = if g.day == day { g.day_notional as i128 } else { 0 };
+    let after = used + math::notional(p.base_asset_amount as i128, oracle);
+    if after > l.daily_notional_cap as i128 {
+        return refuse(gk, p, rule::G3_DAILY_NOTIONAL, after, l.daily_notional_cap as i128, GuardError::DailyNotionalExceeded);
+    }
+
+    // G4 worst-case exposure on this market, this order included.
+    let exposure = math::worst_case_after(pos.base, pos.open_bids, pos.open_asks, p.direction, p.base_asset_amount);
+    if exposure > row.max_exposure_base as i128 {
+        return refuse(gk, p, rule::G4_EXPOSURE, exposure, row.max_exposure_base as i128, GuardError::ExposureExceeded);
+    }
+
+    // G5 worst-case leverage over the whole account.
+    let (notional, equity) = match account_leverage(ra, &user, &prices, Some((p,))) {
+        Ok(v) => v,
+        Err(e) => return refuse(gk, p, rule::G5_LEVERAGE, 0, 0, e),
+    };
+    let lev = match math::leverage_bps(notional, equity) {
+        Some(v) => v,
+        None => return refuse(gk, p, rule::G5_LEVERAGE, equity, 0, GuardError::NonPositiveEquity),
+    };
+    if lev > l.max_leverage_bps as i128 {
+        return refuse(gk, p, rule::G5_LEVERAGE, lev, l.max_leverage_bps as i128, GuardError::LeverageExceeded);
+    }
+
+    Ok(Some(Decision {
+        day,
+        day_notional_after: u64::try_from(after).map_err(|_| GuardError::MathOverflow)?,
+        exposure_cap: row.max_exposure_base,
+        exposure_after: exposure,
+        leverage_bps: lev,
+        prices,
+    }))
+}
+
+/// After the CPI: re-read the Velocity account and assert the same caps hold on what Velocity actually recorded.
+fn post_check(ctx: &Context<AgentTrade>, p: &OrderParams, d: &Decision) -> Result<()> {
+    let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
+    let t = user.perp_totals(p.market_index);
+    let exposure = math::worst_case_base(t.base, t.open_bids, t.open_asks);
+    let (notional, equity) = account_leverage(ctx.remaining_accounts, &user, &d.prices, None).map_err(|e| -> Error { e.into() })?;
+    let lev = math::leverage_bps(notional, equity).ok_or(GuardError::PostTradeCheckFailed)?;
+    let l = &ctx.accounts.guard.limits;
+    if exposure > d.exposure_cap as i128 || lev > l.max_leverage_bps as i128 {
+        msg!(
+            "guard POST-TRADE CHECK FAILED: exposure {} (pre {}) cap {}, leverage {} cap {}",
+            exposure, d.exposure_after, d.exposure_cap, lev, l.max_leverage_bps
+        );
+        return err!(GuardError::PostTradeCheckFailed);
+    }
+    Ok(())
+}
+
+/// CPI into Velocity with [state, user (mut), guard PDA (signer)] plus all remaining accounts.
+fn forward<'info>(ctx: &Context<'_, '_, 'info, 'info, AgentTrade<'info>>, data: Vec<u8>) -> Result<()> {
+    use anchor_lang::solana_program::{instruction::{AccountMeta, Instruction}, program::invoke_signed};
+    let g = &ctx.accounts.guard;
+    let mut metas = vec![
+        AccountMeta::new_readonly(ctx.accounts.velocity_state.key(), false),
+        AccountMeta::new(ctx.accounts.velocity_user.key(), false),
+        AccountMeta::new_readonly(g.key(), true),
+    ];
+    let mut infos = vec![
+        ctx.accounts.velocity_state.to_account_info(),
+        ctx.accounts.velocity_user.to_account_info(),
+        g.to_account_info(),
+    ];
+    for a in ctx.remaining_accounts.iter() {
+        metas.push(if a.is_writable { AccountMeta::new(a.key(), false) } else { AccountMeta::new_readonly(a.key(), false) });
+        infos.push(a.clone());
+    }
+    infos.push(ctx.accounts.velocity_program.to_account_info());
+    let ix = Instruction { program_id: velocity::PROGRAM_ID, accounts: metas, data };
+    let user_key = ctx.accounts.velocity_user.key();
+    let seeds: &[&[u8]] = &[b"guard", user_key.as_ref(), &[g.bump]];
+    invoke_signed(&ix, &infos, &[seeds])?;
+    Ok(())
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]

@@ -266,17 +266,23 @@ fn g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room() {
     l.max_leverage_bps = 30_000;
     let (mut env, g) = setup(l);
     open_long(&mut env, &g, 10 * BASE);
-    let room_before = max_bid_for_leverage(&env, &g, P0, 30_000);
     let mut price = P0;
     for _ in 0..7 {
         price = price * 99 / 100;
         env.step(10, price);
     }
     let room_after = max_bid_for_leverage(&env, &g, price, 30_000);
-    assert!(room_after < room_before, "a loss lowers equity and the allowed size");
+    // The same room computed as if the loss did not count (equity = collateral only): strictly larger.
+    let (base, _, bids, asks) = env.totals(&g.owner.pubkey());
+    let worst_now = (base as i128 + bids as i128).abs().max((base as i128 + asks as i128).abs());
+    let room_ignoring_loss = ((env.raw_collateral(&g.owner.pubkey()) * 30_000 / 10_000 * BASE as i128 / price as i128 - worst_now) as u64) / 100_000 * 100_000;
+    assert!(room_after + 100_000 < room_ignoring_loss, "the unrealized loss shrinks the room ({room_after} vs {room_ignoring_loss})");
     let bad = Order::resting(0, room_after + 100_000, price - 1_000_000);
     let r = env.gplace("G5 after the drop, one step over", &g, bad);
     refused(&env, &g, &r, &bad, gerr::LEVERAGE_EXCEEDED, rule::G5);
+    let ignoring = Order::resting(0, room_ignoring_loss, price - 1_000_000);
+    let r = env.gplace("G5 the size that ignoring the loss would allow", &g, ignoring);
+    refused(&env, &g, &r, &ignoring, gerr::LEVERAGE_EXCEEDED, rule::G5);
     let good = Order::resting(0, room_after, price - 1_000_000);
     let r = env.gplace("G5 after the drop, at the cap", &g, good);
     accepted(&env, &g, &r, &good, rule::ACCEPTED);
@@ -336,7 +342,7 @@ fn g6_refuses_oracle_offset_outside_band() {
     let mut l = Limits::loose();
     l.price_band_bps = 100;
     let (mut env, g) = setup(l);
-    let mut bad = Order::resting(0, BASE, 0);
+    let mut bad = Order::limit(0, BASE, 0); // oracle orders cannot be post-only on Velocity
     bad.order_type = 4;
     bad.oracle_price_offset = Some(-920_000);
     let r = env.gplace("G6 oracle offset -0.92", &g, bad);
@@ -570,21 +576,45 @@ fn g9_reduce_only_that_is_not_an_exit_goes_through_the_limits() {
 // ------------------------------------------------------------------ G8 no withdraw, no other Velocity instruction
 
 #[test]
-fn g8_guard_binary_contains_only_place_and_cancel_velocity_instructions() {
+fn g8_guard_source_reaches_only_place_and_cancel_on_velocity() {
+    // The compiled program loads constants as immediates, so check the source: exactly two Velocity instruction
+    // discriminators exist, they are place_perp_order and cancel_order, and there is exactly one CPI call site.
     use sha2::{Digest, Sha256};
-    let so = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../target/deploy/guard.so")).unwrap();
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../programs/guard/src/");
+    let vel = std::fs::read_to_string(format!("{dir}velocity.rs")).unwrap();
+    let lib = std::fs::read_to_string(format!("{dir}lib.rs")).unwrap();
+    let consts: Vec<&str> = vel.lines().filter(|l| l.trim_start().starts_with("pub const IX_")).collect();
+    assert_eq!(consts.len(), 2, "two Velocity instruction constants: {consts:?}");
+    for (name, line) in [("place_perp_order", consts[0]), ("cancel_order", consts[1])] {
+        let d: Vec<String> = Sha256::digest(format!("global:{name}").as_bytes())[..8].iter().map(|b| b.to_string()).collect();
+        assert!(line.contains(&d.join(", ")), "{name} discriminator matches: {line}");
+    }
+    let all = format!("{lib}{vel}");
+    assert_eq!(all.matches("invoke_signed(").count(), 1, "one CPI call site");
+    assert_eq!(all.matches("invoke(").count(), 0, "no unsigned CPI");
     let idl: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../fixtures/velocity-idl.json")).unwrap()).unwrap();
-    let mut found = vec![];
+    // No other Velocity discriminator appears anywhere in the source.
     for ix in idl["instructions"].as_array().unwrap() {
         let name = ix["name"].as_str().unwrap();
-        let d: Vec<u8> = Sha256::digest(format!("global:{name}").as_bytes())[..8].to_vec();
-        if so.windows(8).any(|w| w == d.as_slice()) {
-            found.push(name.to_string());
+        if name == "place_perp_order" || name == "cancel_order" {
+            continue;
         }
+        let d: Vec<String> = Sha256::digest(format!("global:{name}").as_bytes())[..8].iter().map(|b| b.to_string()).collect();
+        assert!(!all.contains(&d.join(", ")), "source must not contain the {name} discriminator");
     }
-    found.sort();
-    assert_eq!(found, vec!["cancel_order".to_string(), "place_perp_order".to_string()], "only these two Velocity instructions");
+}
+
+#[test]
+fn g8_guard_has_no_withdraw_or_delegate_instruction() {
+    use solana_instruction::Instruction;
+    let (mut env, g) = setup(Limits::loose());
+    let agent = g.agent.insecure_clone();
+    for name in ["withdraw", "deposit", "update_user_delegate", "transfer_deposit_by_delegate", "close", "set_delegate"] {
+        let accounts = vec![AccountMeta::new_readonly(agent.pubkey(), true), AccountMeta::new(g.guard, false), AccountMeta::new(g.user, false)];
+        let r = env.send(&format!("guard has no {name}"), vec![Instruction { program_id: GUARD, accounts, data: disc(name).to_vec() }], &[&agent]);
+        assert_code(&r, 101); // Anchor InstructionFallbackNotFound
+    }
 }
 
 #[test]

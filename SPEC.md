@@ -23,6 +23,8 @@ with the reason. The owner keeps full control (trade directly, change limits, re
 - G6 price band: limit prices and oracle offsets must stay within N bps of the oracle price.
 - G7 owner-only: set or change limits, rotate or revoke the agent, pause; the agent can never change limits.
 - G9 cancels and reduce-only orders are ALWAYS allowed (a guard must never trap an agent in a losing position); test it.
+- G0 setup safety: init_guard requires the Velocity User's authority == the signing owner (no PDA squatting); the agent
+  check lives in the account constraints (agent set and equal to the signer).
 - G8 withdraw is impossible through the guard (no such instruction; Velocity Withdraw is has_one = authority).
 Every accepted or refused order emits an event (limit, value, reason) for the dashboard. A limit refusal is a SUCCESSFUL
 transaction that does not call Velocity and increments per-limit refusal counters in the Guard account (durable on-chain
