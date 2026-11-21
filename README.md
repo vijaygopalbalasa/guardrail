@@ -45,6 +45,21 @@ have moved; the committed hash is the version every test here was run against. S
 
 Everything at once: `./scripts/test-all.sh`.
 
+### Live fills at moving prices (local surfpool fork)
+
+The local validator's oracle is frozen, so it shows refusals only. On a surfpool fork of devnet the SOL oracle can be
+moved with surfpool's `surfnet_setAccount` cheatcode, so the same runaway agent gets real Velocity fills and a real
+unrealized loss through MCP. It is a local fork with the price moved by the script, not live trading.
+
+| Step | Command | What you should see |
+|---|---|---|
+| A. Get surfpool | download `surfpool` v1.7.0 for your platform from github.com/solana-foundation/surfpool releases | `surfpool --version` prints 1.7.0 |
+| B. Fork devnet and deploy the guard | `SURFPOOL=/path/to/surfpool ./scripts/surfpool.sh start` | a Program Id line for the guard |
+| C. Runaway agent, live fills | `RPC_URL=http://127.0.0.1:8997 node demo/live.mjs` | each step: SOL price, the guarded position and its unrealized PnL; the agent is held at the 6 SOL exposure cap |
+
+Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position held at 6 SOL, unrealized PnL
+-40.42 dUSDT on 1,000 collateral, 5 accepted, refused 33 by G4 and 21 by G1). Stop it with `./scripts/surfpool.sh stop`.
+
 ## What is real, with receipts
 
 | Claim | Test | Where |
@@ -68,7 +83,7 @@ Everything at once: `./scripts/test-all.sh`.
 - Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
 - Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
 - The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
-- Fills and moving prices are shown in replays, because Velocity's devnet oracle is stale. On the local validator the
+- Fills and moving prices are shown in replays and on a local surfpool fork where a cheatcode moves the oracle, because Velocity's devnet oracle is stale. On the local validator the
   cloned oracle is a frozen snapshot, so orders rest but do not fill there.
 - The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
 - The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap

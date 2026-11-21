@@ -38,7 +38,24 @@ function runaway(s) {
   return { type: "place", side: "long", size: Math.min(s.chunk, s.wanted), price: round(s.oraclePrice - 0.4 - 0.3 * s.step) };
 }
 
-export const STRATEGIES = { calm, runaway };
+/**
+ * Runaway, for a market whose price moves (surfpool fork): bids 0.1% under the current oracle and wants double the
+ * last size every step; halves after a refusal; cancels a bid to make room when the exposure cap stops it.
+ */
+function runawayLive(s) {
+  if (s.step >= 10) return { type: "stop" };
+  if (s.wanted === undefined) s.wanted = 0.5 * 2 ** s.step;
+  if (s.chunk === undefined) s.chunk = s.wanted;
+  if (s.tries >= 8 || s.wanted <= 0 || s.chunk < 0.25) return { type: "next" };
+  const v = s.lastVerdict;
+  if (v && !v.accepted && s.lastAction === "place") {
+    if (v.rule === 4 && s.cancels < 2) return { type: "cancel" };
+    s.chunk /= 2;
+  }
+  return { type: "place", side: "long", size: Math.min(s.chunk, s.wanted), price: Math.floor(s.oraclePrice * 0.999 * 100) / 100 };
+}
+
+export const STRATEGIES = { calm, runaway, "runaway-live": runawayLive };
 const round = (p) => Math.round(p * 100) / 100;
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -69,7 +86,7 @@ export function plain(v) {
   return `REFUSED by ${v.ruleName}: ${why ? why() : v.reasonName}; nothing reached Velocity`;
 }
 
-export async function runAgent({ mode, demo, decide = STRATEGIES[mode], oraclePrice = 91.39, log = console.log }) {
+export async function runAgent({ mode, demo, decide = STRATEGIES[mode], oraclePrice = 91.39, log = console.log, beforeStep, afterAccept }) {
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [fileURLToPath(new URL("../mcp/server.mjs", import.meta.url))],
@@ -81,11 +98,13 @@ export async function runAgent({ mode, demo, decide = STRATEGIES[mode], oraclePr
   try {
     log(`agent (${mode}) connected to guardrail-mcp; tools: ${(await mcp.listTools()).tools.map((t) => t.name).join(", ")}`);
     let s = { mode, step: 0, oraclePrice, tries: 0, cancels: 0, placedThisStep: false };
+    if (beforeStep) s.oraclePrice = (await beforeStep(0)) ?? s.oraclePrice;
     for (let guardRails = 0; guardRails < 200; guardRails++) {
       const a = decide(s);
       if (a.type === "stop") break;
       if (a.type === "next") {
-        s = { mode, step: s.step + 1, oraclePrice, tries: 0, cancels: 0, placedThisStep: false };
+        s = { mode, step: s.step + 1, oraclePrice: s.oraclePrice, tries: 0, cancels: 0, placedThisStep: false };
+        if (beforeStep) s.oraclePrice = (await beforeStep(s.step)) ?? s.oraclePrice;
         continue;
       }
       summary.toolCalls++;
@@ -106,6 +125,7 @@ export async function runAgent({ mode, demo, decide = STRATEGIES[mode], oraclePr
       if (v?.accepted) {
         summary.accepted++;
         s.wanted = (s.wanted ?? a.size) - a.size;
+        if (afterAccept) await afterAccept(a);
       } else if (v) {
         summary.refused[v.ruleName] = (summary.refused[v.ruleName] ?? 0) + 1;
       }
