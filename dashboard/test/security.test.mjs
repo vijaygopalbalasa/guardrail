@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
-import { renderFeed, renderLastRefusal, renderError, renderReplayRun } from "../render.js";
+import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed } from "../render.js";
 
 const GUARD = "ihYBqnzinaqysQcbmYetzXkVAVDXM7wWkYr1xWRGZVU";
 const OTHER_GUARD = "DsDm2DK29TXgaDMmj8ZdmZ6qGeTmNRnn9V567LvaHyCt";
@@ -100,7 +100,7 @@ test("hostile strings render as text, never as HTML", () => {
 });
 
 test("the dashboard source never assigns innerHTML", () => {
-  for (const f of ["app.js", "render.js", "replay.js"]) {
+  for (const f of ["app.js", "render.js", "replay.js", "theme.js"]) {
     const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.equal((src.match(/innerHTML/g) ?? []).length, 0, `${f} uses innerHTML`);
   }
@@ -121,4 +121,20 @@ test("the replay data shows the headline and stays labelled REPLAY", () => {
   assert.equal(by.guarded.summary.worstLossPct.toFixed(1), "9.4");
   for (const id of ["guarded", "guarded-g3", "guarded-g5"]) assert.equal(by[id].summary.breaches, 0);
   assert.ok(by["guarded-g5"].summary.refusedBy["G5 leverage"] > 0);
+});
+
+test("the agent feed renders the model's words as text and pairs orders with chain decisions only when they agree", () => {
+  const box = new El("ul");
+  const feed = { turns: [
+    { turn: 1, reason: HOSTILE, tool: "guardrail_place_order", args: { side: "long", size: 5, price: 91 }, accepted: false, rule: HOSTILE },
+    { turn: 2, reason: "Reason: resize", tool: "guardrail_place_order", args: { side: "long", size: 4, price: 91 }, accepted: true },
+    { turn: 3, reason: "check", tool: "guardrail_status", args: {} },
+  ] };
+  const chain = [{ slot: 20n, accepted: true, rule: 0 }, { slot: 10n, accepted: false, rule: 1, value: 5n, cap: 4n, reason: 6000 }];
+  const joined = renderAgentFeed(doc, box, feed, chain);
+  assert.ok(box.textContent.includes(HOSTILE), "shown literally");
+  assert.ok(joined, "joined by slot order");
+  assert.equal(joined.get(feed.turns[0]).slot, 10n);
+  assert.equal(joinAgentFeed(feed.turns, [chain[0]]), null, "count mismatch: no join");
+  assert.equal(joinAgentFeed(feed.turns, [{ slot: 1n, accepted: true }, { slot: 2n, accepted: true }]), null, "verdict mismatch: no join");
 });

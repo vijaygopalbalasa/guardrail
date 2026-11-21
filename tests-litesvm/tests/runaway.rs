@@ -189,6 +189,18 @@ fn run(guarded: bool, limits: Limits) -> Run {
     env.step(10, price);
     out.end_equity = equity(&env, &owner, price);
     out.min_equity = out.min_equity.min(out.end_equity);
+    // The final mark: one more 1% move with no new orders, where the worst loss is measured.
+    let (b2, q2, bids2, asks2) = env.totals(&owner);
+    let eq = out.end_equity;
+    let lev = if eq > 0 { b2.unsigned_abs() as i128 * price as i128 / BASE as i128 * 10_000 / eq } else { i128::MAX };
+    let n = out.steps.len();
+    out.steps.push(serde_json::json!({
+        "step": n, "final": true, "price": price as f64 / 1e6, "wants": 0.0, "decisions": [],
+        "position": b2 as f64 / 1e9, "openBids": bids2 as f64 / 1e9, "openAsks": (asks2 as f64 / 1e9).abs(),
+        "collateral": env.raw_collateral(&owner) as f64 / 1e6, "upnl": (b2 as i128 * price as i128 / BASE as i128 + q2 as i128) as f64 / 1e6,
+        "equity": eq as f64 / 1e6, "leverage": lev as f64 / 1e4,
+        "lossPct": ((out.start_equity - eq) as f64 / out.start_equity as f64 * 100.0),
+    }));
     out
 }
 
