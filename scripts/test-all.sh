@@ -10,6 +10,7 @@ cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "^
 trap './scripts/local-validator.sh stop' EXIT
 (cd client && node --test test/*.test.mjs 2>&1 | grep -E "^ℹ (pass|fail)")
 (cd mcp && node --test test/*.test.mjs 2>&1 | grep -E "^ℹ (pass|fail)")
+(cd demo && node --test test/*.test.mjs 2>&1 | grep -E "^ℹ (pass|fail)")
 GUARD=$(node client/scripts/demo-seed.mjs | awk '/^guard /{print $2}')
 GUARD=$GUARD node --test dashboard/test/*.test.mjs 2>&1 | grep -E "^ℹ (pass|fail)"
 echo "dashboard: (cd dashboard && python3 -m http.server 8780) then open http://127.0.0.1:8780/?guard=$GUARD"

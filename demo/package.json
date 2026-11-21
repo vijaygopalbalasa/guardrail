@@ -1,0 +1,12 @@
+{
+  "name": "guardrail-demo-agent",
+  "private": true,
+  "type": "module",
+  "description": "A scripted trading agent that talks to guardrail-mcp over stdio, the way any agent framework would.",
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "dependencies": {
+    "@guardrail/client": "file:../client",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@solana/web3.js": "1.98.4"
+  }
+}
