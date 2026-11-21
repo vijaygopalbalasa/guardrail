@@ -32,9 +32,12 @@ plant "G4 ignores this order" $LIB "let exposure = math::worst_case_after(pos.ba
 plant "G4 first-match slot lookup" $VEL "for p in self.perp.iter().filter(|p| p.is_active() && p.market_index == market_index) {" "for p in self.perp.iter().filter(|p| p.market_index == market_index).take(1) {"
 plant "G5 ignores unrealized PnL" $LIB "upnl += math::notional(t.base as i128, price) + t.quote as i128;" "upnl += 0;"
 plant "G5 check removed" $LIB "if lev > l.max_leverage_bps as i128 {" "if false {"
-plant "G6 limit price band skipped" $LIB "if !math::within_band(p.price as i128, oracle, band) {" "if false {"
+plant "G6 price field skipped" $LIB "if p.price != 0 && !math::within_band(p.price as i128, oracle, band) {" "if false {"
+plant "G6 oracle offset skipped" $LIB "if offset != 0 && !math::offset_within_band(offset as i128, oracle, band) {" "if false {"
 plant "G6 auction prices skipped" $LIB "for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {" "for a in [None::<i64>].into_iter().flatten() {"
-plant "G6 oracle offset skipped" $LIB "for o in [p.oracle_price_offset, p.auction_start_price, p.auction_end_price].into_iter().flatten() {" "for o in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {"
+plant "G6 market order without a worst price allowed" $LIB "if p.order_type == order_type::MARKET && p.price == 0 {" "if false {"
+plant "G9 exit skips the price band" $LIB "        if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {" "        if let Some((bps, _)) = None::<(i128, &str)> {"
+plant "G5 borrow in another spot market ignored" $LIB "if user.spot.iter().any(|s| s.market_index != 0 && s.scaled_balance > 0 && s.balance_type == 1) {" "if false {"
 plant "G6 staleness off by one" $LIB "if age > l.max_oracle_staleness_slots {" "if age > l.max_oracle_staleness_slots + 1 {"
 plant "G7 pause ignored" $LIB "    if g.paused {
         return refuse" "    if false {

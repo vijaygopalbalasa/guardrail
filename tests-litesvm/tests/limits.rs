@@ -660,15 +660,21 @@ fn g6_refuses_limit_order_whose_oracle_offset_is_outside_band() {
     let mut l = Limits::loose();
     l.price_band_bps = 100;
     let (mut env, g) = setup(l);
-    let mut bad = Order::resting(0, BASE, 91_000_000); // price in band
-    bad.oracle_price_offset = Some(-5_000_000); // but oracle - $5 is 5.5% away
-    let r = env.gplace("G6 limit with out-of-band offset", &g, bad);
+    // Velocity wants price 0 on an oracle-offset limit order; the offset then sets the limit.
+    let mut bad = Order::resting(0, BASE, 0);
+    bad.oracle_price_offset = Some(-5_000_000); // oracle - $5 is 5.5% away
+    let r = env.gplace("G6 oracle-offset limit, offset out of band", &g, bad);
     refused(&env, &g, &r, &bad, gerr::PRICE_OUTSIDE_BAND, rule::G6);
     let mut good = bad;
     good.oracle_price_offset = Some(-500_000);
-    let r = env.gplace("G6 limit with in-band offset", &g, good);
+    let r = env.gplace("G6 oracle-offset limit, offset in band", &g, good);
     assert_ok(&r);
     assert!(events(&r)[0].accepted);
+    // An in-band price does not hide an out-of-band offset: the guard refuses it with its own reason.
+    let mut mixed = Order::resting(0, BASE, 91_000_000);
+    mixed.oracle_price_offset = Some(-5_000_000);
+    let r = env.gplace("G6 in-band price with out-of-band offset", &g, mixed);
+    refused(&env, &g, &r, &mixed, gerr::PRICE_OUTSIDE_BAND, rule::G6);
 }
 
 #[test]
@@ -773,7 +779,7 @@ fn refuses_when_another_spot_market_holds_a_borrow() {
     });
     let r = env.gplace("borrow in spot market 1", &g, o);
     refused(&env, &g, &r, &o, gerr::OTHER_SPOT_BORROW, rule::G5);
-    patch(&mut env, g.user, |d| d[104 + 40 + 34] = 0); // the same balance as a deposit is ignored
-    let r = env.gplace("deposit in spot market 1 (ignored)", &g, o);
+    patch(&mut env, g.user, |d| d[104 + 40..104 + 48].copy_from_slice(&0u64.to_le_bytes())); // borrow repaid
+    let r = env.gplace("no borrow left", &g, o);
     accepted(&env, &g, &r, &o, rule::ACCEPTED);
 }

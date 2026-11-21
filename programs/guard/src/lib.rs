@@ -146,6 +146,33 @@ fn check_agent(ctx: &Context<AgentTrade>) -> Result<()> {
     Ok(())
 }
 
+/// G6: the first price field outside the band, as (deviation in bps, field). Velocity reads an order's prices as:
+/// `price` absolute; a non-zero `oracle_price_offset` relative to the oracle (it overrides `price` as the limit);
+/// auction prices relative for Oracle orders and for Limit orders with an offset, absolute otherwise. A Market order
+/// must carry a worst price.
+fn band_breach(p: &OrderParams, oracle: i64, band: u32) -> Option<(i128, &'static str)> {
+    let dev = |x: i128| (x - oracle as i128).abs() * math::BPS / oracle as i128;
+    let off = |x: i128| x.abs() * math::BPS / oracle as i128;
+    if p.order_type == order_type::MARKET && p.price == 0 {
+        return Some((math::BPS, "market order without a worst price"));
+    }
+    if p.price != 0 && !math::within_band(p.price as i128, oracle, band) {
+        return Some((dev(p.price as i128), "price"));
+    }
+    let offset = p.oracle_price_offset.unwrap_or(0);
+    if offset != 0 && !math::offset_within_band(offset as i128, oracle, band) {
+        return Some((off(offset as i128), "oracle_price_offset"));
+    }
+    let relative = p.order_type == order_type::ORACLE || (p.order_type == order_type::LIMIT && offset != 0);
+    for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {
+        let ok = if relative { math::offset_within_band(a as i128, oracle, band) } else { math::within_band(a as i128, oracle, band) };
+        if !ok {
+            return Some((if relative { off(a as i128) } else { dev(a as i128) }, "auction price"));
+        }
+    }
+    None
+}
+
 fn emit_checked(guard: Pubkey, p: &OrderParams, accepted: bool, rule_code: u8, value: i128, cap: i128) {
     emit!(OrderChecked {
         guard,
@@ -194,8 +221,13 @@ fn market_price(ra: &[AccountInfo], market_index: u16, slot: u64) -> std::result
     Ok((price, slot.saturating_sub(o.posted_slot)))
 }
 
-/// Collateral (spot market 0, the quote asset) in quote units. Other spot positions are ignored (conservative).
+/// Collateral (spot market 0, the quote asset) in quote units. Deposits in other spot markets are not counted
+/// (that understates equity, the safe side); a borrow in another spot market is refused, because ignoring it would
+/// overstate equity.
 fn collateral(ra: &[AccountInfo], user: &velocity::UserView) -> std::result::Result<i128, GuardError> {
+    if user.spot.iter().any(|s| s.market_index != 0 && s.scaled_balance > 0 && s.balance_type == 1) {
+        return Err(GuardError::OtherSpotBorrow);
+    }
     let sm_acc = find(ra, &velocity::spot_market_address(0)).ok_or(GuardError::MissingMarketAccount)?;
     let sm = velocity::load_spot_market(sm_acc, 0).ok_or(GuardError::BadMarketAccount)?;
     let mut total: i128 = 0;
@@ -265,8 +297,16 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Deci
     let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
     let pos = user.perp_totals(p.market_index);
 
-    // G9: a true exit always goes through.
+    // G9: a true exit skips the limits and the pause, but its price must stay in the band (from the oracle's last
+    // price, stale or not) so an exit cannot hand the position's value to a partner far from the market.
     if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {
+        let oracle = match market_price(ra, p.market_index, clock.slot) {
+            Ok((price, _age)) => price,
+            Err(e) => return refuse(gk, p, rule::ORDER_SHAPE, p.market_index as i128, 0, e),
+        };
+        if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
+            return refuse(gk, p, rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
+        }
         msg!("guard: G9 exit (reduce-only, opposite to a {} position, size {})", pos.base, p.base_asset_amount);
         return Ok(None);
     }
@@ -308,31 +348,9 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Deci
     }
     let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
 
-    // G6 price band: limit price, oracle offset and auction prices.
-    let band = l.price_band_bps;
-    let dev_bps = |x: i128| (x - oracle as i128).abs() * math::BPS / oracle as i128;
-    let off_bps = |x: i128| x.abs() * math::BPS / oracle as i128;
-    match p.order_type {
-        order_type::LIMIT | order_type::MARKET => {
-            if p.order_type == order_type::MARKET && p.price == 0 {
-                return refuse(gk, p, rule::G6_PRICE_BAND, 0, band as i128, GuardError::PriceOutsideBand);
-            }
-            if !math::within_band(p.price as i128, oracle, band) {
-                return refuse(gk, p, rule::G6_PRICE_BAND, dev_bps(p.price as i128), band as i128, GuardError::PriceOutsideBand);
-            }
-            for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {
-                if !math::within_band(a as i128, oracle, band) {
-                    return refuse(gk, p, rule::G6_PRICE_BAND, dev_bps(a as i128), band as i128, GuardError::PriceOutsideBand);
-                }
-            }
-        }
-        _ => {
-            for o in [p.oracle_price_offset, p.auction_start_price, p.auction_end_price].into_iter().flatten() {
-                if !math::offset_within_band(o as i128, oracle, band) {
-                    return refuse(gk, p, rule::G6_PRICE_BAND, off_bps(o as i128), band as i128, GuardError::PriceOutsideBand);
-                }
-            }
-        }
+    // G6 price band on every price field.
+    if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
+        return refuse(gk, p, rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
     }
 
     // G3 daily notional at the oracle price.
@@ -577,8 +595,8 @@ pub enum GuardError {
     MissingMarketAccount,
     #[msg("the market's oracle source is not supported")]
     UnsupportedOracle,
-    #[msg("oracle account is not the market's oracle")]
-    WrongOracle,
+    #[msg("a borrow in a spot market other than the quote market is not supported")]
+    OtherSpotBorrow,
     #[msg("oracle account is invalid")]
     BadOracleAccount,
     #[msg("account equity is not positive")]
