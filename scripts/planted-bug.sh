@@ -22,7 +22,7 @@ PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if [ -n "${CHECK:-}" ]; then restore; return; fi  # CHECK=1: only confirm every plant site is unique, no builds
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 --test audit_r4 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 --test audit_r4 --test audit_r5 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
@@ -87,8 +87,8 @@ plant "R5 no refusal when 32 guard orders are open" $LIB "        if !matches!(o
 plant "R5 stored max_ts not checked after the CPI (unit tests)" $LIB "    cap_secs > 0 && (o.max_ts <= now || o.max_ts as i128 - now as i128 > cap_secs as i128)" "    cap_secs > 0 && o.max_ts as i128 - now as i128 > cap_secs as i128" unit
 plant "R6 G10 check removed" $LIB "        if increases && loss > g.max_daily_loss as i128 {" "        if false {"
 plant "R6 G10 ignores deposits and withdrawals" $LIB "    baseline_equity + (flows - baseline_flows) - equity" "    baseline_equity - equity + 0 * (flows - baseline_flows)" unit
-plant "R6 G10 baseline re-taken on every call" $LIB "    if g.max_daily_loss > 0 && g.loss_day != today {" "    if g.max_daily_loss > 0 {"
-plant "R6 G10 baseline never resets on a new day" $LIB "    if g.max_daily_loss > 0 && g.loss_day != today {" "    if g.max_daily_loss > 0 && g.loss_day == 0 {"
+plant "R6 G10 baseline re-taken on every call" $LIB "    } else if g.max_daily_loss > 0 && g.loss_day != today {" "    } else if g.max_daily_loss > 0 {"
+plant "R6 G10 baseline never resets on a new day" $LIB "    } else if g.max_daily_loss > 0 && g.loss_day != today {" "    } else if g.max_daily_loss > 0 && g.loss_day == 0 {"
 plant "R6 G10 refusal filed under G7" $LIB "                rule::G10_DAILY_LOSS => g.refused_g10 += 1," "                rule::G10_DAILY_LOSS => g.refused_g7 += 1,"
 plant "R6 an order Velocity did not store counts as accepted" $LIB "        if placed.is_empty() {" "        if false {"
 plant "R7 G10 baseline not taken on the first cancel of the day" $LIB "        observe(&mut ctx)?;
@@ -123,7 +123,7 @@ plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "    
     }
     let adj" "    let _ = direct;
     let adj"
-plant "R11 anyone's first-hour checkpoint marks the day at midnight" $LIB "        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);" "        let trusted = caller != Pubkey::default() || caller == g.owner || g.keeper == Pubkey::default();"
+plant "R11 anyone's first-hour checkpoint marks the day at midnight" $LIB "        } else if g.keeper != Pubkey::default() && caller == g.keeper && first_hour {" "        } else if first_hour {"
 plant "R11 a state error (stale or unsupported oracle) fails cancels and exits" $LIB "            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
             Err(_) => return Ok(()),
         }
@@ -144,6 +144,13 @@ plant "R13 a new day's baseline ignores the previous day's high" $LIB "    if le
 plant "R13 the day's high does not start from its baseline" $LIB "            h = h.max(adj(g.baseline_equity, g.baseline_flows));" ""
 plant "R13 the keeper can be removed while a cap is set" $LIB "        require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);" ""
 plant "R14 a guard upgraded mid-day forgets the high it saw before" $LIB "            h = h.max(adj(g.last_seen_equity, g.last_seen_flows));" ""
+plant "R15 the keeper may be the agent (set_keeper)" $LIB "        require!(keeper == Pubkey::default() || keeper != ctx.accounts.guard.agent, GuardError::KeeperIsAgent);" ""
+plant "R15 the agent may be the keeper (set_agent)" $LIB "        require!(agent == Pubkey::default() || agent != ctx.accounts.guard.keeper, GuardError::KeeperIsAgent);" ""
+plant "R15 with no day high the stored baseline is ignored" $LIB "    if let Some(x) = stored {
+        b = b.max(adj(x));
+    }" "    let _ = stored;"
+plant "R15 the owner can reset only in the first hour" $LIB "        let mark = if caller == g.owner {" "        let mark = if caller == g.owner && first_hour {"
+plant "R15 values from older days still carry after a gap" $LIB "    day != 0 && day == today - 1" "    day != 0 && day <= today - 1"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

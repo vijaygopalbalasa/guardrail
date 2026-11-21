@@ -553,6 +553,7 @@ pub mod gerr {
     pub const REDUCE_ONLY_BEYOND_POSITION: u32 = 6034;
     pub const KEEPER_REQUIRED: u32 = 6035;
     pub const BAD_GUARD_ACCOUNT: u32 = 6036;
+    pub const KEEPER_IS_AGENT: u32 = 6037;
 }
 
 pub mod rule {

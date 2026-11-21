@@ -74,6 +74,8 @@ pub mod guard {
 
     /// G7: owner only. Pubkey::default() revokes the agent.
     pub fn set_agent(ctx: Context<OwnerOnly>, agent: Pubkey) -> Result<()> {
+        // The keeper marks the day's baseline; the agent must never be able to (audit round 5).
+        require!(agent == Pubkey::default() || agent != ctx.accounts.guard.keeper, GuardError::KeeperIsAgent);
         ctx.accounts.guard.agent = agent;
         msg!("guard: agent set to {}", agent);
         Ok(())
@@ -89,25 +91,33 @@ pub mod guard {
         Ok(())
     }
 
-    /// G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.
-    /// In the first hour of the UTC day, the first baseline is the equity now (a midnight mark: yesterday's losses stay
-    /// yesterday's); after that hour it is the higher of equity now and the last equity the guard saw.
+    /// G10, permissionless: anyone can take the day's baseline with fresh prices (the max rule). The keeper the owner
+    /// named, in the first hour of the UTC day, marks the day at the equity then (yesterday's losses stay yesterday's);
+    /// the owner resets the baseline to the equity now at any time. Every checkpoint emits a Checkpointed event.
     pub fn checkpoint<'info>(ctx: Context<'_, '_, 'info, 'info, Checkpoint<'info>>) -> Result<()> {
         let clock = Clock::get()?;
         let ui = ctx.accounts.velocity_user.to_account_info();
         let first_hour = clock.unix_timestamp.rem_euclid(86_400) < 3_600;
-        // The midnight mark only for the owner or the keeper the owner named; anyone else gets the max rule.
         let g = &ctx.accounts.guard;
         let caller = ctx.accounts.caller.key();
-        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);
-        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, first_hour && trusted)?;
-        msg!("guard: checkpoint, day {} baseline {}", ctx.accounts.guard.loss_day, ctx.accounts.guard.baseline_equity);
+        let mark = if caller == g.owner {
+            Mark::Reset
+        } else if g.keeper != Pubkey::default() && caller == g.keeper && first_hour {
+            Mark::Midnight
+        } else {
+            Mark::None
+        };
+        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, mark)?;
+        let g = &ctx.accounts.guard;
+        emit!(Checkpointed { guard: g.key(), caller, day: g.loss_day, baseline_equity: g.baseline_equity, kind: mark as u8 });
+        msg!("guard: checkpoint ({:?}), day {} baseline {}", mark, g.loss_day, g.baseline_equity);
         Ok(())
     }
 
     /// G10, owner only: the keeper whose first-hour checkpoint marks the day at midnight (Pubkey::default() = none).
     pub fn set_keeper(ctx: Context<OwnerOnly>, keeper: Pubkey) -> Result<()> {
         require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);
+        require!(keeper == Pubkey::default() || keeper != ctx.accounts.guard.agent, GuardError::KeeperIsAgent);
         ctx.accounts.guard.keeper = keeper;
         msg!("guard: keeper set to {}", keeper);
         Ok(())
@@ -597,7 +607,16 @@ struct Baseline {
 fn observe(ctx: &mut Context<AgentTrade>) -> Result<()> {
     let clock = Clock::get()?;
     let ui = ctx.accounts.velocity_user.to_account_info();
-    observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, false)
+    observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, Mark::None)
+}
+
+/// How a checkpoint sets the day's baseline: the max rule, the keeper's midnight mark (first hour, if not yet set
+/// today) or the owner's reset (any time, replacing today's baseline and high).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Mark {
+    None = 0,
+    Midnight = 1,
+    Reset = 2,
 }
 
 /// Every guard call must bring the accounts that price every active market (each perp market, its oracle and spot
@@ -605,7 +624,7 @@ fn observe(ctx: &mut Context<AgentTrade>) -> Result<()> {
 /// cannot choose which calls are observed (review of the N2 change). Only a stale oracle, which no caller controls,
 /// skips the observation. `direct`: a checkpoint in the first hour of the UTC day sets the day's baseline to the
 /// equity now.
-fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock, direct: bool) -> Result<()> {
+fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock, mark: Mark) -> Result<()> {
     // Every account is found by its key, so the only choice a caller has is to leave one out: that, and only that,
     // fails the call (MissingMarketAccount). Anything that comes from the account's or a market's own state (a stale or
     // unsupported oracle, an account that does not load, an overflow, a balance the guard cannot value) skips the
@@ -634,10 +653,19 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return Ok(()) };
     let today = math::utc_day(clock.unix_timestamp);
     let adj = |e: i64, f: i64| e.saturating_add(flows.saturating_sub(f));
-    if g.max_daily_loss > 0 && g.loss_day != today {
-        // Without the owner's or keeper's midnight mark the new day's baseline never falls below the last equity seen
-        // or the highest equity known for the last day observed (audit round 4): losses carry over until a mark.
-        g.baseline_equity = new_day_baseline(eq, flows, direct, last_seen_of(g), day_high_of(g));
+    if mark == Mark::Reset {
+        // The owner's explicit reset: today's baseline and high start again at the equity now.
+        g.loss_day = today;
+        g.baseline_equity = eq;
+        g.baseline_flows = flows;
+        g.day_high_equity = eq;
+        g.day_high_flows = flows;
+        g.day_high_day = today;
+    } else if g.max_daily_loss > 0 && g.loss_day != today {
+        // Without a mark the new day's baseline never falls below what the guard knew of the previous UTC day (its last
+        // reading, its high, its baseline): a drawdown cap from the last high seen until a mark. After a gap of more than
+        // one full day with no guard call, nothing carries and the baseline is the equity now.
+        g.baseline_equity = new_day_baseline(eq, flows, mark == Mark::Midnight, last_seen_of(g, today), day_high_of(g, today), stored_baseline_of(g, today));
         g.loss_day = today;
         g.baseline_flows = flows;
     }
@@ -665,9 +693,11 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     Ok(())
 }
 
-/// A new day's G10 baseline, one rule for every path: the owner's or keeper's midnight mark is equity now; otherwise it
-/// is the highest of equity now, the last equity seen and the last day's high, each adjusted for deposits since.
-pub fn new_day_baseline(eq: i64, flows: i64, direct: bool, last_seen: Option<(i64, i64)>, day_high: Option<(i64, i64)>) -> i64 {
+/// A new day's G10 baseline, one rule for every path: the keeper's midnight mark is equity now; otherwise it is the
+/// highest of equity now and what the guard knew of the previous UTC day (its last reading, its high, its stored
+/// baseline), each adjusted for deposits since. The callers pass only values from the previous day, so after a gap of
+/// more than one full day nothing carries.
+pub fn new_day_baseline(eq: i64, flows: i64, direct: bool, last_seen: Option<(i64, i64)>, day_high: Option<(i64, i64)>, stored: Option<(i64, i64)>) -> i64 {
     if direct {
         return eq;
     }
@@ -679,15 +709,27 @@ pub fn new_day_baseline(eq: i64, flows: i64, direct: bool, last_seen: Option<(i6
     if let Some(x) = day_high {
         b = b.max(adj(x));
     }
+    if let Some(x) = stored {
+        b = b.max(adj(x));
+    }
     b
 }
 
-fn last_seen_of(g: &Guard) -> Option<(i64, i64)> {
-    g.has_last_seen.then_some((g.last_seen_equity, g.last_seen_flows))
+/// The previous UTC day relative to `today` (values from older days do not carry).
+fn previous_day(day: i64, today: i64) -> bool {
+    day != 0 && day == today - 1
 }
 
-fn day_high_of(g: &Guard) -> Option<(i64, i64)> {
-    (g.day_high_day != 0).then_some((g.day_high_equity, g.day_high_flows))
+fn last_seen_of(g: &Guard, today: i64) -> Option<(i64, i64)> {
+    (g.has_last_seen && previous_day(g.last_seen_day, today)).then_some((g.last_seen_equity, g.last_seen_flows))
+}
+
+fn day_high_of(g: &Guard, today: i64) -> Option<(i64, i64)> {
+    previous_day(g.day_high_day, today).then_some((g.day_high_equity, g.day_high_flows))
+}
+
+fn stored_baseline_of(g: &Guard, today: i64) -> Option<(i64, i64)> {
+    previous_day(g.loss_day, today).then_some((g.baseline_equity, g.baseline_flows))
 }
 
 fn net_flows(user: &velocity::UserView) -> i128 {
@@ -829,7 +871,7 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
             // Normally set by observe() at the start of the call; the same rule (new_day_baseline) here.
             let eq64 = i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?;
             let flows64 = i64::try_from(flows).map_err(|_| GuardError::MathOverflow)?;
-            let b = Baseline { day: today, equity: new_day_baseline(eq64, flows64, false, last_seen_of(g), day_high_of(g)), flows: flows64 };
+            let b = Baseline { day: today, equity: new_day_baseline(eq64, flows64, false, last_seen_of(g, today), day_high_of(g, today), stored_baseline_of(g, today)), flows: flows64 };
             *baseline = Some(b);
             (b.equity as i128, flows)
         };
@@ -1085,6 +1127,16 @@ pub struct OrderChecked {
 
 /// Emitted for every cancel the agent asks for.
 #[event]
+pub struct Checkpointed {
+    pub guard: Pubkey,
+    pub caller: Pubkey,
+    pub day: i64,
+    pub baseline_equity: i64,
+    /// 0 the max rule, 1 the keeper's midnight mark, 2 the owner's reset.
+    pub kind: u8,
+}
+
+#[event]
 pub struct CancelChecked {
     pub guard: Pubkey,
     pub order_id: u32,
@@ -1229,6 +1281,8 @@ pub enum GuardError {
     KeeperRequired,
     #[msg("not a guard account of this program for this owner")]
     BadGuardAccount,
+    #[msg("the keeper and the agent must be different keys")]
+    KeeperIsAgent,
 }
 
 #[cfg(test)]
@@ -1259,13 +1313,15 @@ mod stored_order_tests {
     #[test]
     fn a_new_days_baseline_is_one_rule_for_both_paths() {
         // equity now 950 (no flows since): the last equity seen 980 and the last day's high 1,000 keep it at 1,000
-        assert_eq!(new_day_baseline(950, 0, false, Some((980, 0)), Some((1_000, 0))), 1_000);
+        assert_eq!(new_day_baseline(950, 0, false, Some((980, 0)), Some((1_000, 0)), None), 1_000);
         // a deposit of 500 since the high was seen lifts the carried high by 500
-        assert_eq!(new_day_baseline(1_450, 500, false, Some((980, 0)), Some((1_000, 0))), 1_500);
+        assert_eq!(new_day_baseline(1_450, 500, false, Some((980, 0)), Some((1_000, 0)), None), 1_500);
         // nothing seen before: equity now
-        assert_eq!(new_day_baseline(950, 0, false, None, None), 950);
+        assert_eq!(new_day_baseline(950, 0, false, None, None, None), 950);
+        // with no day high, the stored day's baseline still counts (the upgrade night)
+        assert_eq!(new_day_baseline(950, 0, false, Some((977, 0)), None, Some((1_000, 0))), 1_000);
         // the owner's or keeper's midnight mark: equity now
-        assert_eq!(new_day_baseline(950, 0, true, Some((980, 0)), Some((1_000, 0))), 950);
+        assert_eq!(new_day_baseline(950, 0, true, Some((980, 0)), Some((1_000, 0)), Some((1_000, 0))), 950);
     }
 
     #[test]

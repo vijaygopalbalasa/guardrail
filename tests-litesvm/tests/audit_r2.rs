@@ -219,15 +219,18 @@ fn n2b_no_account_choice_lowers_the_next_days_baseline() {
 #[test]
 fn n2b_a_checkpoint_in_the_first_hour_marks_the_day_at_midnight() {
     let p_low = (P0 as f64 * 0.95) as u64;
-    for (label, extra_secs, expect_refused) in [("the owner checkpoints at 00:10 UTC", 600i64, false), ("the owner checkpoints at 03:00 UTC", 3 * 3600, true)] {
+    for (label, extra_secs, expect_refused) in [("the keeper checkpoints at 00:10 UTC", 600i64, false), ("the keeper checkpoints at 03:00 UTC", 3 * 3600, true)] {
         let (mut env, g) = g10_setup();
+        let keeper = Keypair::new();
+        env.svm.airdrop(&keeper.pubkey(), 1_000_000_000).unwrap();
+        let owner = g.owner.insecure_clone();
+        assert_ok(&env.set_keeper("owner names a keeper", &g, &owner, &keeper.pubkey()));
         assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
         env.step(5, p_low); // the loss happens on day 1
         let now = env.now();
         let to_midnight = 86_400 - now.rem_euclid(86_400);
         env.step(((to_midnight + extra_secs) * 5 / 2) as u64, p_low);
-        let owner = g.owner.insecure_clone();
-        assert_ok(&env.checkpoint_as(label, &g, &owner));
+        assert_ok(&env.checkpoint_as(label, &g, &keeper));
         let r = env.gplace("day 2: a bid at the same low", &g, small_bid(p_low));
         if expect_refused {
             assert_refused(&r, gerr::DAILY_LOSS_EXCEEDED);

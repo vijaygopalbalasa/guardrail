@@ -1,0 +1,6 @@
+test r5_with_no_day_high_the_stored_days_baseline_still_counts ... FAILED
+test r5_the_keeper_cannot_be_the_agent ... FAILED
+test r5_twin_the_carry_holds_from_the_previous_day ... ok
+test r5_the_owner_resets_the_baseline_at_any_time ... FAILED
+test r5_after_a_gap_of_more_than_a_day_the_baseline_is_equity_now ... FAILED
+test result: FAILED. 1 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
