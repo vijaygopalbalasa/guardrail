@@ -1,0 +1,10 @@
+ℹ fail 7
+ℹ pass 0
+✖ accounts with the wrong owner are refused (0.380958ms)
+✖ an event emitted by another program in the same transaction is ignored (2.013833ms)
+✖ an event emitted inside a CPI the guard makes (another program executing) is ignored (0.440916ms)
+✖ an event naming a different guard is ignored (0.108166ms)
+✖ failing tests:
+✖ hostile strings render as text, never as HTML (0.053375ms)
+✖ the dashboard source never assigns innerHTML (0.324833ms)
+✖ the rpc parameter is limited to an allowlist (0.093709ms)

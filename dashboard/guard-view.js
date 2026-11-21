@@ -121,3 +121,8 @@ export async function loadDashboard(url, guardAddress, limit = 40) {
   }
   return { guard, velocity, decisions };
 }
+
+// STUB (red phase): no owner checks, no allowlist.
+export const checkedGuard = (info) => decodeGuard(info.data);
+export const checkedVelocityUser = (info) => decodeVelocityUser(info.data);
+export const allowedRpc = (p) => p ?? "http://127.0.0.1:8999";
