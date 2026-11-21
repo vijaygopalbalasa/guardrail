@@ -1,0 +1,3 @@
+2026-11-21 09:15:51 UTC checkpoint FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS: day 20778 baseline 999999999 tx 2CE14aqXf6sXqv2zxbYsLkQGUmaL6uktXJRtqc15kMV87vnYhfZr8iKYbY29QNzCvSakAw9nTCkZEcNFjB46m2ZH
+2026-11-21 09:15:53 UTC checkpoint W7ntzEnkuoDQJDRdH3sPLqWeav3HLKK9D3aC5n6pdj5: day 20778 baseline 999999999 tx 33U4Ez4zHB1RZ99JyVr4ZqgszDmP9gEy2RzhkraoFYo4z2YYGHXCSfAaYqM2ZZFuGvdejjHPdK41mPXCGGeH4tgk
+The keeper run once with --now at 09:15 UTC, after the first hour, so this checkpoint used the max rule (no midnight mark); with --at-midnight it runs 5 s after each 00:00 UTC. Each guard's keeper is its owner's key (set by demo/setup.mjs).
