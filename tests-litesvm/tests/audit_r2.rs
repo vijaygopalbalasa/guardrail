@@ -186,6 +186,10 @@ fn n2b_a_cancel_without_an_oracle_account_is_refused() {
     assert!(env.gcancel_with("cancel with the SOL oracle left out", &g, id, &without(SOL_ORACLE)).is_err());
     assert!(env.gcancel_with("cancel with SOL-PERP left out", &g, id, &without(PERP0)).is_err());
     assert!(env.gcancel_with("cancel with spot market 0 left out", &g, id, &without(SPOT0)).is_err());
+    // a cancel the guard refuses never reaches Velocity, so only the guard can insist on the accounts
+    for (label, drop) in [("refused cancel, no SOL oracle", SOL_ORACLE), ("refused cancel, no SOL-PERP", PERP0), ("refused cancel, no spot market", SPOT0)] {
+        assert!(env.gcancel_with(label, &g, 999_999, &without(drop)).is_err(), "{label}");
+    }
     // twin: with every account the cancel goes through (cancels stay always available)
     assert_ok(&env.gcancel("cancel with the full account set", &g, Some(id)));
 }
@@ -201,6 +205,7 @@ fn n2b_no_account_choice_lowers_the_next_days_baseline() {
     // the agent tries to make the guard record only the low, or nothing at the high
     for (label, acc) in [("no SOL oracle", without(SOL_ORACLE)), ("no SOL-PERP", without(PERP0)), ("no spot market", without(SPOT0))] {
         assert!(env.gcancel_with(label, &g, id, &acc).is_err(), "{label}");
+        assert!(env.gcancel_with(label, &g, 999_999, &acc).is_err(), "{label}: a refused cancel too");
         let mut o = small_bid(p_low);
         o.price -= 1_000;
         assert!(env.gplace_as(label, &g, &g.agent.insecure_clone(), o, &acc).is_err(), "{label}");

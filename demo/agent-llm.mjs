@@ -150,7 +150,7 @@ export async function runLlmAgent({ mode, demo, turns = 10, model = process.env.
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const mode = process.argv[2] ?? "runaway";
-  if (!PROMPTS[mode]) { console.error("usage: node demo/agent-llm.mjs calm|recover|runaway [--surfpool] [--turns N]"); process.exit(2); }
+  if (!PROMPTS[mode]) { console.error("usage: node demo/agent-llm.mjs calm|recover|runaway [--surfpool] [--turns N] [--replay transcript.jsonl]"); process.exit(2); }
   const turns = Number(process.argv[process.argv.indexOf("--turns") + 1]) || 10;
   const demo = JSON.parse(readFileSync(fileURLToPath(new URL("../out/demo.json", import.meta.url)), "utf8"));
   let market;
@@ -162,7 +162,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   mkdirSync(dir, { recursive: true });
   const model = process.env.GUARDRAIL_AGENT_MODEL ?? DEFAULT_MODEL;
   const logFile = `${dir}llm-run-${mode}-${model.replace(/[^a-z0-9]+/gi, "_")}-${Date.now()}.jsonl`;
-  const s = await runLlmAgent({ mode, demo, turns, market, logFile, openingLong: market && mode !== "calm" ? 3 : 0 });
+  // --replay <transcript.jsonl>: the model's recorded decisions are sent again, turn by turn, with no API call; the
+  // guard's verdicts are live.
+  const ri = process.argv.indexOf("--replay");
+  let decide;
+  if (ri > 0) {
+    const rec = readFileSync(process.argv[ri + 1], "utf8").trim().split("\n").map((l) => JSON.parse(l));
+    console.log(`replaying ${rec.length} recorded decisions of ${rec[0].model} (no API call); the guard's verdicts are live`);
+    decide = async (_messages, turn) => ({ reason: rec[turn]?.reason ?? "", tool: rec[turn]?.tool ?? null, args: rec[turn]?.args ?? {}, usage: null });
+  }
+  const s = await runLlmAgent({ mode, demo, turns: decide ? Math.min(turns, 99) : turns, market, logFile, decide, openingLong: market && mode !== "calm" ? 3 : 0 });
   console.log(`log: ${logFile}`);
   process.exitCode = s.turns > 0 ? 0 : 1;
 }

@@ -78,7 +78,8 @@
       "name": "checkpoint",
       "docs": [
         "G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.",
-        "It can only ever be the higher of equity now and the last equity the guard saw, so nobody gains by its timing."
+        "In the first hour of the UTC day, the first baseline is the equity now (a midnight mark: yesterday's losses stay",
+        "yesterday's); after that hour it is the higher of equity now and the last equity the guard saw."
       ],
       "discriminator": [
         213,
