@@ -93,6 +93,10 @@
       ],
       "accounts": [
         {
+          "name": "caller",
+          "signer": true
+        },
+        {
           "name": "guard",
           "writable": true
         },
@@ -309,6 +313,41 @@
         {
           "name": "max_daily_loss",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_keeper",
+      "docs": [
+        "G10, owner only: the keeper whose first-hour checkpoint marks the day at midnight (Pubkey::default() = none)."
+      ],
+      "discriminator": [
+        102,
+        94,
+        23,
+        78,
+        157,
+        222,
+        243,
+        214
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "guard"
+          ]
+        },
+        {
+          "name": "guard",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "keeper",
+          "type": "pubkey"
         }
       ]
     },
@@ -819,6 +858,13 @@
           {
             "name": "has_last_seen",
             "type": "bool"
+          },
+          {
+            "name": "keeper",
+            "docs": [
+              "The owner's keeper: its checkpoint in the first hour of a UTC day marks the day at midnight (default: none)."
+            ],
+            "type": "pubkey"
           }
         ]
       }

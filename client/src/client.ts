@@ -280,13 +280,16 @@ export class GuardrailClient {
   async setLimits(owner: Keypair, limits: Limits) { return this.send([this.ownerIx("set_limits", owner.publicKey, encodeLimits(limits))], [owner]); }
   /** PublicKey.default revokes the agent. */
   async setAgent(owner: Keypair, agent: PublicKey) { return this.send([this.ownerIx("set_agent", owner.publicKey, agent.toBuffer())], [owner]); }
-  /** G10, permissionless: anyone (`payer`) takes the day's baseline for `owner`'s guard with fresh prices. */
+  /**
+   * G10, permissionless: anyone (`payer`) takes the day's baseline for `owner`'s guard with fresh prices. Signed by the
+   * owner or the owner's keeper in the first hour of a UTC day, it marks the day at the equity then.
+   */
   async checkpoint(payer: Keypair, owner: PublicKey) {
     const { velocityUser, guard } = this.guardFor(owner);
     const extra = await this.remainingAccounts(velocityUser, 0);
     const ix = new TransactionInstruction({
       programId: this.programId,
-      keys: [{ pubkey: guard, isSigner: false, isWritable: true }, { pubkey: velocityUser, isSigner: false, isWritable: false }, ...extra],
+      keys: [{ pubkey: payer.publicKey, isSigner: true, isWritable: false }, { pubkey: guard, isSigner: false, isWritable: true }, { pubkey: velocityUser, isSigner: false, isWritable: false }, ...extra],
       data: discriminator("global", "checkpoint"),
     });
     return this.send([ix], [payer]);
@@ -294,5 +297,7 @@ export class GuardrailClient {
 
   /** G10: the most equity (quote units, 1e6 = 1 dUSDT) the account may lose in one UTC day; 0 turns it off. */
   async setDailyLoss(owner: Keypair, maxDailyLoss: bigint) { const b = Buffer.alloc(8); b.writeBigUInt64LE(maxDailyLoss); return this.send([this.ownerIx("set_daily_loss", owner.publicKey, b)], [owner]); }
+  /** G10: the keeper whose first-hour checkpoint marks the day at midnight (PublicKey.default for none). */
+  async setKeeper(owner: Keypair, keeper: PublicKey) { return this.send([this.ownerIx("set_keeper", owner.publicKey, keeper.toBuffer())], [owner]); }
   async setPaused(owner: Keypair, paused: boolean) { return this.send([this.ownerIx("set_paused", owner.publicKey, Buffer.from([paused ? 1 : 0]))], [owner]); }
 }
