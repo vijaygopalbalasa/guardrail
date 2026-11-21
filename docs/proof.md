@@ -57,7 +57,7 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
 | Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (47 tests in the file) | `tests-litesvm/tests/limits.rs` |
-| 70 of 71 planted bugs caught; the one not caught is a backup check (the post-CPI stored-order check) that the earlier checks make unreachable, see `notes/RED.md` | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
+| 74 of 75 planted bugs caught (copy run at b779468); the one not caught is a backup check (the post-CPI stored-order check) that the earlier checks make unreachable, see `notes/RED.md` | `scripts/planted-bug.sh` (run in a copy-on-write copy) | `notes/planted-bug-run.txt`, `notes/planted-bug-summary.txt` |
 | Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
 | The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
 | The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |

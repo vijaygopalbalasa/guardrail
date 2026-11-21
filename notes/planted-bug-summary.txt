@@ -1,0 +1,77 @@
+CAUGHT === G1 off by one
+CAUGHT === G2 market allowlist ignores the index
+CAUGHT === F2 exits skip the market allowlist
+CAUGHT === G2 order type check removed
+CAUGHT === G2 builder check removed
+CAUGHT === G3 forgets the running total
+CAUGHT === G3 never resets on a new day
+CAUGHT === G4 ignores this order
+CAUGHT === G4 first-match slot lookup
+CAUGHT === G5 ignores unrealized PnL
+CAUGHT === G5 check removed
+CAUGHT === G6 price field skipped
+CAUGHT === G6 oracle offset skipped
+CAUGHT === G6 auction prices skipped
+CAUGHT === G6 market order without a worst price allowed
+CAUGHT === G9 exit skips the price band
+CAUGHT === G5 other spot balances ignored
+CAUGHT === G6 staleness off by one
+CAUGHT === G7 pause ignored
+CAUGHT === G7 owner check removed from set_limits
+CAUGHT === G7 revoked agent still trades
+CAUGHT === agent constraint removed (any signer trades)
+CAUGHT === a refusal fails the transaction instead of being recorded
+CAUGHT === refusal counter for G1 not bumped
+CAUGHT === G9 exit does not need to oppose the position
+CAUGHT === F4 resting exits ignored
+CAUGHT === G9 exits blocked by limits (no bypass)
+CAUGHT === G8 a third Velocity instruction (withdraw) appears
+CAUGHT === post-trade check off by one (refuses at the cap)
+CAUGHT === stale exit favourable-side check removed
+CAUGHT === stale exit threshold ignored (always the band)
+CAUGHT === F1 oracle order without an offset allowed
+MISSED === F1 stored-order check after the CPI removed (defense in depth: the pre-check refuses first)
+CAUGHT === F1 stored-order breach rule broken (unit tests on the audit's stored orders)
+CAUGHT === F2 exits skip the order-type allowlist
+CAUGHT === F3 agent may cancel any order
+CAUGHT === F3 agent may cancel all
+CAUGHT === INFO order lifetime ignored
+CAUGHT === INFO last refusal by rule not kept
+CAUGHT === R5 lifetime: max_ts 0 or in the past passes (life = max_ts - now)
+CAUGHT === R5 placed ids never pruned
+CAUGHT === R5 a new id evicts a live one
+CAUGHT === R5 no refusal when 32 guard orders are open
+CAUGHT === R5 stored max_ts not checked after the CPI (unit tests)
+CAUGHT === R6 G10 check removed
+CAUGHT === R6 G10 ignores deposits and withdrawals
+CAUGHT === R6 G10 baseline re-taken on every call
+CAUGHT === R6 G10 baseline never resets on a new day
+CAUGHT === R6 G10 refusal filed under G7
+CAUGHT === R6 an order Velocity did not store counts as accepted
+CAUGHT === R7 G10 baseline not taken on the first cancel of the day
+CAUGHT === R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)
+CAUGHT === R8 an order that keeps exposure equal by flipping is waived (the review case)
+CAUGHT === R9 N2 a new day's baseline ignores the last equity seen
+CAUGHT === R9 N2 checkpoint accepts any Velocity account
+CAUGHT === R9 N3 exits skip the order lifetime
+CAUGHT === R9 N4 the owner's reduce-only orders count against the agent's exits
+CAUGHT === R9 N5 surplus reduce-only orders pass
+CAUGHT === R10 an observation is skipped when the caller leaves accounts out
+CAUGHT === R10 a first-hour checkpoint does not mark the day at midnight
+CAUGHT === R11 anyone's first-hour checkpoint marks the day at midnight
+CAUGHT === R11 a state error (stale or unsupported oracle) fails cancels and exits
+CAUGHT === R12 anyone may migrate or close a guard
+CAUGHT === R12 migrate does not grow the account
+CAUGHT === R12 close keeps the rent
+CAUGHT === R12 a daily loss cap without a keeper
+CAUGHT === R13 migrate accepts any shorter length
+CAUGHT === R13 a new day's baseline ignores the previous day's high
+CAUGHT === R13 the keeper can be removed while a cap is set
+CAUGHT === R14 a guard upgraded mid-day forgets the high it saw before
+CAUGHT === R15 the keeper may be the agent (set_keeper)
+CAUGHT === R15 the agent may be the keeper (set_agent)
+CAUGHT === R15 with no day high the stored baseline is ignored
+CAUGHT === R15 the owner can reset only in the first hour
+CAUGHT === R15 values from older days still carry after a gap
+
+Final run: 74 of 75 caught, in a copy-on-write copy at b779468 (program code unchanged after it). The one not caught removes the post-CPI stored-order check, a backup the pre-CPI checks make unreachable (see notes/RED.md, round 4).
