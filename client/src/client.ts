@@ -166,19 +166,34 @@ export class GuardrailClient {
     };
   }
 
-  /** Cancels an order (or the latest one) through the guard. Always allowed, even while paused. */
-  async cancelOrder(args: { agent: Keypair; owner: PublicKey; orderId?: number; payer?: Keypair }): Promise<{ signature: string }> {
+  /** Open order ids on the Velocity account that the guard placed (the only ones the agent may cancel). */
+  async guardOrders(owner: PublicKey): Promise<number[]> {
+    const g = await this.getGuard(owner);
+    const d = (await this.connection.getAccountInfo(this.guardFor(owner).velocityUser, "confirmed"))!.data;
+    const open: number[] = [];
+    for (let i = 0; i < 32; i++) { const o = 1064 + i * 104; if (d[o + 86] === 1) open.push(d.readUInt32LE(o + 80)); }
+    return open.filter((id) => g.placedOrderIds.includes(id)).sort((a, b) => a - b);
+  }
+
+  /**
+   * Cancels one order the guard placed (by default the most recent one still open). Always allowed, even while
+   * paused. The guard refuses (as a recorded success) a cancel of the owner's own orders or a cancel-all.
+   */
+  async cancelOrder(args: { agent: Keypair; owner: PublicKey; orderId?: number; payer?: Keypair }): Promise<{ signature: string; accepted: boolean; orderId: number | null }> {
     const { velocityUser } = this.guardFor(args.owner);
     const extra = await this.remainingAccounts(velocityUser, 0);
-    const id = args.orderId === undefined ? Buffer.from([0]) : Buffer.concat([Buffer.from([1]), (() => { const b = Buffer.alloc(4); b.writeUInt32LE(args.orderId!); return b; })()]);
+    const target = args.orderId ?? (await this.guardOrders(args.owner)).at(-1);
+    if (target === undefined) return { signature: "", accepted: false, orderId: null };
+    const id = Buffer.concat([Buffer.from([1]), (() => { const b = Buffer.alloc(4); b.writeUInt32LE(target); return b; })()]);
     const ix = new TransactionInstruction({
       programId: this.programId,
       keys: this.tradeKeys(args.agent.publicKey, args.owner, extra),
       data: Buffer.concat([discriminator("global", "cancel_order"), id]),
     });
     const signers = args.payer && !args.payer.publicKey.equals(args.agent.publicKey) ? [args.payer, args.agent] : [args.agent];
-    const { signature } = await this.send([ix], signers);
-    return { signature };
+    const { signature, logs } = await this.send([ix], signers);
+    const accepted = !logs.some((l) => l.includes("guard REFUSED cancel"));
+    return { signature, accepted, orderId: target };
   }
 
   // ----- owner-only (never exposed to the agent) -----

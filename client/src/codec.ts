@@ -17,6 +17,8 @@ export interface OrderInput {
   reduceOnly?: boolean;
   postOnly?: boolean;
   userOrderId?: number;
+  /** Unix seconds after which Velocity expires the order (required when the owner sets an order lifetime). */
+  maxTs?: bigint;
   auction?: { duration: number; start: bigint; end: bigint };
 }
 
@@ -37,6 +39,8 @@ export interface Limits {
   maxOracleStalenessSlots: bigint;
   /** Exits with an older oracle may only be priced on the owner-favourable side of the last price. */
   exitMaxStalenessSlots: bigint;
+  /** Non-exit orders must carry maxTs within this many seconds (0: no bound). */
+  maxOrderLifetimeSecs?: bigint;
 }
 
 export const ORDER_TYPE_BITS = { market: 1, limit: 2, oracle: 16 } as const;
@@ -60,7 +64,7 @@ export function encodeOrderParams(o: OrderInput): Buffer {
   const w = new Writer();
   w.u8(ORDER_TYPE_TAG[o.orderType ?? "limit"]).u8(1 /* perp */).u8(o.side === "long" ? 0 : 1).u8(o.userOrderId ?? 0);
   w.u64(o.size).u64(o.price ?? 0n).u16(o.marketIndex ?? 0).u8(o.reduceOnly ? 1 : 0).u8(o.postOnly ? 1 : 0).u8(0 /* bit_flags */);
-  w.opt(undefined, () => {}); // max_ts
+  w.opt(o.maxTs, (x) => w.i64(x)); // max_ts
   w.opt(undefined, () => {}); // trigger_price
   w.u8(0); // trigger_condition
   w.opt(o.oracleOffset, (x) => w.i64(x));
@@ -79,7 +83,7 @@ export function encodeLimits(l: Limits): Buffer {
     const m = l.markets[i] ?? { marketIndex: 0, maxExposureBase: 0n };
     w.u16(m.marketIndex).u64(m.maxExposureBase);
   }
-  w.u8(l.allowedOrderTypes).u64(l.dailyNotionalCap).u32(l.maxLeverageBps).u32(l.priceBandBps).u64(l.maxOracleStalenessSlots).u64(l.exitMaxStalenessSlots);
+  w.u8(l.allowedOrderTypes).u64(l.dailyNotionalCap).u32(l.maxLeverageBps).u32(l.priceBandBps).u64(l.maxOracleStalenessSlots).u64(l.exitMaxStalenessSlots).u64(l.maxOrderLifetimeSecs ?? 0n);
   return w.done();
 }
 
@@ -110,6 +114,12 @@ export interface GuardAccount {
   /** refused.G1 ... refused.G7 */
   refused: Record<"G1" | "G2" | "G3" | "G4" | "G5" | "G6" | "G7", bigint>;
   lastRefusal: LastRefusal;
+  /** Order ids the guard placed; the agent may cancel only these. */
+  placedOrderIds: number[];
+  cancelCount: bigint;
+  refusedCancels: bigint;
+  /** The last refusal for each rule code 0..7. */
+  lastRefusalByRule: LastRefusal[];
 }
 
 function readLimits(r: Reader): Limits {
@@ -125,6 +135,7 @@ function readLimits(r: Reader): Limits {
     priceBandBps: r.u32(),
     maxOracleStalenessSlots: r.u64(),
     exitMaxStalenessSlots: r.u64(),
+    maxOrderLifetimeSecs: r.u64(),
   };
 }
 
@@ -141,8 +152,15 @@ export function decodeGuard(data: Buffer): GuardAccount {
   r.u8(); // bump
   const acceptedCount = r.u64();
   const refused = { G1: r.u64(), G2: r.u64(), G3: r.u64(), G4: r.u64(), G5: r.u64(), G6: r.u64(), G7: r.u64() };
-  const lastRefusal = { rule: r.u8(), reason: r.u32(), value: r.i128(), cap: r.i128(), slot: r.u64() };
-  return { owner, velocityUser, agent, paused, limits, day, dayNotional, acceptedCount, refused, lastRefusal };
+  const readLr = () => ({ rule: r.u8(), reason: r.u32(), value: r.i128(), cap: r.i128(), slot: r.u64() });
+  const lastRefusal = readLr();
+  const placedOrderIds: number[] = [];
+  for (let i = 0; i < 32; i++) { const id = r.u32(); if (id) placedOrderIds.push(id); }
+  r.u8(); // placed_cursor
+  const cancelCount = r.u64();
+  const refusedCancels = r.u64();
+  const lastRefusalByRule = Array.from({ length: 8 }, readLr);
+  return { owner, velocityUser, agent, paused, limits, day, dayNotional, acceptedCount, refused, lastRefusal, placedOrderIds, cancelCount, refusedCancels, lastRefusalByRule };
 }
 
 export interface OrderChecked {

@@ -81,13 +81,14 @@ server.registerTool(
 server.registerTool(
   "guardrail_cancel_order",
   {
-    description: "Cancel an open order through the guard (always allowed, even while the guard is paused). Omit order_id to cancel the latest order.",
+    description: "Cancel an order this agent placed through the guard (always allowed, even while the guard is paused). Omit order_id to cancel the most recent one. The guard refuses to cancel the owner's own orders.",
     inputSchema: { order_id: z.number().int().nonnegative().optional() },
   },
   async (a) => {
     try {
       const r = await client.cancelOrder({ agent, owner, orderId: a.order_id });
-      return text(`CANCELLED ${a.order_id ?? "latest order"}\n${json(r)}`);
+      if (r.orderId === null) return text("NOTHING TO CANCEL: no open order placed by this agent");
+      return text(`${r.accepted ? "CANCELLED" : "REFUSED (only orders this agent placed can be cancelled)"} ${r.orderId}\n${json(r)}`);
     } catch (e) {
       if (e instanceof GuardrailError) return { ...text(`FAILED: ${e.message}`), isError: true };
       throw e;
@@ -123,6 +124,7 @@ server.registerTool(
       limits: g.limits,
       accepted: g.acceptedCount,
       refused: g.refused,
+      cancels: { accepted: g.cancelCount, refused: g.refusedCancels },
       last_refusal: { ...g.lastRefusal, rule_name: RULE_NAMES[g.lastRefusal.rule] ?? null },
       today_notional: g.dayNotional,
       positions,
