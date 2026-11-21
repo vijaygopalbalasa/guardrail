@@ -123,15 +123,15 @@ fn order_shape_refusals_trigger_bitflags_spot_zero() {
     t.order_type = 3;
     t.trigger_price = Some(90_000_000);
     let r = env.gplace("trigger limit", &g, t);
-    refused(&env, &g, &r, &t, gerr::TRIGGER_ORDERS_REFUSED, rule::SHAPE);
+    refused(&env, &g, &r, &t, gerr::TRIGGER_ORDERS_REFUSED, rule::G2);
     let mut b = Order::resting(0, BASE, 91_000_000);
     b.bit_flags = 1;
     let r = env.gplace("bit flags", &g, b);
-    refused(&env, &g, &r, &b, gerr::BIT_FLAGS_REFUSED, rule::SHAPE);
+    refused(&env, &g, &r, &b, gerr::BIT_FLAGS_REFUSED, rule::G2);
     let mut s = Order::resting(0, BASE, 91_000_000);
     s.market_type = 0;
     let r = env.gplace("spot market type", &g, s);
-    refused(&env, &g, &r, &s, gerr::NOT_PERP, rule::SHAPE);
+    refused(&env, &g, &r, &s, gerr::NOT_PERP, rule::G2);
     let z = Order::resting(0, 0, 91_000_000);
     let r = env.gplace("zero size", &g, z);
     assert_refused(&r, gerr::ZERO_SIZE);
@@ -539,17 +539,26 @@ fn g9_exit_allowed_when_paused_or_market_delisted() {
 }
 
 #[test]
-fn g9_exit_still_needs_a_fresh_oracle() {
-    let (mut env, g) = exit_setup();
-    tighten(&mut env, &g, |l| l.max_oracle_staleness_slots = 3);
-    env.step(1, P0);
-    env.advance(4);
+fn g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band() {
+    // Staleness never blocks an exit; the band uses the oracle's last price.
+    let mut l = Limits::loose();
+    l.price_band_bps = 100;
+    let (mut env, g) = setup(l);
+    open_long(&mut env, &g, BASE);
+    tighten(&mut env, &g, |l| {
+        l.price_band_bps = 100;
+        l.max_oracle_staleness_slots = 3;
+    });
+    env.advance(20);
+    let new = Order::resting(0, 100_000_000, 91_000_000);
+    assert_code(&env.gplace("new order with a 20-slot-old oracle", &g, new), gerr::STALE_ORACLE);
+    let mut far = Order::limit(1, BASE, 80_000_000);
+    far.reduce_only = true;
+    let r = env.gplace("stale oracle, exit far under the last price", &g, far);
+    refused(&env, &g, &r, &far, gerr::PRICE_OUTSIDE_BAND, rule::G6);
     let mut exit = Order::resting(1, BASE, 91_500_000);
     exit.reduce_only = true;
-    assert_code(&env.gplace("exit with a 4-slot-old oracle", &g, exit), gerr::STALE_ORACLE);
-    env.step(1, P0);
-    env.advance(3);
-    let r = env.gplace("exit with a 3-slot-old oracle", &g, exit);
+    let r = env.gplace("stale oracle, exit inside the band", &g, exit);
     accepted(&env, &g, &r, &exit, rule::G9);
 }
 

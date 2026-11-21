@@ -25,7 +25,6 @@ pub mod rule {
     pub const G6_PRICE_BAND: u8 = 6;
     pub const G7_PAUSED: u8 = 7;
     pub const G9_EXIT: u8 = 9;
-    pub const ORDER_SHAPE: u8 = 10;
 }
 
 /// Order types the owner may allow (bit = 1 << OrderType tag). Trigger orders are never accepted.
@@ -89,19 +88,43 @@ pub mod guard {
         ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         params: OrderParams,
     ) -> Result<()> {
-        check_agent(&ctx)?;
-        let decision = check_order(&ctx, &params)?;
+        let outcome = check_order(&ctx, &params)?;
+        if let Outcome::Refuse { rule: r, value, cap, reason } = outcome {
+            // A limit refusal is a recorded success: Velocity is not called, the Guard counts it, the event says why.
+            let slot = Clock::get()?.slot;
+            let g = &mut ctx.accounts.guard;
+            match r {
+                rule::G1_ORDER_SIZE => g.refused_g1 += 1,
+                rule::G2_ALLOWLIST => g.refused_g2 += 1,
+                rule::G3_DAILY_NOTIONAL => g.refused_g3 += 1,
+                rule::G4_EXPOSURE => g.refused_g4 += 1,
+                rule::G5_LEVERAGE => g.refused_g5 += 1,
+                rule::G6_PRICE_BAND => g.refused_g6 += 1,
+                _ => g.refused_g7 += 1,
+            }
+            g.last_refusal = LastRefusal { rule: r, reason: u32::from(reason), value, cap, slot };
+            msg!("guard REFUSED (rule {}): {} (value {}, cap {})", r, reason, value, cap);
+            emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
+            return Ok(());
+        }
         let mut data = velocity::IX_PLACE_PERP_ORDER.to_vec();
         params.serialize(&mut data)?;
         forward(&ctx, data)?;
-        if let Some(d) = decision {
-            post_check(&ctx, &params, &d)?;
-            let g = &mut ctx.accounts.guard;
-            g.day = d.day;
-            g.day_notional = d.day_notional_after;
-            emit_checked(g.key(), &params, true, rule::ACCEPTED, d.leverage_bps, g.limits.max_leverage_bps as i128);
-        } else {
-            emit_checked(ctx.accounts.guard.key(), &params, true, rule::G9_EXIT, 0, 0);
+        match outcome {
+            Outcome::Accept(d) => {
+                // A cap exceeded after the CPI would be a guard bug, not a refusal: fail the transaction.
+                post_check(&ctx, &params, &d)?;
+                let g = &mut ctx.accounts.guard;
+                g.day = d.day;
+                g.day_notional = d.day_notional_after;
+                g.accepted_count += 1;
+                emit_checked(g.key(), &params, true, rule::ACCEPTED, d.leverage_bps, g.limits.max_leverage_bps as i128, 0);
+            }
+            _ => {
+                let g = &mut ctx.accounts.guard;
+                g.accepted_count += 1;
+                emit_checked(g.key(), &params, true, rule::G9_EXIT, 0, 0, 0);
+            }
         }
         msg!("guard: order accepted, size {} market {}", params.base_asset_amount, params.market_index);
         Ok(())
@@ -112,7 +135,6 @@ pub mod guard {
         ctx: Context<'_, '_, 'info, 'info, AgentTrade<'info>>,
         order_id: Option<u32>,
     ) -> Result<()> {
-        check_agent(&ctx)?;
         let mut data = velocity::IX_CANCEL_ORDER.to_vec();
         order_id.serialize(&mut data)?;
         forward(&ctx, data)?;
@@ -136,13 +158,6 @@ fn validate_limits(l: &Limits) -> Result<()> {
             require!(b.max_exposure_base == 0 || b.market_index != a.market_index, GuardError::InvalidLimits);
         }
     }
-    Ok(())
-}
-
-fn check_agent(ctx: &Context<AgentTrade>) -> Result<()> {
-    let g = &ctx.accounts.guard;
-    require!(g.agent != Pubkey::default(), GuardError::AgentRevoked);
-    require_keys_eq!(ctx.accounts.agent.key(), g.agent, GuardError::NotAgent);
     Ok(())
 }
 
@@ -173,7 +188,8 @@ fn band_breach(p: &OrderParams, oracle: i64, band: u32) -> Option<(i128, &'stati
     None
 }
 
-fn emit_checked(guard: Pubkey, p: &OrderParams, accepted: bool, rule_code: u8, value: i128, cap: i128) {
+#[allow(clippy::too_many_arguments)]
+fn emit_checked(guard: Pubkey, p: &OrderParams, accepted: bool, rule_code: u8, value: i128, cap: i128, reason: u32) {
     emit!(OrderChecked {
         guard,
         accepted,
@@ -184,14 +200,20 @@ fn emit_checked(guard: Pubkey, p: &OrderParams, accepted: bool, rule_code: u8, v
         reduce_only: p.reduce_only,
         value,
         cap,
+        reason,
     });
 }
 
-/// Logs the reason, emits the refusal event (kept in the failed transaction's logs) and returns the error.
-fn refuse(guard: Pubkey, p: &OrderParams, rule_code: u8, value: i128, cap: i128, e: GuardError) -> Result<Option<Decision>> {
-    msg!("guard REFUSED (rule {}): {} (value {}, cap {})", rule_code, e, value, cap);
-    emit_checked(guard, p, false, rule_code, value, cap);
-    Err(e.into())
+/// The pre-check's verdict. Real errors (wrong agent, bad accounts, stale oracle) are Err instead.
+enum Outcome {
+    Accept(Decision),
+    /// A G9 exit: skips G1 to G5, the pause and staleness; already checked against the band.
+    Exit,
+    Refuse { rule: u8, value: i128, cap: i128, reason: GuardError },
+}
+
+fn refuse(rule_code: u8, value: i128, cap: i128, reason: GuardError) -> Result<Outcome> {
+    Ok(Outcome::Refuse { rule: rule_code, value, cap, reason })
 }
 
 /// What the pre-check computed, re-asserted after the CPI.
@@ -221,12 +243,12 @@ fn market_price(ra: &[AccountInfo], market_index: u16, slot: u64) -> std::result
     Ok((price, slot.saturating_sub(o.posted_slot)))
 }
 
-/// Collateral (spot market 0, the quote asset) in quote units. Deposits in other spot markets are not counted
-/// (that understates equity, the safe side); a borrow in another spot market is refused, because ignoring it would
-/// overstate equity.
+/// Collateral (spot market 0, the quote asset) in quote units. Fails closed: any balance in another spot market
+/// (deposit or borrow) or a negative quote balance refuses risk-increasing orders, since the guard values only the
+/// quote deposit.
 fn collateral(ra: &[AccountInfo], user: &velocity::UserView) -> std::result::Result<i128, GuardError> {
-    if user.spot.iter().any(|s| s.market_index != 0 && s.scaled_balance > 0 && s.balance_type == 1) {
-        return Err(GuardError::OtherSpotBorrow);
+    if user.spot.iter().any(|s| s.scaled_balance != 0 && (s.market_index != 0 || s.balance_type == 1)) {
+        return Err(GuardError::OtherSpotBalance);
     }
     let sm_acc = find(ra, &velocity::spot_market_address(0)).ok_or(GuardError::MissingMarketAccount)?;
     let sm = velocity::load_spot_market(sm_acc, 0).ok_or(GuardError::BadMarketAccount)?;
@@ -269,63 +291,60 @@ fn account_leverage(
     Ok((notional, collateral(ra, user)? + upnl))
 }
 
-/// Pre-CPI checks. Ok(None) means the order is a G9 exit and skips the limits; Ok(Some) carries what to re-check.
-fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Decision>> {
+/// Pre-CPI checks.
+fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
     let g = &ctx.accounts.guard;
-    let gk = g.key();
     let l = &g.limits;
     let ra = ctx.remaining_accounts;
     let clock = Clock::get()?;
 
     // Order shape, always enforced (exits included).
     if p.market_type != 1 {
-        return refuse(gk, p, rule::ORDER_SHAPE, p.market_type as i128, 1, GuardError::NotPerp);
+        return refuse(rule::G2_ALLOWLIST, p.market_type as i128, 1, GuardError::NotPerp);
     }
     if p.base_asset_amount == 0 {
-        return refuse(gk, p, rule::ORDER_SHAPE, 0, 0, GuardError::ZeroSize);
+        return refuse(rule::G2_ALLOWLIST, 0, 0, GuardError::ZeroSize);
     }
     if p.bit_flags != 0 {
-        return refuse(gk, p, rule::ORDER_SHAPE, p.bit_flags as i128, 0, GuardError::BitFlagsRefused);
+        return refuse(rule::G2_ALLOWLIST, p.bit_flags as i128, 0, GuardError::BitFlagsRefused);
     }
     if p.order_type == order_type::TRIGGER_MARKET || p.order_type == order_type::TRIGGER_LIMIT || p.trigger_price.is_some() {
-        return refuse(gk, p, rule::ORDER_SHAPE, p.order_type as i128, 0, GuardError::TriggerOrdersRefused);
+        return refuse(rule::G2_ALLOWLIST, p.order_type as i128, 0, GuardError::TriggerOrdersRefused);
     }
     if p.builder_idx.is_some() || p.builder_fee_tenth_bps.is_some() {
-        return refuse(gk, p, rule::G2_ALLOWLIST, 1, 0, GuardError::BuilderFieldsRefused);
+        return refuse(rule::G2_ALLOWLIST, 1, 0, GuardError::BuilderFieldsRefused);
     }
 
     let user = velocity::UserView::load(&ctx.accounts.velocity_user.to_account_info()).ok_or(GuardError::NotVelocityUser)?;
     let pos = user.perp_totals(p.market_index);
 
-    // G9: a true exit skips the limits and the pause, but its price must stay in the band (from the oracle's last
-    // price, stale or not) so an exit cannot hand the position's value to a partner far from the market.
+    // G9: a true exit skips G1 to G5, the pause and the staleness limit (a stale oracle must never trap a position),
+    // but its price must stay inside the band computed from the oracle's last price, so an exit cannot hand the
+    // position's value to a partner far from the market.
     if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {
-        let oracle = match market_price(ra, p.market_index, clock.slot) {
-            Ok((price, _age)) => price,
-            Err(e) => return refuse(gk, p, rule::ORDER_SHAPE, p.market_index as i128, 0, e),
-        };
+        let (oracle, _age) = market_price(ra, p.market_index, clock.slot)?;
         if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
-            return refuse(gk, p, rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
+            return refuse(rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
         }
         msg!("guard: G9 exit (reduce-only, opposite to a {} position, size {})", pos.base, p.base_asset_amount);
-        return Ok(None);
+        return Ok(Outcome::Exit);
     }
 
     // G7
     if g.paused {
-        return refuse(gk, p, rule::G7_PAUSED, 1, 0, GuardError::Paused);
+        return refuse(rule::G7_PAUSED, 1, 0, GuardError::Paused);
     }
     // G2
     let row = match l.markets.iter().find(|m| m.max_exposure_base > 0 && m.market_index == p.market_index) {
         Some(r) => *r,
-        None => return refuse(gk, p, rule::G2_ALLOWLIST, p.market_index as i128, 0, GuardError::MarketNotAllowed),
+        None => return refuse(rule::G2_ALLOWLIST, p.market_index as i128, 0, GuardError::MarketNotAllowed),
     };
     if p.order_type > 7 || l.allowed_order_types & (1u8 << p.order_type) == 0 {
-        return refuse(gk, p, rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
+        return refuse(rule::G2_ALLOWLIST, p.order_type as i128, l.allowed_order_types as i128, GuardError::OrderTypeNotAllowed);
     }
     // G1
     if p.base_asset_amount > l.max_order_base {
-        return refuse(gk, p, rule::G1_ORDER_SIZE, p.base_asset_amount as i128, l.max_order_base as i128, GuardError::OrderTooLarge);
+        return refuse(rule::G1_ORDER_SIZE, p.base_asset_amount as i128, l.max_order_base as i128, GuardError::OrderTooLarge);
     }
 
     // Prices: the order's market and every market with an open position or order, each from its own oracle.
@@ -337,20 +356,21 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Deci
     for m in markets {
         match market_price(ra, m, clock.slot) {
             Ok((price, age)) => {
-                // G6 stale oracle
+                // G6 stale oracle: a real error, not a refusal.
                 if age > l.max_oracle_staleness_slots {
-                    return refuse(gk, p, rule::G6_PRICE_BAND, age as i128, l.max_oracle_staleness_slots as i128, GuardError::StaleOracle);
+                    msg!("guard: oracle for market {} is {} slots old (max {})", m, age, l.max_oracle_staleness_slots);
+                    return err!(GuardError::StaleOracle);
                 }
                 prices.push((m, price));
             }
-            Err(e) => return refuse(gk, p, rule::ORDER_SHAPE, m as i128, 0, e),
+            Err(e) => return Err(e.into()),
         }
     }
     let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
 
     // G6 price band on every price field.
     if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
-        return refuse(gk, p, rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
+        return refuse(rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
     }
 
     // G3 daily notional at the oracle price.
@@ -358,29 +378,30 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Option<Deci
     let used = if g.day == day { g.day_notional as i128 } else { 0 };
     let after = used + math::notional(p.base_asset_amount as i128, oracle);
     if after > l.daily_notional_cap as i128 {
-        return refuse(gk, p, rule::G3_DAILY_NOTIONAL, after, l.daily_notional_cap as i128, GuardError::DailyNotionalExceeded);
+        return refuse(rule::G3_DAILY_NOTIONAL, after, l.daily_notional_cap as i128, GuardError::DailyNotionalExceeded);
     }
 
     // G4 worst-case exposure on this market, this order included.
     let exposure = math::worst_case_after(pos.base, pos.open_bids, pos.open_asks, p.direction, p.base_asset_amount);
     if exposure > row.max_exposure_base as i128 {
-        return refuse(gk, p, rule::G4_EXPOSURE, exposure, row.max_exposure_base as i128, GuardError::ExposureExceeded);
+        return refuse(rule::G4_EXPOSURE, exposure, row.max_exposure_base as i128, GuardError::ExposureExceeded);
     }
 
     // G5 worst-case leverage over the whole account.
     let (notional, equity) = match account_leverage(ra, &user, &prices, Some((p,))) {
         Ok(v) => v,
-        Err(e) => return refuse(gk, p, rule::G5_LEVERAGE, 0, 0, e),
+        Err(GuardError::OtherSpotBalance) => return refuse(rule::G5_LEVERAGE, 0, 0, GuardError::OtherSpotBalance),
+        Err(e) => return Err(e.into()),
     };
     let lev = match math::leverage_bps(notional, equity) {
         Some(v) => v,
-        None => return refuse(gk, p, rule::G5_LEVERAGE, equity, 0, GuardError::NonPositiveEquity),
+        None => return refuse(rule::G5_LEVERAGE, equity, 0, GuardError::NonPositiveEquity),
     };
     if lev > l.max_leverage_bps as i128 {
-        return refuse(gk, p, rule::G5_LEVERAGE, lev, l.max_leverage_bps as i128, GuardError::LeverageExceeded);
+        return refuse(rule::G5_LEVERAGE, lev, l.max_leverage_bps as i128, GuardError::LeverageExceeded);
     }
 
-    Ok(Some(Decision {
+    Ok(Outcome::Accept(Decision {
         day,
         day_notional_after: u64::try_from(after).map_err(|_| GuardError::MathOverflow)?,
         exposure_cap: row.max_exposure_base,
@@ -473,6 +494,28 @@ pub struct Guard {
     pub day: i64,
     pub day_notional: u64,
     pub bump: u8,
+    /// Orders accepted (G9 exits included).
+    pub accepted_count: u64,
+    /// Orders refused, by rule (G2 includes order-shape refusals; G5 includes non-positive equity and unsupported
+    /// spot balances; G7 is the pause).
+    pub refused_g1: u64,
+    pub refused_g2: u64,
+    pub refused_g3: u64,
+    pub refused_g4: u64,
+    pub refused_g5: u64,
+    pub refused_g6: u64,
+    pub refused_g7: u64,
+    pub last_refusal: LastRefusal,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
+pub struct LastRefusal {
+    pub rule: u8,
+    /// The GuardError code (6000 + variant).
+    pub reason: u32,
+    pub value: i128,
+    pub cap: i128,
+    pub slot: u64,
 }
 
 /// Mirror of Velocity's OrderParams (borsh layout from its IDL). Enums are kept as their u8 tags.
@@ -514,6 +557,8 @@ pub struct OrderChecked {
     pub value: i128,
     /// The owner's cap for the rule.
     pub cap: i128,
+    /// The GuardError code naming the refusal (0 when accepted).
+    pub reason: u32,
 }
 
 #[derive(Accounts)]
@@ -537,7 +582,14 @@ pub struct OwnerOnly<'info> {
 #[derive(Accounts)]
 pub struct AgentTrade<'info> {
     pub agent: Signer<'info>,
-    #[account(mut, seeds = [b"guard", velocity_user.key().as_ref()], bump = guard.bump, has_one = velocity_user)]
+    #[account(
+        mut,
+        seeds = [b"guard", velocity_user.key().as_ref()],
+        bump = guard.bump,
+        has_one = velocity_user,
+        constraint = guard.agent != Pubkey::default() @ GuardError::AgentRevoked,
+        constraint = guard.agent == agent.key() @ GuardError::NotAgent,
+    )]
     pub guard: Account<'info, Guard>,
     /// CHECK: Velocity validates it.
     pub velocity_state: UncheckedAccount<'info>,
@@ -595,8 +647,8 @@ pub enum GuardError {
     MissingMarketAccount,
     #[msg("the market's oracle source is not supported")]
     UnsupportedOracle,
-    #[msg("a borrow in a spot market other than the quote market is not supported")]
-    OtherSpotBorrow,
+    #[msg("only a positive quote balance is supported: another spot balance or a quote borrow exists")]
+    OtherSpotBalance,
     #[msg("oracle account is invalid")]
     BadOracleAccount,
     #[msg("account equity is not positive")]

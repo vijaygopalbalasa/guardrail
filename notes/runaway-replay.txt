@@ -33,6 +33,7 @@ step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG
 step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 position  10.000 SOL equity    929.83 leverage  0.88x
 step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 position  10.000 SOL equity    921.65 leverage  0.88x
 step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 position  10.000 SOL equity    913.54 leverage  0.88x
+Guard account counters (on chain): accepted 6, refused G1 55 G2 0 G3 0 G4 50 G5 0 G6 0 G7 0; last refusal rule 4 reason 6005 value 12000000000 cap 10000000000 slot 524554096
 
 GUARDED, exposure cap loosened to 100 SOL (the daily notional cap G3 binds)
 step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
@@ -49,6 +50,7 @@ step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG
 step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 position  16.875 SOL equity    890.76 leverage  1.55x
 step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 position  16.875 SOL equity    876.95 leverage  1.56x
 step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 position  16.875 SOL equity    863.28 leverage  1.57x
+Guard account counters (on chain): accepted 9, refused G1 55 G2 0 G3 44 G4 0 G5 0 G6 0 G7 0; last refusal rule 3 reason 6004 value 1652223099 cap 1500000000 slot 524554102
 
 HEADLINE  unguarded: worst loss 412.44 dUSDT of 1000.00 (41.2%), end loss 412.44, max position 55.00 SOL, max leverage 6.98x, orders accepted 11, refused by Velocity margin 88
 HEADLINE  guarded:   worst loss 94.47 dUSDT of 1000.00 (9.4%), end loss 94.47, max position 10.00 SOL, max leverage 0.89x, orders accepted 6, refused by the guard {"G1 order size": 55, "G4 exposure": 50}, refused by Velocity 0, breaches 0

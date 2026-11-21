@@ -157,6 +157,18 @@ fn run(guarded: bool, limits: Limits) -> Run {
         size *= 2;
         price = price * 99 / 100;
     }
+    if guarded {
+        let st = env.guard_state(&g);
+        out.lines.push(format!(
+            "Guard account counters (on chain): accepted {}, refused G1 {} G2 {} G3 {} G4 {} G5 {} G6 {} G7 {}; last refusal rule {} reason {} value {} cap {} slot {}",
+            st.accepted_count, st.refused[1], st.refused[2], st.refused[3], st.refused[4], st.refused[5], st.refused[6], st.refused[7],
+            st.last_refusal.rule, st.last_refusal.reason, st.last_refusal.value, st.last_refusal.cap, st.last_refusal.slot
+        ));
+        assert_eq!(st.accepted_count, out.accepted as u64, "on-chain accepted count matches the replay");
+        let on_chain: u64 = st.refused.iter().sum();
+        let tallied: u32 = out.refused_by.values().sum();
+        assert_eq!(on_chain, tallied as u64, "on-chain refusal counters match the replay");
+    }
     env.step(10, price);
     out.end_equity = equity(&env, &owner, price);
     out.min_equity = out.min_equity.min(out.end_equity);
