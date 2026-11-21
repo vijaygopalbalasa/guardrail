@@ -37,7 +37,7 @@ access to Solana devnet. Run every command from the repository root.
 | 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `46 passed` for the limit tests, plus the probes and the replay |
 | 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
 | 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
-| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision |
+| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision; `/replay.html` plays the unguarded and guarded replays side by side, step by step |
 
 If the hash in step 1 differs, Velocity has upgraded its devnet program since Nov 21 2026 and its account layouts may
 have moved; the committed hash is the version every test here was run against. Stop the validator with

@@ -106,3 +106,29 @@ export function renderLimits(doc, box, g) {
   ];
   box.replaceChildren(h(doc, "dl", { className: "kv" }, kv.flatMap(([k, v]) => [h(doc, "dt", null, k), h(doc, "dd", null, v)])));
 }
+
+/** One run of the replay at one step: headline numbers, the step's decisions and an equity bar. DOM nodes only. */
+export function renderReplayRun(doc, box, run, i, collateral) {
+  const s = run.steps[Math.min(i, run.steps.length - 1)];
+  const lossPct = Math.max(0, num(s.lossPct));
+  const decisions = (s.decisions ?? []).map((d) => {
+    const ok = d.result === "accepted";
+    const label = ok ? `+${num(d.size)} SOL accepted, filled ${num(d.filled)}` : `${num(d.size)} SOL refused by ${String(d.by)}`;
+    return h(doc, "li", null, h(doc, "span", { className: `tag ${ok ? "ok" : "no"}` }, ok ? "ACCEPTED" : d.result === "velocity" ? "VELOCITY" : "REFUSED"), " ", label);
+  });
+  box.replaceChildren(
+    h(doc, "div", { className: "rp-title" }, String(run.title)),
+    h(doc, "div", { className: "addr" }, `limits: ${String(run.limits)}`),
+    h(doc, "div", { className: `big ${lossPct > 10 ? "no" : "ok"}` }, lossPct < 0.05 ? "0.0%" : `-${lossPct.toFixed(1)}%`),
+    h(doc, "div", { className: "sub" }, "loss of equity so far"),
+    h(doc, "div", { className: "track rp-eq" }, h(doc, "div", { className: `fill ${lossPct > 10 ? "" : "okfill"}`, width: Math.max(0, Math.min(100, (num(s.equity) / num(collateral)) * 100)) })),
+    h(doc, "dl", { className: "kv" },
+      h(doc, "dt", null, "SOL price"), h(doc, "dd", null, `$${num(s.price).toFixed(2)}`),
+      h(doc, "dt", null, "position"), h(doc, "dd", null, `${num(s.position).toFixed(3)} SOL long`),
+      h(doc, "dt", null, "open bids"), h(doc, "dd", null, `${num(s.openBids).toFixed(3)} SOL`),
+      h(doc, "dt", null, "equity"), h(doc, "dd", null, `${num(s.equity).toFixed(2)} dUSDT (uPnL ${num(s.upnl).toFixed(2)})`),
+      h(doc, "dt", null, "leverage"), h(doc, "dd", null, `${num(s.leverage).toFixed(2)}x`)),
+    h(doc, "div", { className: "sub" }, `step ${num(s.step) + 1}: the agent wants +${num(s.wants)} SOL`),
+    h(doc, "ul", { className: "rp-list" }, decisions.length ? decisions : [h(doc, "li", null, "no orders")]),
+  );
+}

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
-import { renderFeed, renderLastRefusal, renderError } from "../render.js";
+import { renderFeed, renderLastRefusal, renderError, renderReplayRun } from "../render.js";
 
 const GUARD = "ihYBqnzinaqysQcbmYetzXkVAVDXM7wWkYr1xWRGZVU";
 const OTHER_GUARD = "DsDm2DK29TXgaDMmj8ZdmZ6qGeTmNRnn9V567LvaHyCt";
@@ -100,8 +100,25 @@ test("hostile strings render as text, never as HTML", () => {
 });
 
 test("the dashboard source never assigns innerHTML", () => {
-  for (const f of ["app.js", "render.js"]) {
+  for (const f of ["app.js", "render.js", "replay.js"]) {
     const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.equal((src.match(/innerHTML/g) ?? []).length, 0, `${f} uses innerHTML`);
   }
+});
+
+test("replay playback renders hostile strings as text", () => {
+  const box = new El("div");
+  const run = { title: HOSTILE, limits: HOSTILE, steps: [{ step: 0, price: 91, wants: 1, position: 1, openBids: 0, openAsks: 0, collateral: 1000, upnl: 0, equity: 1000, leverage: 0.1, lossPct: 0, decisions: [{ size: 1, result: "refused", by: HOSTILE }] }] };
+  renderReplayRun(doc, box, run, 0, 1000);
+  assert.ok(box.textContent.includes(HOSTILE));
+});
+
+test("the replay data shows the headline and stays labelled REPLAY", () => {
+  const d = JSON.parse(readFileSync(new URL("../replay.json", import.meta.url), "utf8"));
+  assert.match(d.label, /^REPLAY/);
+  const by = Object.fromEntries(d.runs.map((r) => [r.id, r]));
+  assert.equal(by.unguarded.summary.worstLossPct.toFixed(1), "41.2");
+  assert.equal(by.guarded.summary.worstLossPct.toFixed(1), "9.4");
+  for (const id of ["guarded", "guarded-g3", "guarded-g5"]) assert.equal(by[id].summary.breaches, 0);
+  assert.ok(by["guarded-g5"].summary.refusedBy["G5 leverage"] > 0);
 });
