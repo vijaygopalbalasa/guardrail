@@ -1,0 +1,6 @@
+{
+  "label": "REPLAY: Velocity's devnet binary, cloned devnet state, SOL price written by the test ($91.39 falling 1% a step for 14 steps). Same runaway agent both times: it doubles its size every step and halves and retries when refused.",
+  "unguarded": { "worstLossPct": 41.2, "worstLoss": 412.44, "maxPositionSol": 55.0, "maxLeverage": 6.98, "stoppedBy": "Velocity's own 5x margin check (88 orders)" },
+  "guarded": { "worstLossPct": 9.4, "worstLoss": 94.47, "maxPositionSol": 10.0, "maxLeverage": 0.89, "refused": { "G1 order size": 55, "G4 exposure": 50 }, "breaches": 0 },
+  "collateral": 1000
+}
