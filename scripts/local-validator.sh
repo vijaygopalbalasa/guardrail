@@ -5,11 +5,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CFG=config.yml
-stop() { pkill -f "solana-test-validator -C $CFG" 2>/dev/null || true; for _ in $(seq 1 20); do pgrep -f "solana-test-validator -C $CFG" >/dev/null || return 0; sleep 1; done; }
+stop() { [ -f $CFG ] || return 0; pkill -f "solana-test-validator -C $CFG" 2>/dev/null || true; for _ in $(seq 1 20); do pgrep -f "solana-test-validator -C $CFG" >/dev/null || return 0; sleep 1; done; }
 case "${1:-start}" in
   stop) stop ;;
   start)
     stop
+    [ -f keys/dev.json ] && [ -f $CFG ] || ./scripts/init-local.sh
     DEV=$(solana-keygen pubkey keys/dev.json)
     mkdir -p out
     solana-test-validator -C $CFG --mint "$DEV" --ledger out/ledger --reset -q \
@@ -25,7 +26,7 @@ case "${1:-start}" in
       --clone Dai8hT1YRBBm5rBSJUSKcdR11psM55LVAkshbypfC4k4 \
       --clone GqmEqYsy8EyvofDpmtFxK8zhYrgWgNokAtYoduQdL7v6 \
       --clone 467z7AR8tPKQcUD17hgmU3DFt8NUWrUi7ZEVs461wdEf \
-      --upgradeable-program keys/guard-program.json target/deploy/guard.so "$DEV" \
+      --upgradeable-program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy target/deploy/guard.so "$DEV" \
       > out/validator.log 2>&1 &
     for _ in $(seq 1 120); do solana -C $CFG --url http://127.0.0.1:8999 cluster-version >/dev/null 2>&1 && break; sleep 1; done
     solana -C $CFG --url http://127.0.0.1:8999 slot

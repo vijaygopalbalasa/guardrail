@@ -24,19 +24,25 @@ measured from the raw account bytes, not with the guard's own code. Full table: 
 
 ## Try it in two minutes (after the first build)
 
-Needs Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54) and Node 22 or newer.
+Needs Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and network
+access to Solana devnet. Run every command from the repository root.
 
 | Step | Command | What you should see |
 |---|---|---|
-| 1. Get Velocity's devnet binary | `solana program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so` | its sha256 matches `fixtures/velocity-devnet.so.sha256` |
-| 2. Build the guard | `./scripts/build.sh` | `target/deploy/guard.so` |
-| 3. The headline replay | `cd tests-litesvm && cargo test --release --test runaway -- --nocapture` | both runs step by step, then the HEADLINE lines |
-| 4. Every limit test | `cd tests-litesvm && cargo test --release` | 46 replay tests pass |
-| 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && scripts/local-validator.sh start` | a validator with Velocity cloned from devnet and the guard |
+| 0. Local key and config | `./scripts/init-local.sh` | a throwaway key in `keys/dev.json` and `config.yml` (your own solana config is not touched) |
+| 1. Get Velocity's devnet binary | `solana -C config.yml program dump -u devnet vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-devnet.so && shasum -a 256 fixtures/velocity-devnet.so` | the same hash as in `fixtures/velocity-devnet.so.sha256` |
+| 2. Build the guard | `./scripts/build.sh` | ends with `Finished`; `target/deploy/guard.so` exists |
+| 3. The headline replay | `(cd tests-litesvm && cargo test --release --test runaway -- --nocapture)` | both runs step by step, then the HEADLINE lines (41.2% vs 9.4%, breaches 0) |
+| 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `46 passed` for the limit tests, plus the probes and the replay |
+| 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
 | 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
-| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `cd dashboard && python3 -m http.server 8780` and open the printed URL | limits, accepted vs refused by rule, the last refusal, every decision |
+| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision |
 
-Everything at once: `scripts/test-all.sh`.
+If the hash in step 1 differs, Velocity has upgraded its devnet program since Nov 21 2026 and its account layouts may
+have moved; the committed hash is the version every test here was run against. Stop the validator with
+`./scripts/local-validator.sh stop`.
+
+Everything at once: `./scripts/test-all.sh`.
 
 ## What is real, with receipts
 
@@ -62,6 +68,7 @@ Everything at once: `scripts/test-all.sh`.
 - The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
 - Fills and moving prices are shown in replays, because Velocity's devnet oracle is stale. On the local validator the
   cloned oracle is a frozen snapshot, so orders rest but do not fill there.
+- The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
 - The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap
   `place_and_take`.
 - Collateral is counted from the quote deposit only; any other spot balance blocks new risk instead of being valued.
@@ -69,8 +76,9 @@ Everything at once: `scripts/test-all.sh`.
 
 ## How it compares
 
-- **Xorr** enforces caps inside its own off-chain executor, for spot trading.
-- **CRESCO** is a generic token mandate.
+- **Xorr** enforces its daily cap and allowlist inside its own off-chain executor for spot buys, with only the total
+  spend enforced on chain by a token approval.
+- **CRESCO** is a generic on-chain mandate for token transfers.
 - **Velocity's equity floor** exists, but only Velocity's admin can set it; the account's owner and delegate cannot.
 - **Guardrail** is enforced on chain, by the program that holds the delegate role, on every perps order: order size,
   markets, daily notional, worst-case exposure including open orders, leverage on unrealized PnL, and the price
@@ -80,7 +88,7 @@ Everything at once: `scripts/test-all.sh`.
 
 | | Limit | In one line |
 |---|---|---|
-| G0 | Agent only | Only the agent key the owner named can trade through the guard; a revoked or different key is rejected. |
+| G0 | Setup and agent | Only the Velocity account's owner can create its guard, and only the agent key the owner named can trade through it; a revoked or different key is rejected. |
 | G1 | Order size | No single order larger than the owner's maximum. |
 | G2 | Allowlists | Only the owner's markets and order types (Limit, Market, Oracle); no trigger orders, no builder fees, no odd order flags. |
 | G3 | Daily notional | Total order value per UTC day stays under the cap; a new day starts a new total. |
