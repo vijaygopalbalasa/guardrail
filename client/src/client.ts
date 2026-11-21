@@ -297,6 +297,27 @@ export class GuardrailClient {
 
   /** G10: the most equity (quote units, 1e6 = 1 dUSDT) the account may lose in one UTC day; 0 turns it off. */
   async setDailyLoss(owner: Keypair, maxDailyLoss: bigint) { const b = Buffer.alloc(8); b.writeBigUInt64LE(maxDailyLoss); return this.send([this.ownerIx("set_daily_loss", owner.publicKey, b)], [owner]); }
+  /** Owner only: grows a guard made by an older program version to the current size (the owner pays the rent). */
+  async migrateGuard(owner: Keypair) { return this.send([this.guardByOwnerIx("migrate_guard", owner.publicKey)], [owner]); }
+
+  /**
+   * Owner only: closes the guard and returns its rent. Remove the guard as the Velocity account's delegate separately
+   * (Velocity's update_user_delegate) before trading directly again; init_guard can then run again.
+   */
+  async closeGuard(owner: Keypair) { return this.send([this.guardByOwnerIx("close_guard", owner.publicKey)], [owner]); }
+
+  private guardByOwnerIx(name: string, owner: PublicKey): TransactionInstruction {
+    return new TransactionInstruction({
+      programId: this.programId,
+      keys: [
+        { pubkey: owner, isSigner: true, isWritable: true },
+        { pubkey: this.guardFor(owner).guard, isSigner: false, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ],
+      data: discriminator("global", name),
+    });
+  }
+
   /** G10: the keeper whose first-hour checkpoint marks the day at midnight (PublicKey.default for none). */
   async setKeeper(owner: Keypair, keeper: PublicKey) { return this.send([this.ownerIx("set_keeper", owner.publicKey, keeper.toBuffer())], [owner]); }
   async setPaused(owner: Keypair, paused: boolean) { return this.send([this.ownerIx("set_paused", owner.publicKey, Buffer.from([paused ? 1 : 0]))], [owner]); }

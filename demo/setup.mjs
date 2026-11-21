@@ -34,12 +34,16 @@ export async function setupDemo(rpc = "http://127.0.0.1:8999") {
   await setupVelocityAccount(conn, owner, 1_000);
   const client = new GuardrailClient(conn);
   const { guard, signature: initSig } = await client.initGuard(owner, agent.publicKey, LIMITS);
-  // G10: at most 50 dUSDT (5% of the account) lost per UTC day before only exits pass.
+  // G10: at most 50 dUSDT (5% of the account) lost per UTC day before only exits pass. A cap needs a keeper (the
+  // owner's own key here; scripts/keeper.mjs checkpoints just after 00:00 UTC).
+  await client.setKeeper(owner, owner.publicKey);
   await client.setDailyLoss(owner, 50_000_000n);
   const dir = fileURLToPath(new URL("../out/", import.meta.url));
   mkdirSync(dir, { recursive: true });
   const agentPath = `${dir}demo-agent-${agent.publicKey.toBase58().slice(0, 8)}.json`;
   writeFileSync(agentPath, JSON.stringify([...agent.secretKey]), { mode: 0o600 });
+  // The demo owner's throwaway key stays in out/ (gitignored), so the owner can later migrate or close the guard.
+  writeFileSync(`${dir}demo-owner-${owner.publicKey.toBase58().slice(0, 8)}.json`, JSON.stringify([...owner.secretKey]), { mode: 0o600 });
   return { rpc, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath, initSig };
 }
 

@@ -45,6 +45,7 @@ if (await conn.getAccountInfo(guard)) {
   console.log("3/3 the guard, with the demo limits, as the account's delegate; daily loss cap 50 dUSDT");
   // Velocity's devnet oracle is weeks old, so the staleness limits are loose on devnet (orders rest and do not fill).
   await client.initGuard(owner, agent.publicKey, { ...DEMO_LIMITS, maxOracleStalenessSlots: 100_000_000n, exitMaxStalenessSlots: 100_000_000n });
+  await client.setKeeper(owner, owner.publicKey); // a G10 cap needs a keeper: your own key (run scripts/keeper.mjs)
   await client.setDailyLoss(owner, 50_000_000n);
   writeFileSync(`${dir}quickstart.json`, JSON.stringify({ rpc: RPC, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath }, null, 2));
   console.log(`agent key: ${agentPath}`);
@@ -55,3 +56,4 @@ console.log(`velocity account ${velocityUser.toBase58()}`);
 console.log(`guard ${guard.toBase58()}`);
 console.log(`cost: ${sol(start - end)} SOL (rent for the accounts plus fees and the agent's 0.02 SOL)`);
 console.log(`dashboard: https://guardrail-perps.vercel.app/?rpc=${RPC}&guard=${guard.toBase58()}`);
+console.log(`keeper (marks each UTC day at midnight): node scripts/keeper.mjs --keypair ${path} --owners ${owner.publicKey.toBase58()} --at-midnight`);

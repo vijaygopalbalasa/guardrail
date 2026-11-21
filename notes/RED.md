@@ -158,3 +158,17 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
   and exits. Now only a missing account (MissingMarketAccount; every account is found by key, so leaving one out is the
   caller's only choice) fails the call; state errors skip the observation. Red: notes/red-n2cd.txt. Plants: 2 more,
   and the R10 plant site updated (notes/planted-bug-r11.txt).
+
+## Round 12 (Nov 21): audit round 3 (guardrail-audit-r3.md), tests in tests-litesvm/tests/audit_r3.rs
+
+- R3-1 (Medium): appending fields bricked older guards (10 of 11 devnet guards fail with 3003). New owner-only
+  `migrate_guard` grows a guard of any older layout to the current size (checked by program owner, discriminator,
+  owner field and PDA; new bytes zero; the owner pays the rent) and `close_guard` returns the rent so `init_guard` can
+  run again. 128 reserved bytes now, so later fields need no migration. Tests simulate older guards by cutting a current
+  one to the devnet sizes (865, 950, 967, 999 bytes; fields are only ever appended, so an older guard is a prefix): each
+  fails before, migrates, keeps its limits and counters, and trades. Close then init works, for the oldest layout too.
+- R3-2 (Low to Medium): a refused cancel at a 23:59 dip set last_seen low. Now a G10 cap needs a keeper
+  (KeeperRequired, 6035), scripts/keeper.mjs checkpoints just after 00:00 UTC, the quickstart and demo setup name the
+  owner's own key, and readings in the last hour before 00:00 UTC only raise the last equity seen that day. The audit's
+  probe is refused both with the keeper's mark and without it.
+- Red: notes/red-audit-r3.txt (6 of 6). Plants: 5, all caught (notes/planted-bug-r12.txt).

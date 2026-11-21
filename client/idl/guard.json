@@ -110,6 +110,39 @@
       "args": []
     },
     {
+      "name": "close_guard",
+      "docs": [
+        "Owner only: closes the guard (any layout) and returns its rent to the owner. The owner removes the guard as the",
+        "Velocity account's delegate separately (Velocity's update_user_delegate); init_guard can then run again."
+      ],
+      "discriminator": [
+        132,
+        144,
+        16,
+        147,
+        0,
+        23,
+        60,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "guard",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "init_guard",
       "docs": [
         "The Velocity user's authority creates the guard with an agent and limits. Afterwards the owner sets the guard",
@@ -175,6 +208,40 @@
           }
         }
       ]
+    },
+    {
+      "name": "migrate_guard",
+      "docs": [
+        "Owner only: grows a guard made under an older (shorter) layout to the current size. Fields are only ever",
+        "appended, so the old bytes keep their meaning and the new ones start at zero (G10 off unless it was set, no last",
+        "equity seen, no keeper). The owner pays the extra rent."
+      ],
+      "discriminator": [
+        175,
+        134,
+        32,
+        40,
+        68,
+        232,
+        134,
+        180
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "guard",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "place_perp_order",
@@ -644,6 +711,16 @@
       "code": 6034,
       "name": "ReduceOnlyBeyondPosition",
       "msg": "a reduce-only order must oppose the position and, with the guard's resting exits, fit inside it"
+    },
+    {
+      "code": 6035,
+      "name": "KeeperRequired",
+      "msg": "G10: name a keeper (set_keeper) before setting a daily loss cap"
+    },
+    {
+      "code": 6036,
+      "name": "BadGuardAccount",
+      "msg": "not a guard account of this program for this owner"
     }
   ],
   "types": [
@@ -865,6 +942,25 @@
               "The owner's keeper: its checkpoint in the first hour of a UTC day marks the day at midnight (default: none)."
             ],
             "type": "pubkey"
+          },
+          {
+            "name": "last_seen_day",
+            "docs": [
+              "The UTC day of last_seen_equity."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "reserved",
+            "docs": [
+              "Room for future fields, so they need no migration (zero now)."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                128
+              ]
+            }
           }
         ]
       }
