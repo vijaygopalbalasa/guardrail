@@ -90,11 +90,18 @@ mod props {
         #![proptest_config(ProptestConfig { cases: 20_000, .. ProptestConfig::default() })]
 
         #[test]
+        fn every_true_exit_is_recognised(dir in 0u8..2, pos_abs in 1i64..i64::MAX, frac in 1u64..=1_000) {
+            let pos = if dir == 1 { pos_abs } else { -pos_abs };
+            let size = ((pos_abs as u128 * frac as u128) / 1_000).max(1) as u64;
+            prop_assert!(is_exit(true, dir, size, pos));
+        }
+
+        #[test]
         fn worst_case_is_at_least_the_position_and_grows_with_order_size(
             base in any::<i64>(), bids in 0i64..i64::MAX, asks in i64::MIN + 1..=0i64, dir in 0u8..2, a in any::<u64>(), b in any::<u64>()
         ) {
             let w = worst_case_base(base, bids, asks);
-            prop_assert!(w >= (base as i128).abs().min(w));
+            prop_assert!(w >= (base as i128).abs(), "worst case is never below the position itself");
             let (small, large) = (a.min(b), a.max(b));
             prop_assert!(worst_case_after(base, bids, asks, dir, small) <= worst_case_after(base, bids, asks, dir, large));
             prop_assert_eq!(worst_case_after(base, bids, asks, dir, 0), w);
@@ -112,7 +119,8 @@ mod props {
             prop_assert_eq!(within_band(oracle as i128 + d, oracle, band), within_band(oracle as i128 - d, oracle, band));
             let edge = (band as i128 * oracle as i128) / BPS;
             prop_assert!(within_band(oracle as i128 + edge, oracle, band));
-            prop_assert!(!within_band(oracle as i128 + edge + 1, oracle, band) || (band as i128 * oracle as i128) % BPS != 0 || edge * BPS == band as i128 * oracle as i128);
+            prop_assert!(!within_band(oracle as i128 + edge + 1, oracle, band), "one unit past the edge is refused");
+            prop_assert!(!within_band(oracle as i128 - edge - 1, oracle, band));
             prop_assert_eq!(offset_within_band(d, oracle, band), within_band(oracle as i128 + d, oracle, band));
         }
 
@@ -151,6 +159,7 @@ mod props {
         fn notional_is_monotonic(a in 0i128..1_000_000_000_000_000, b in 0i128..1_000_000_000_000_000, p in 1i64..10_000_000_000) {
             let (lo, hi) = (a.min(b), a.max(b));
             prop_assert!(notional(lo, p) <= notional(hi, p));
+            prop_assert_eq!(notional(BASE_PRECISION, p), p as i128, "1 base unit of 1e9 is worth the price");
         }
     }
 
