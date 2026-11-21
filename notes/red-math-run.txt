@@ -1,0 +1,11 @@
+test test_id ... ok
+test math::props::known_values ... FAILED
+test math::props::worst_case_matches_a_brute_force_definition ... FAILED
+test math::props::price_conversion_scales_exactly ... FAILED
+test math::props::non_positive_equity_has_no_leverage ... FAILED
+test math::props::leverage_never_understates ... FAILED
+test math::props::band_is_symmetric_and_exact_at_the_edge ... ok
+test math::props::notional_is_monotonic ... ok
+test math::props::exit_never_exceeds_or_follows_the_position ... ok
+test math::props::worst_case_is_at_least_the_position_and_grows_with_order_size ... ok
+test result: FAILED. 5 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
