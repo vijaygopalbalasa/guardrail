@@ -37,13 +37,20 @@ plant "G6 oracle offset skipped" $LIB "if offset != 0 && !math::offset_within_ba
 plant "G6 auction prices skipped" $LIB "for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {" "for a in [None::<i64>].into_iter().flatten() {"
 plant "G6 market order without a worst price allowed" $LIB "if p.order_type == order_type::MARKET && p.price == 0 {" "if false {"
 plant "G9 exit skips the price band" $LIB "        if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {" "        if let Some((bps, _)) = None::<(i128, &str)> {"
-plant "G5 borrow in another spot market ignored" $LIB "if user.spot.iter().any(|s| s.market_index != 0 && s.scaled_balance > 0 && s.balance_type == 1) {" "if false {"
+plant "G5 other spot balances ignored" $LIB "if user.spot.iter().any(|s| s.scaled_balance != 0 && (s.market_index != 0 || s.balance_type == 1)) {" "if false {"
 plant "G6 staleness off by one" $LIB "if age > l.max_oracle_staleness_slots {" "if age > l.max_oracle_staleness_slots + 1 {"
 plant "G7 pause ignored" $LIB "    if g.paused {
         return refuse" "    if false {
         return refuse"
 plant "G7 owner check removed from set_limits" $LIB "#[account(mut, has_one = owner @ GuardError::NotOwner)]" "#[account(mut)]"
-plant "G7 revoked agent still trades" $LIB "require!(g.agent != Pubkey::default(), GuardError::AgentRevoked);" ""
+plant "G7 revoked agent still trades" $LIB "        constraint = guard.agent != Pubkey::default() @ GuardError::AgentRevoked,
+" ""
+plant "agent constraint removed (any signer trades)" $LIB "        constraint = guard.agent == agent.key() @ GuardError::NotAgent,
+" ""
+plant "a refusal fails the transaction instead of being recorded" $LIB "            emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
+            return Ok(());" "            emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
+            return Err(reason.into());"
+plant "refusal counter for G1 not bumped" $LIB "rule::G1_ORDER_SIZE => g.refused_g1 += 1," "rule::G1_ORDER_SIZE => {}"
 plant "G9 exit does not need to oppose the position" $MATH "    opposes && (size as u128) <= position_base.unsigned_abs() as u128" "    (size as u128) <= position_base.unsigned_abs() as u128"
 plant "G9 exits blocked by limits (no bypass)" $LIB "    if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {" "    if false {"
 plant "G8 a third Velocity instruction (withdraw) appears" $VEL "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];" "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];
