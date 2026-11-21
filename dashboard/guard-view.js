@@ -64,16 +64,54 @@ export function decodeGuard(u8) {
   return g;
 }
 
-export function decodeEvents(logs) {
+/**
+ * OrderChecked events emitted by the guard program itself, for this guard only. The log stack is tracked from the
+ * "Program <id> invoke [n]" and "Program <id> success|failed" lines, and a "Program data:" line counts only while
+ * the guard program is the executing frame (another program in the same transaction, or one the guard calls, can
+ * log anything). The event's guard field must equal `guardAddress`.
+ */
+export function decodeEvents(logs, guardAddress, programId = GUARD_PROGRAM_ID) {
   const out = [];
+  const stack = [];
   for (const l of logs ?? []) {
-    if (!l.startsWith("Program data: ")) continue;
+    const inv = /^Program (\w+) invoke \[(\d+)\]$/.exec(l);
+    if (inv) { stack.length = Number(inv[2]) - 1; stack.push(inv[1]); continue; }
+    const end = /^Program (\w+) (success|failed)/.exec(l);
+    if (end) { if (stack[stack.length - 1] === end[1]) stack.pop(); continue; }
+    if (!l.startsWith("Program data: ") || stack[stack.length - 1] !== programId) continue;
     const u8 = fromB64(l.slice(14));
     if (u8.length < 90 || hex(u8.subarray(0, 8)) !== DISC_EVENT) continue;
     const r = new R(u8, 8);
-    out.push({ guard: r.key(), accepted: r.u8() === 1, rule: r.u8(), marketIndex: r.u16(), direction: r.u8(), size: r.u64(), reduceOnly: r.u8() === 1, value: r.i128(), cap: r.i128(), reason: r.u32() });
+    const e = { guard: r.key(), accepted: r.u8() === 1, rule: r.u8(), marketIndex: r.u16(), direction: r.u8(), size: r.u64(), reduceOnly: r.u8() === 1, value: r.i128(), cap: r.i128(), reason: r.u32() };
+    if (e.guard === guardAddress) out.push(e);
   }
   return out;
+}
+
+/** The Guard account, only if the guard program owns it. */
+export function checkedGuard(info, programId = GUARD_PROGRAM_ID) {
+  if (!info) throw new Error("no guard account");
+  if (info.owner !== programId) throw new Error(`guard account owner is ${info.owner}, expected the guard program ${programId}`);
+  return decodeGuard(info.data);
+}
+
+/** The Velocity User account, only if the Velocity program owns it. */
+export function checkedVelocityUser(info) {
+  if (!info) return { positions: [], orders: [] };
+  if (info.owner !== VELOCITY_PROGRAM_ID) throw new Error(`Velocity user owner is ${info.owner}, expected ${VELOCITY_PROGRAM_ID}`);
+  if (info.data.length < 4496) throw new Error("Velocity user account too short");
+  return decodeVelocityUser(info.data);
+}
+
+/** The RPC endpoints the page may read from: local validators and Solana's public devnet and mainnet RPC. */
+export function allowedRpc(param) {
+  if (param === null || param === undefined || param === "") return "http://127.0.0.1:8999";
+  let u;
+  try { u = new URL(param); } catch { return null; }
+  if (u.username || u.password) return null;
+  const local = (u.hostname === "127.0.0.1" || u.hostname === "localhost") && (u.protocol === "http:" || u.protocol === "https:");
+  const publicRpc = u.protocol === "https:" && (u.hostname === "api.devnet.solana.com" || u.hostname === "api.mainnet-beta.solana.com") && !u.port;
+  return local || publicRpc ? u.origin : null;
 }
 
 /** Velocity positions and open orders from the User account bytes. */
@@ -100,29 +138,20 @@ export async function rpc(url, method, params) {
   if (j.error) throw new Error(`${method}: ${j.error.message}`);
   return j.result;
 }
-export async function accountData(url, address) {
+export async function accountInfo(url, address) {
   const r = await rpc(url, "getAccountInfo", [address, { encoding: "base64", commitment: "confirmed" }]);
-  return r.value ? fromB64(r.value.data[0]) : null;
+  return r.value ? { owner: r.value.owner, data: fromB64(r.value.data[0]) } : null;
 }
 
-/** PDA derivation needs ed25519 point checks; the dashboard takes the guard address (or derives it server-side). */
 export async function loadDashboard(url, guardAddress, limit = 40) {
-  const gd = await accountData(url, guardAddress);
-  if (!gd) throw new Error(`no guard account at ${guardAddress}`);
-  const guard = decodeGuard(gd);
-  const ud = await accountData(url, guard.velocityUser);
-  const velocity = ud ? decodeVelocityUser(ud) : { positions: [], orders: [] };
+  const guard = checkedGuard(await accountInfo(url, guardAddress));
+  const velocity = checkedVelocityUser(await accountInfo(url, guard.velocityUser));
   const sigs = await rpc(url, "getSignaturesForAddress", [guardAddress, { limit, commitment: "confirmed" }]);
   const decisions = [];
   for (const s of sigs) {
     if (s.err) continue;
     const tx = await rpc(url, "getTransaction", [s.signature, { commitment: "confirmed", maxSupportedTransactionVersion: 0 }]);
-    for (const e of decodeEvents(tx?.meta?.logMessages)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
+    for (const e of decodeEvents(tx?.meta?.logMessages, guardAddress)) decisions.push({ ...e, signature: s.signature, slot: s.slot, blockTime: s.blockTime });
   }
   return { guard, velocity, decisions };
 }
-
-// STUB (red phase): no owner checks, no allowlist.
-export const checkedGuard = (info) => decodeGuard(info.data);
-export const checkedVelocityUser = (info) => decodeVelocityUser(info.data);
-export const allowedRpc = (p) => p ?? "http://127.0.0.1:8999";
