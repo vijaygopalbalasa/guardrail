@@ -77,9 +77,9 @@
     {
       "name": "checkpoint",
       "docs": [
-        "G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.",
-        "In the first hour of the UTC day, the first baseline is the equity now (a midnight mark: yesterday's losses stay",
-        "yesterday's); after that hour it is the higher of equity now and the last equity the guard saw."
+        "G10, permissionless: anyone can take the day's baseline with fresh prices (the max rule). The keeper the owner",
+        "named, in the first hour of the UTC day, marks the day at the equity then (yesterday's losses stay yesterday's);",
+        "the owner resets the baseline to the equity now at any time. Every checkpoint emits a Checkpointed event."
       ],
       "discriminator": [
         213,
@@ -523,6 +523,19 @@
       ]
     },
     {
+      "name": "Checkpointed",
+      "discriminator": [
+        98,
+        75,
+        60,
+        154,
+        157,
+        193,
+        32,
+        209
+      ]
+    },
+    {
       "name": "OrderChecked",
       "discriminator": [
         94,
@@ -721,14 +734,16 @@
       "code": 6036,
       "name": "BadGuardAccount",
       "msg": "not a guard account of this program for this owner"
+    },
+    {
+      "code": 6037,
+      "name": "KeeperIsAgent",
+      "msg": "the keeper and the agent must be different keys"
     }
   ],
   "types": [
     {
       "name": "CancelChecked",
-      "docs": [
-        "Emitted for every cancel the agent asks for."
-      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -747,6 +762,40 @@
           {
             "name": "reason",
             "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Checkpointed",
+      "docs": [
+        "Emitted for every cancel the agent asks for."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "guard",
+            "type": "pubkey"
+          },
+          {
+            "name": "caller",
+            "type": "pubkey"
+          },
+          {
+            "name": "day",
+            "type": "i64"
+          },
+          {
+            "name": "baseline_equity",
+            "type": "i64"
+          },
+          {
+            "name": "kind",
+            "docs": [
+              "0 the max rule, 1 the keeper's midnight mark, 2 the owner's reset."
+            ],
+            "type": "u8"
           }
         ]
       }

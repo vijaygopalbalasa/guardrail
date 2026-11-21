@@ -45,11 +45,12 @@ async function mark(o) {
     const at = new Date(t * 1000).toISOString().slice(0, 19).replace("T", " ");
     try {
       const before = await client.getGuard(new PublicKey(o));
-      const preempted = Number(before.dailyLoss?.day) === chainDay(t);
+      const isOwner = before.owner?.toBase58?.() === keeper.publicKey.toBase58();
+      const preempted = !isOwner && Number(before.dailyLoss?.day) === chainDay(t);
       const r = await client.checkpoint(keeper, new PublicKey(o));
       const g = await client.getGuard(new PublicKey(o));
       const ok = Number(g.dailyLoss?.day) === chainDay(t);
-      const note = preempted ? " (pre-empted: the day's baseline was already set by an earlier call; not a midnight mark)" : ok ? " (day marked)" : " (not this day yet)";
+      const note = isOwner ? " (owner reset: the baseline is the equity now)" : preempted ? " (pre-empted: the day's baseline was already set by an earlier call; not a midnight mark)" : ok ? " (day marked)" : " (not this day yet)";
       console.log(`${at} UTC (chain) try ${k}: checkpoint ${o} day ${g.dailyLoss?.day} baseline ${g.dailyLoss?.baselineEquity} tx ${r.signature}${note}`);
       if (ok) return true;
     } catch (e) {
@@ -64,10 +65,11 @@ async function mark(o) {
 /** Every owner in parallel, each with its own time limit, so one slow guard never pushes another past the first hour. */
 const PER_OWNER_MS = Number(arg("--owner-timeout-min") ?? 55) * 60_000;
 async function round() {
-  await Promise.all(owners.map((o) => Promise.race([
-    mark(o),
-    new Promise((r) => setTimeout(() => { console.error(`ALERT: ${o} timed out after ${PER_OWNER_MS / 60_000} min`); r(false); }, PER_OWNER_MS)),
-  ])));
+  await Promise.all(owners.map((o) => {
+    let timer;
+    const limit = new Promise((r) => { timer = setTimeout(() => { console.error(`ALERT: ${o} timed out after ${PER_OWNER_MS / 60_000} min`); r(false); }, PER_OWNER_MS); });
+    return Promise.race([mark(o), limit]).finally(() => clearTimeout(timer));
+  }));
 }
 
 if (process.argv.includes("--now")) await round();

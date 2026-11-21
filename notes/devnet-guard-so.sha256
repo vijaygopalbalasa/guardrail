@@ -1,1 +1,7 @@
-1ad503eef65f98a11f15a75ab9d8da36efac908fc3d0826a47c48e2ee2093f4b  target/deploy/guard.so
+05eecf83ba56cc9902caca4c743236caf5c9284d054a47d16ea2159135987b7b  target/deploy/guard.so (trailing zero padding stripped, 357985 bytes)
+
+Program BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy on Solana devnet, built from commit 494359f (program sources unchanged since b779468).
+Upgrade tx: 4oDHiksbeYdS2F6fDW5qmGrFfCEfupx9P4HoV7sEL8BMuvAPLiCuir2VxiT1jPba17c7hY4SCWVzstjSCZcgQvEu
+Method: scripts/verify-devnet-program.sh dumps the on-chain program, strips the trailing zero padding from the dump and
+from target/deploy/guard.so, and compares their sha256 (the program account is larger than the .so after
+`solana program extend`). Result on Nov 22 2026: MATCH.

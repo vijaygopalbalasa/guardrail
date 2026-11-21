@@ -45,7 +45,9 @@ can always trade directly or remove the delegate. The guard wraps Velocity's `pl
 - [Build and test](docs/build-and-test.md): every step from a fresh clone (about 6 minutes cold), the local validator,
   the surfpool fork with live fills and the CI job.
 - Devnet program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet)
-  and its receipts: `notes/devnet-receipts.md` (old-layout guards are labelled "history (old layout, not migrated)").
+  (built from commit 494359f; the deployed bytes match the build, `scripts/verify-devnet-program.sh`) and its
+  receipts: `notes/devnet-receipts.md` (old-layout guards are labelled "history (old layout, not migrated)"; the freshness
+  check is relaxed on devnet, whose oracle is weeks old).
 - Review rounds: `audits/`; the fixes round by round: `notes/RED.md`.
 
 ## The limits

@@ -14,7 +14,7 @@ async function retry(f) {
 const tx = (s) => `https://explorer.solana.com/tx/${s}?cluster=devnet`;
 const addr = (a) => `https://explorer.solana.com/address/${a}?cluster=devnet`;
 const [deploySig, ...setups] = process.argv.slice(2);
-const lines = ["# Devnet receipts", "", "Guardrail's guard program on Solana devnet, with the fixed code (audit findings F1 to F4, then the R5 review: order lifetime and placed order ids).", "Velocity's devnet oracle is weeks old, so orders rest on Velocity devnet and do not fill; the demo guards use a loose", "staleness limit for that reason. Fills at moving prices are shown on a local surfpool fork (see the README).", ""];
+const lines = ["# Devnet receipts", "", "Guardrail's guard program on Solana devnet, after five review rounds (audits/); the commit it was built from is in notes/devnet-guard-so.sha256.", "Freshness check relaxed on devnet: Velocity's devnet oracle is weeks old, so orders rest and do not fill; the demo guards use a loose", "staleness limit for that reason. Fills at moving prices are shown on a local surfpool fork (see the README).", ""];
 lines.push(`- Program: [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](${addr("BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy")}) (sha256 of the deployed bytes in notes/devnet-guard-so.sha256)`);
 lines.push(`- Deploy: [${deploySig.slice(0, 16)}...](${tx(deploySig)})`, "");
 for (const f of setups) {
