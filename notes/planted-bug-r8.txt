@@ -1,0 +1,82 @@
+=== R8 G4 and G5 also refuse risk-reducing orders (exit trap)
+test r8_a_plain_sell_that_reduces_risk_passes_when_leverage_is_over_the_cap ... FAILED
+test result: FAILED. 14 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+=== R8 every order counts as risk-reducing
+test r5_an_open_guard_order_stays_cancellable_after_32_more_placements ... FAILED
+test f4_exits_beyond_the_position_counting_resting_exits_are_not_exits ... FAILED
+test info_order_lifetime_bound ... FAILED
+test f1_oracle_exit_without_offset_is_refused_even_while_paused ... FAILED
+test f2_exit_must_use_an_allowed_order_type ... FAILED
+test f1_oracle_order_without_offset_is_refused ... FAILED
+test f3_agent_cannot_cancel_the_owners_orders_or_cancel_all ... FAILED
+test f1_stale_exit_oracle_without_offset_is_refused ... FAILED
+test r5_with_32_guard_orders_open_the_next_is_refused_not_evicting_a_live_id ... FAILED
+test r5_lifetime_cap_refuses_zero_negative_and_past_max_ts ... FAILED
+test r5_ids_the_owner_cancelled_directly_are_forgotten_so_new_orders_still_fit ... FAILED
+test r8_a_plain_sell_that_reduces_risk_passes_when_leverage_is_over_the_cap ... FAILED
+test result: FAILED. 3 passed; 12 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test g10_a_mid_day_deposit_does_not_hide_a_loss ... FAILED
+test g10_a_mid_day_withdrawal_is_not_a_loss ... FAILED
+test g10_an_exit_and_a_cancel_pass_at_the_cap ... FAILED
+test g10_an_exit_first_day_starts_the_count_at_that_exit ... FAILED
+test g10_baseline_does_not_move_across_refused_calls ... FAILED
+test g10_only_the_owner_sets_the_cap ... FAILED
+test g10_a_cancel_first_day_starts_the_count_at_that_cancel ... FAILED
+test g10_cap_zero_is_off ... FAILED
+test g10_a_new_utc_day_resets_the_baseline ... FAILED
+test an_order_velocity_does_not_store_fails_instead_of_counting_as_accepted ... FAILED
+test g10_twin_a_loss_under_the_cap_is_accepted ... FAILED
+test g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap ... FAILED
+test result: FAILED. 0 passed; 12 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test accepted_orders_and_exits_count_and_real_errors_record_nothing ... FAILED
+test g1_refuses_order_one_unit_over_max_size ... FAILED
+test g4_refuses_bid_that_takes_worst_case_long_over_cap ... FAILED
+test g3_refuses_when_daily_notional_cap_would_be_exceeded_and_resets_next_utc_day ... FAILED
+test every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter ... FAILED
+test g2_refuses_market_not_on_allowlist ... FAILED
+test g4_refuses_ask_that_takes_worst_case_short_over_cap ... FAILED
+test g2_refuses_order_type_not_allowed ... FAILED
+test g2_refuses_builder_idx_and_builder_fee ... FAILED
+test g4_sums_every_slot_for_the_market_not_the_first_match ... FAILED
+test g6_refuses_auction_price_outside_band ... FAILED
+test g6_refuses_limit_order_whose_oracle_offset_is_outside_band ... FAILED
+test g6_refuses_stale_oracle ... FAILED
+test g6_refuses_limit_price_outside_band ... FAILED
+test g5_counts_unrealized_pnl_so_a_falling_price_shrinks_room ... FAILED
+test g5_refuses_when_an_open_position_market_is_missing ... FAILED
+test g6_refuses_oracle_order_with_a_far_price_field ... FAILED
+test g6_refuses_oracle_offset_outside_band ... FAILED
+test g6_refuses_market_order_without_a_worst_price ... FAILED
+test g5_refuses_order_that_takes_worst_case_leverage_over_cap ... FAILED
+test g7_pause_blocks_new_orders_but_not_cancels ... FAILED
+test g9_exit_actually_closes_the_position_under_tight_limits ... FAILED
+test g9_exit_allowed_when_exposure_is_over_cap ... FAILED
+test g9_exit_in_a_delisted_market_is_refused_by_the_allowlist ... FAILED
+test g7_revoke_and_rotate_agent ... FAILED
+test g9_exit_allowed_when_daily_notional_is_spent ... FAILED
+test g9_exit_allowed_when_leverage_is_over_cap ... FAILED
+test g9_exit_allowed_with_a_stale_oracle_but_still_inside_the_band ... FAILED
+test g9_exit_allowed_when_paused ... FAILED
+test g9_exit_price_must_stay_in_band ... FAILED
+test g9_reduce_only_that_is_not_an_exit_goes_through_the_limits ... FAILED
+test order_shape_refusals_trigger_bitflags_spot_zero ... FAILED
+test refuses_unsupported_oracle_source_bad_market_and_bad_oracle ... FAILED
+test refuses_when_equity_is_not_positive ... FAILED
+test moderately_stale_exit_still_uses_the_normal_band ... FAILED
+test stale_exit_buy_above_the_last_oracle_price_is_refused_at_or_below_is_allowed ... FAILED
+test refuses_new_risk_when_any_other_spot_balance_exists_or_quote_is_negative ... FAILED
+test stale_exit_sell_below_the_last_oracle_price_is_refused_at_or_above_is_allowed ... FAILED
+test stale_exit_refuses_market_without_price_negative_offset_and_unfavourable_auction ... FAILED
+test result: FAILED. 8 passed; 39 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+=== restored
+sources restored byte for byte
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.11s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
