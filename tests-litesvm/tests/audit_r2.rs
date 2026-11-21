@@ -2,6 +2,7 @@
 //! REPLAY: prices written by the test.
 
 use guardrail_tests::*;
+use solana_instruction::AccountMeta;
 use solana_signer::Signer;
 
 const P0: u64 = 91_390_000;
@@ -169,4 +170,62 @@ fn n2_checkpoint_only_reads_the_guards_own_velocity_account() {
     assert!(r.is_err(), "has_one = velocity_user");
     env.step(DAY_SLOTS, P0);
     assert_ok(&env.checkpoint("the guard's own account", &g));
+}
+
+// ---------------------------------------------------------------- N2 review: the caller cannot choose what is observed
+
+fn without(drop: Pubkey) -> Vec<AccountMeta> {
+    Env::maps().into_iter().filter(|a| a.pubkey != drop).collect()
+}
+
+#[test]
+fn n2b_a_cancel_without_an_oracle_account_is_refused() {
+    let (mut env, g) = g10_setup();
+    assert!(events(&env.gplace("a resting bid", &g, small_bid(P0)))[0].accepted);
+    let id = env.last_guard_order(&g).unwrap();
+    assert!(env.gcancel_with("cancel with the SOL oracle left out", &g, id, &without(SOL_ORACLE)).is_err());
+    assert!(env.gcancel_with("cancel with SOL-PERP left out", &g, id, &without(PERP0)).is_err());
+    assert!(env.gcancel_with("cancel with spot market 0 left out", &g, id, &without(SPOT0)).is_err());
+    // twin: with every account the cancel goes through (cancels stay always available)
+    assert_ok(&env.gcancel("cancel with the full account set", &g, Some(id)));
+}
+
+#[test]
+fn n2b_no_account_choice_lowers_the_next_days_baseline() {
+    let (mut env, g) = g10_setup();
+    assert!(events(&env.gplace("day 1: a complete call at the high", &g, small_bid(P0)))[0].accepted);
+    let id = env.last_guard_order(&g).unwrap();
+    let high = env.guard_state(&g).last_seen_equity;
+    let p_low = (P0 as f64 * 0.95) as u64;
+    env.step(5, p_low);
+    // the agent tries to make the guard record only the low, or nothing at the high
+    for (label, acc) in [("no SOL oracle", without(SOL_ORACLE)), ("no SOL-PERP", without(PERP0)), ("no spot market", without(SPOT0))] {
+        assert!(env.gcancel_with(label, &g, id, &acc).is_err(), "{label}");
+        let mut o = small_bid(p_low);
+        o.price -= 1_000;
+        assert!(env.gplace_as(label, &g, &g.agent.insecure_clone(), o, &acc).is_err(), "{label}");
+    }
+    assert_eq!(env.guard_state(&g).last_seen_equity, high, "nothing but a complete call is recorded");
+    env.step(DAY_SLOTS, p_low);
+    assert_refused(&env.gplace("day 2 at the low", &g, small_bid(p_low)), gerr::DAILY_LOSS_EXCEEDED);
+}
+
+#[test]
+fn n2b_a_checkpoint_in_the_first_hour_marks_the_day_at_midnight() {
+    let p_low = (P0 as f64 * 0.95) as u64;
+    for (label, extra_secs, expect_refused) in [("checkpoint at 00:10 UTC", 600i64, false), ("checkpoint at 03:00 UTC", 3 * 3600, true)] {
+        let (mut env, g) = g10_setup();
+        assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
+        env.step(5, p_low); // the loss happens on day 1
+        let now = env.now();
+        let to_midnight = 86_400 - now.rem_euclid(86_400);
+        env.step(((to_midnight + extra_secs) * 5 / 2) as u64, p_low);
+        assert_ok(&env.checkpoint(label, &g));
+        let r = env.gplace("day 2: a bid at the same low", &g, small_bid(p_low));
+        if expect_refused {
+            assert_refused(&r, gerr::DAILY_LOSS_EXCEEDED);
+        } else {
+            assert!(events(&r)[0].accepted, "{label}: yesterday's loss stays yesterday's");
+        }
+    }
 }

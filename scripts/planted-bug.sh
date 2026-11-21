@@ -93,7 +93,7 @@ plant "R6 an order Velocity did not store counts as accepted" $LIB "        if p
 plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
 plant "R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = true || !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);"
 plant "R8 an order that keeps exposure equal by flipping is waived (the review case)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = exposure > exposure_before;"
-plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = eq.max(carried);" "        g.baseline_equity = eq.max(carried.min(eq));"
+plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried.min(eq)) };"
 plant "R9 N2 checkpoint accepts any Velocity account" $LIB "    #[account(mut, has_one = velocity_user)]
     pub guard: Account<'info, Guard>,
     /// CHECK: read only, bound to the guard by has_one" "    #[account(mut)]
@@ -106,6 +106,10 @@ plant "R9 N4 the owner's reduce-only orders count against the agent's exits" $VE
 plant "R9 N5 surplus reduce-only orders pass" $LIB "    if p.reduce_only {
         return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)" "    if false {
         return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)"
+plant "R10 an observation is skipped when the caller leaves accounts out" $LIB "        let (p, age) = market_price(ra, m, clock.slot)?;
+        stale |= age > g.limits.max_oracle_staleness_slots;" "        let Ok((p, age)) = market_price(ra, m, clock.slot) else { return Ok(()) };
+        stale |= age > g.limits.max_oracle_staleness_slots;"
+plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried) };" "        g.baseline_equity = eq.max(carried);"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

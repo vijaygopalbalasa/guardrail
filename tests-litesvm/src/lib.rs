@@ -854,6 +854,16 @@ impl Env {
         self.send(label, vec![Instruction { program_id: GUARD, accounts, data }], &[&agent])
     }
 
+    /// cancel_order with a chosen set of remaining accounts (to show they must price every active market).
+    pub fn gcancel_with(&mut self, label: &str, g: &Guarded, order_id: u32, extra: &[AccountMeta]) -> TxResult {
+        let mut data = disc("cancel_order").to_vec();
+        data.push(1);
+        data.extend_from_slice(&order_id.to_le_bytes());
+        let agent = g.agent.insecure_clone();
+        let accounts = Self::trade_accounts(&agent.pubkey(), g, extra);
+        self.send(label, vec![Instruction { program_id: GUARD, accounts, data }], &[&agent])
+    }
+
     fn owner_ix(name: &str, signer: &Pubkey, g: &Guarded, args: Vec<u8>) -> Instruction {
         let mut data = disc(name).to_vec();
         data.extend(args);

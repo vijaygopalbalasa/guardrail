@@ -88,11 +88,13 @@ pub mod guard {
     }
 
     /// G10, permissionless: anyone (an owner's keeper at 00:00 UTC, say) can take the day's baseline with fresh prices.
-    /// It can only ever be the higher of equity now and the last equity the guard saw, so nobody gains by its timing.
+    /// In the first hour of the UTC day, the first baseline is the equity now (a midnight mark: yesterday's losses stay
+    /// yesterday's); after that hour it is the higher of equity now and the last equity the guard saw.
     pub fn checkpoint<'info>(ctx: Context<'_, '_, 'info, 'info, Checkpoint<'info>>) -> Result<()> {
         let clock = Clock::get()?;
         let ui = ctx.accounts.velocity_user.to_account_info();
-        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock);
+        let first_hour = clock.unix_timestamp.rem_euclid(86_400) < 3_600;
+        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, first_hour)?;
         msg!("guard: checkpoint, day {} baseline {}", ctx.accounts.guard.loss_day, ctx.accounts.guard.baseline_equity);
         Ok(())
     }
@@ -527,31 +529,46 @@ struct Baseline {
 fn observe(ctx: &mut Context<AgentTrade>) -> Result<()> {
     let clock = Clock::get()?;
     let ui = ctx.accounts.velocity_user.to_account_info();
-    observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock);
-    Ok(())
+    observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, false)
 }
 
-fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock) {
-    let Some(user) = velocity::UserView::load(user_ai) else { return };
+/// Every guard call must bring the accounts that price every active market (each perp market, its oracle and spot
+/// market 0), checked by owner and key as for an order; a missing or wrong account fails the call, so the caller
+/// cannot choose which calls are observed (review of the N2 change). Only a stale oracle, which no caller controls,
+/// skips the observation. `direct`: a checkpoint in the first hour of the UTC day sets the day's baseline to the
+/// equity now.
+fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock, direct: bool) -> Result<()> {
+    let user = velocity::UserView::load(user_ai).ok_or(GuardError::NotVelocityUser)?;
     let mut prices = vec![];
+    let mut stale = false;
     for m in user.active_markets() {
-        match market_price(ra, m, clock.slot) {
-            Ok((p, age)) if age <= g.limits.max_oracle_staleness_slots => prices.push((m, p)),
-            _ => return,
-        }
+        let (p, age) = market_price(ra, m, clock.slot)?;
+        stale |= age > g.limits.max_oracle_staleness_slots;
+        prices.push((m, p));
     }
-    let Ok((_, equity)) = account_leverage(ra, &user, &prices, None) else { return };
-    let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return };
+    let equity = match account_leverage(ra, &user, &prices, None) {
+        Ok((_, e)) => e,
+        // A balance the guard cannot value (any spot balance but the quote deposit) is the account's state, not the
+        // caller's choice: no observation, and risk-increasing orders are refused by G5 as before.
+        Err(GuardError::OtherSpotBalance) => return Ok(()),
+        Err(e) => return Err(e.into()),
+    };
+    if stale {
+        return Ok(());
+    }
+    let eq = i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?;
+    let flows = i64::try_from(net_flows(&user)).map_err(|_| GuardError::MathOverflow)?;
     let today = math::utc_day(clock.unix_timestamp);
     if g.max_daily_loss > 0 && g.loss_day != today {
         let carried = if g.has_last_seen { g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows)) } else { eq };
         g.loss_day = today;
-        g.baseline_equity = eq.max(carried);
+        g.baseline_equity = if direct { eq } else { eq.max(carried) };
         g.baseline_flows = flows;
     }
     g.last_seen_equity = eq;
     g.last_seen_flows = flows;
     g.has_last_seen = true;
+    Ok(())
 }
 
 fn net_flows(user: &velocity::UserView) -> i128 {

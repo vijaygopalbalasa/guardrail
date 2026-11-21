@@ -144,3 +144,10 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - INFO: README notes the depeg caveat (flows at the quote oracle, collateral 1:1).
 - Red: notes/red-audit-r2.txt (5 of 7 failed before the program change; N1 and the no-drop twin passed).
 - Plants: 5, all caught (notes/planted-bug-r9.txt).
+- Review of the N2 change: observe_guard returned silently when accounts were missing, so the agent could leave them
+  out at high equity and include them at the low. Now every guard call (place, exit, cancel, checkpoint) must bring the
+  accounts that price every active market (perp market, its oracle, spot market 0), checked by owner and key; a
+  missing or wrong one fails the call. Only a stale oracle skips the observation. A checkpoint in the first hour of the
+  UTC day sets that day's first baseline to the equity then (a midnight mark); anyone can call it, so an owner's
+  keeper at 00:00 UTC keeps it there, and a caller later in that hour can hide at most that hour's move.
+  Red on the previous program: notes/red-n2b.txt (3 tests). Plants: 2 more (notes/planted-bug-r10.txt).
