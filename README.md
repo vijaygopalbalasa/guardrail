@@ -22,12 +22,16 @@ unguarded run was stopped only by Velocity's own 5x margin check, after it had a
 | | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
 |---|---|---|---|---|---|
 | Unguarded (agent is Velocity's delegate) | **412.44 dUSDT (41.2%)** | 55 SOL | 6.98x | Velocity's own 5x margin check (88 orders refused) | n/a |
-| Guarded | **94.47 dUSDT (9.4%)** | 10 SOL | 0.89x | the guard: 55 refused by G1, 50 by G4 | **0** |
+| Guarded | **94.47 dUSDT (9.4%)** | 10 SOL | 0.89x | the guard: 55 refused by G1, 30 by G4, 20 by G10 (daily loss) | **0** |
 
 "REPLAY" means: Velocity's real devnet binary running in LiteSVM, devnet state cloned on Nov 21 2026, the SOL price
 written by the test at each step, and real fills from a second account. It is not live trading. A second guarded run
-with a looser exposure cap lost 150.26 dUSDT (15.0%), refused by G1 and G3, also with 0 breaches. A breach means an
-accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance,
+with a looser exposure cap lost 150.26 dUSDT (15.0%), refused by G1, G3 and G10, also with 0 breaches. With every
+limit loose except the daily-loss brake (G10 at 20 dUSDT a day), it lost 140.06 dUSDT (14.0%): 98 refusals by G10,
+0 breaches. The brake stops new risk once the day's loss passes the cap; it does not close a position, so a held
+position keeps losing as the price falls. The guarded run above carries G10 at 50 dUSDT a day. A breach means an
+accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, or
+was accepted while the day's loss was over the G10 cap,
 measured from the raw account bytes, not with the guard's own code. Full table: `notes/runaway-replay.txt`
 (recorded); step 3 below writes a fresh copy to `out/runaway-replay.txt`.
 
@@ -75,11 +79,12 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 |---|---|---|
 | A guarded runaway agent loses 9.4% where the same agent unguarded loses 41.2%, with 0 breaches | `replay_runaway_agent_unguarded_vs_guarded` | `tests-litesvm/tests/runaway.rs`, `notes/runaway-replay.txt` |
 | When only leverage can bind (G1, G3 and G4 loose, G5 at 2x), the leverage cap stops the same runaway agent: 97 refusals by G5, worst loss 19.1% vs 41.2%, 0 breaches (shown red with G5 removed) | `replay_leverage_cap_binds_when_losses_shrink_equity` | `tests-litesvm/tests/runaway.rs`, `notes/g5-replay.txt`, `notes/red-g5-replay.txt` |
+| The daily-loss brake (G10) refuses new risk once the day's loss passes the owner's cap, while exits and cancels pass; a new UTC day resets it, and deposits and withdrawals are neutral. When it is the only tight limit, it stops the runaway agent with 98 refusals and a 14.0% worst loss vs 41.2% (it does not close the held position) | `tests-litesvm/tests/daily_loss.rs`, `replay_runaway_agent_unguarded_vs_guarded` | `notes/runaway-replay.txt`, `notes/red-g10.txt`, `notes/planted-bug-r6.txt` |
 | The guard runs on devnet: deploy, init_guard, an accepted order, a cancel and refusals by G1, G3, G4 and G6 from the runaway agent through MCP, on Velocity devnet | explorer links | `notes/devnet-receipts.md`; dashboard on devnet: `notes/dashboard-devnet.png` |
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
 | Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
-| Breaking any limit on purpose makes its own tests fail (45 planted bugs, 44 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt`, `notes/planted-bug-r5.txt` |
+| Breaking any limit on purpose makes its own tests fail (51 planted bugs, 50 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt`, `notes/planted-bug-r5.txt` |
 | Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
 | The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
 | The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
@@ -127,7 +132,8 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | G6 | Price band | Every price on the order stays within a band around the market's own oracle, and the oracle must be fresh. |
 | G7 | Owner controls | Only the owner sets limits, rotates or revokes the agent, and pauses. |
 | G8 | No withdraw | The guard has no withdraw path and reaches only Velocity's place and cancel instructions. |
-| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position skips G1 to G5 and the pause but stays inside the band, and with a very stale oracle it may only be priced in the owner's favour. |
+| G9 | Exits and cancels | Cancels always go through; an exit that only shrinks the position skips G1 to G5, G10 and the pause but stays inside the band, and with a very stale oracle it may only be priced in the owner's favour. |
+| G10 | Daily loss | The owner sets the most the account may lose in one UTC day. The day's first risk-increasing order stores a baseline (collateral plus unrealized PnL); once the loss since then passes the cap, only exits and cancels go through until the next UTC day. Deposits and withdrawals in between are taken out, so neither hides nor fakes a loss. |
 
 A refused order is a successful transaction that records the rule, the measured value and the owner's cap, and
 emits an `OrderChecked` event. Nothing reaches Velocity. Real errors (wrong agent, bad accounts, a stale oracle on a
