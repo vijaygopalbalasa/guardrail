@@ -1,0 +1,92 @@
+=== G1 off by one
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+=== G2 market allowlist ignores the index
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G2 order type check removed
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G2 builder check removed
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+=== G3 forgets the running total
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G3 never resets on a new day
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G4 ignores this order
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G4 first-match slot lookup
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G5 ignores unrealized PnL
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G5 check removed
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G6 limit price band skipped
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G6 auction prices skipped
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G6 oracle offset skipped
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G6 staleness off by one
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G7 pause ignored
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G7 owner check removed from set_limits
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G7 revoked agent still trades
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G9 exit does not need to oppose the position
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G9 exits blocked by limits (no bypass)
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== G8 a third Velocity instruction (withdraw) appears
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test g8_guard_source_reaches_only_place_and_cancel_on_velocity ... FAILED
+test result: FAILED. 30 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== post-trade check off by one (refuses at the cap)
+BUILD FAILED
+./scripts/planted-bug.sh: line 21: ./scripts/build.sh: No such file or directory
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+=== restored
+sources restored byte for byte
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+done

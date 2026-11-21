@@ -18,7 +18,7 @@ s = open(p).read()
 assert s.count(old) == 1, f"plant site not unique: {old!r}"
 open(p, 'w').write(s.replace(old, new))
 PY
-  ./scripts/build.sh > notes/build-plant.log 2>&1 || { echo "BUILD FAILED"; tail -5 notes/build-plant.log; }
+  if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
   (cd tests-litesvm && cargo test --release --no-fail-fast --test limits 2>&1) | grep -E "\.\.\. FAILED|^test result"
   restore
 }
