@@ -45,6 +45,7 @@ access to Solana devnet. Run every command from the repository root.
 | 4. Every limit test | `(cd tests-litesvm && cargo test --release)` | `46 passed` for the limit tests, plus the probes and the replay |
 | 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
 | 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
+| 7. A language-model agent with a bad mandate | `OPENROUTER_API_KEY=... node demo/agent-llm.mjs runaway` (after step 6's setup) | each turn: the model's one-line reason, its tool call and the guard's verdict; logged to `out/llm-run-*.jsonl` |
 | 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision; `/replay.html` plays the unguarded and guarded replays side by side, step by step |
 
 If the hash in step 1 differs, Velocity has upgraded its devnet program since Nov 21 2026 and its account layouts may
@@ -86,6 +87,7 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
 | An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
 | The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
+| A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
 | The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
 
 ## Not claimed
