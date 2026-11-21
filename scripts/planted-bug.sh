@@ -21,7 +21,7 @@ open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
@@ -84,6 +84,12 @@ plant "R5 placed ids never pruned" $LIB "        if *id != 0 && !open.contains(i
 plant "R5 a new id evicts a live one" $LIB "        match g.placed_order_ids.iter_mut().find(|x| **x == 0) {" "        match g.placed_order_ids.iter_mut().next() {"
 plant "R5 no refusal when 32 guard orders are open" $LIB "        if !matches!(outcome, Outcome::Refuse { .. }) && !ctx.accounts.guard.placed_order_ids.contains(&0) {" "        if false {"
 plant "R5 stored max_ts not checked after the CPI (unit tests)" $LIB "    cap_secs > 0 && (o.max_ts <= now || o.max_ts as i128 - now as i128 > cap_secs as i128)" "    cap_secs > 0 && o.max_ts as i128 - now as i128 > cap_secs as i128" unit
+plant "R6 G10 check removed" $LIB "        if loss > g.max_daily_loss as i128 {" "        if false {"
+plant "R6 G10 ignores deposits and withdrawals" $LIB "    baseline_equity + (flows - baseline_flows) - equity" "    baseline_equity - equity + 0 * (flows - baseline_flows)" unit
+plant "R6 G10 baseline re-taken on every call" $LIB "        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {" "        let (b_eq, b_flows) = if false {"
+plant "R6 G10 baseline never resets on a new day" $LIB "        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {" "        let (b_eq, b_flows) = if g.baseline_equity != 0 {"
+plant "R6 G10 refusal filed under G7" $LIB "                rule::G10_DAILY_LOSS => g.refused_g10 += 1," "                rule::G10_DAILY_LOSS => g.refused_g7 += 1,"
+plant "R6 an order Velocity did not store counts as accepted" $LIB "        if placed.is_empty() {" "        if false {"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

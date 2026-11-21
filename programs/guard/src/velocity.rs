@@ -98,6 +98,8 @@ pub struct OrderSlot {
 }
 
 pub const USER_ORDERS: usize = 1064;
+/// total_deposits, then total_withdraws (probe_deposit_and_withdraw_totals).
+pub const USER_TOTAL_DEPOSITS: usize = 4392;
 pub const ORDER_LEN: usize = 104;
 pub const NUM_ORDERS: usize = 32;
 
@@ -108,6 +110,9 @@ pub struct UserView {
     pub spot: [SpotPos; NUM_POSITIONS],
     /// Open orders only (status Open).
     pub orders: Vec<OrderSlot>,
+    /// Velocity's running totals of deposits and withdrawals (quote units at the quote oracle price).
+    pub total_deposits: u64,
+    pub total_withdraws: u64,
 }
 
 impl UserView {
@@ -169,6 +174,8 @@ impl UserView {
             perp,
             spot,
             orders,
+            total_deposits: u64_at(d, USER_TOTAL_DEPOSITS),
+            total_withdraws: u64_at(d, USER_TOTAL_DEPOSITS + 8),
         }
     }
 

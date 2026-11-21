@@ -294,6 +294,55 @@ impl Env {
         k
     }
 
+    /// A fresh dUSDT token account owned by `owner` holding `amount` (base units), written directly (fixture).
+    pub fn token_account(&mut self, owner: &Pubkey, amount: u64) -> Pubkey {
+        let ata = Address::new_unique();
+        let mut t = Vec::with_capacity(165);
+        t.extend_from_slice(QUOTE_MINT.as_ref());
+        t.extend_from_slice(owner.as_ref());
+        t.extend_from_slice(&amount.to_le_bytes());
+        t.extend_from_slice(&[0u8; 36]);
+        t.push(1);
+        t.extend_from_slice(&[0u8; 12]);
+        t.extend_from_slice(&0u64.to_le_bytes());
+        t.extend_from_slice(&[0u8; 36]);
+        let lamports = self.svm.minimum_balance_for_rent_exemption(165);
+        self.svm.set_account(ata, Account { lamports, data: t, owner: TOKEN, executable: false, rent_epoch: 0 }).unwrap();
+        ata
+    }
+
+    /// The owner deposits `dusdt` more into its Velocity account (spot market 0).
+    pub fn deposit_more(&mut self, label: &str, k: &Keypair, dusdt: u64) -> TxResult {
+        let a = k.pubkey();
+        let ata = self.token_account(&a, dusdt * QUOTE);
+        let mut dep = disc("deposit").to_vec();
+        dep.extend_from_slice(&0u16.to_le_bytes());
+        dep.extend_from_slice(&(dusdt * QUOTE).to_le_bytes());
+        dep.push(0);
+        let accounts = vec![r(STATE), w(user_pda(&a)), w(stats_pda(&a)), AccountMeta::new_readonly(a, true), w(SPOT0_VAULT), w(ata), r(TOKEN), r(USDT_ORACLE), w(SPOT0)];
+        self.send(label, vec![Instruction { program_id: VELOCITY, accounts, data: dep }], &[k])
+    }
+
+    /// The owner withdraws `dusdt` from its Velocity account into a fresh token account.
+    pub fn withdraw(&mut self, label: &str, k: &Keypair, dusdt: u64) -> TxResult {
+        let a = k.pubkey();
+        let ata = self.token_account(&a, 0);
+        let signer = Pubkey::try_from(&self.svm.get_account(&STATE).unwrap().data[488..520]).unwrap(); // State.signer (IDL offset 488)
+        let mut data = disc("withdraw").to_vec();
+        data.extend_from_slice(&0u16.to_le_bytes());
+        data.extend_from_slice(&(dusdt * QUOTE).to_le_bytes());
+        data.push(0);
+        let mut accounts = vec![r(STATE), w(user_pda(&a)), w(stats_pda(&a)), AccountMeta::new_readonly(a, true), w(SPOT0_VAULT), r(signer), w(ata), r(TOKEN)];
+        accounts.extend([r(SOL_ORACLE), r(USDT_ORACLE), w(SPOT0), w(PERP0)]);
+        self.send(label, vec![Instruction { program_id: VELOCITY, accounts, data }], &[k])
+    }
+
+    /// Velocity's running totals: (total_deposits, total_withdraws) at User 4392 and 4400.
+    pub fn flows(&self, owner: &Pubkey) -> (u64, u64) {
+        let d = self.svm.get_account(&user_pda(owner)).unwrap().data;
+        (u64::from_le_bytes(d[4392..4400].try_into().unwrap()), u64::from_le_bytes(d[4400..4408].try_into().unwrap()))
+    }
+
     pub fn maps() -> Vec<AccountMeta> {
         vec![r(SOL_ORACLE), r(USDT_ORACLE), w(SPOT0), w(PERP0)]
     }
@@ -499,6 +548,8 @@ pub mod gerr {
     pub const CANCEL_NOT_ALLOWED: u32 = 6029;
     pub const ORDER_LIFETIME_TOO_LONG: u32 = 6030;
     pub const TOO_MANY_OPEN_ORDERS: u32 = 6031;
+    pub const DAILY_LOSS_EXCEEDED: u32 = 6032;
+    pub const ORDER_NOT_STORED: u32 = 6033;
 }
 
 pub mod rule {
@@ -511,7 +562,7 @@ pub mod rule {
     pub const G6: u8 = 6;
     pub const G7: u8 = 7;
     pub const G9: u8 = 9;
-    pub const SHAPE: u8 = 10;
+    pub const G10: u8 = 10;
 }
 
 pub const T_MARKET: u8 = 1 << 0;
@@ -595,6 +646,14 @@ pub struct GuardState {
     pub refused_cancels: u64,
     /// The last refusal for each rule (index = rule code 0..=7).
     pub last_refusal_by_rule: Vec<LastRefusal>,
+    /// G10: the owner's daily loss cap (quote units, 0 = off), the UTC day of the baseline, the baseline equity and
+    /// Velocity's net deposits at that moment, the G10 refusal count and the last G10 refusal.
+    pub max_daily_loss: u64,
+    pub loss_day: i64,
+    pub baseline_equity: i64,
+    pub baseline_flows: i64,
+    pub refused_g10: u64,
+    pub last_refusal_g10: LastRefusal,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -789,6 +848,10 @@ impl Env {
         let ix = Self::owner_ix("set_agent", &signer.pubkey(), g, agent.as_ref().to_vec());
         self.send(label, vec![ix], &[signer])
     }
+    pub fn set_daily_loss(&mut self, label: &str, g: &Guarded, signer: &Keypair, max_daily_loss: u64) -> TxResult {
+        let ix = Self::owner_ix("set_daily_loss", &signer.pubkey(), g, max_daily_loss.to_le_bytes().to_vec());
+        self.send(label, vec![ix], &[signer])
+    }
     pub fn set_paused(&mut self, label: &str, g: &Guarded, signer: &Keypair, paused: bool) -> TxResult {
         let ix = Self::owner_ix("set_paused", &signer.pubkey(), g, vec![paused as u8]);
         self.send(label, vec![ix], &[signer])
@@ -820,7 +883,15 @@ impl Env {
         let placed_order_ids = (0..32).map(|i| u32::from_le_bytes(d[p + i * 4..p + i * 4 + 4].try_into().unwrap())).filter(|x| *x != 0).collect();
         let q = p + 128 + 1;
         let by = q + 16;
+        let t = by + 8 * 45;
+        let i64_at = |x: usize| i64::from_le_bytes(d[x..x + 8].try_into().unwrap());
         GuardState {
+            max_daily_loss: u64_at(t),
+            loss_day: i64_at(t + 8),
+            baseline_equity: i64_at(t + 16),
+            baseline_flows: i64_at(t + 24),
+            refused_g10: u64_at(t + 32),
+            last_refusal_g10: read_lr(t + 40),
             placed_order_ids,
             cancel_count: u64_at(q),
             refused_cancels: u64_at(q + 8),

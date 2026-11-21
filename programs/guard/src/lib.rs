@@ -28,6 +28,7 @@ pub mod rule {
     pub const G6_PRICE_BAND: u8 = 6;
     pub const G7_PAUSED: u8 = 7;
     pub const G9_EXIT: u8 = 9;
+    pub const G10_DAILY_LOSS: u8 = 10;
 }
 
 /// Order types the owner may allow (bit = 1 << OrderType tag). Trigger orders are never accepted.
@@ -78,6 +79,14 @@ pub mod guard {
         Ok(())
     }
 
+    /// G10, owner only: the most equity (quote units) the account may lose in one UTC day before risk-increasing
+    /// orders are refused. 0 turns the brake off.
+    pub fn set_daily_loss(ctx: Context<OwnerOnly>, max_daily_loss: u64) -> Result<()> {
+        ctx.accounts.guard.max_daily_loss = max_daily_loss;
+        msg!("guard: daily loss cap set to {} by the owner", max_daily_loss);
+        Ok(())
+    }
+
     /// G7: owner only. While paused, only cancels and exits (G9) go through.
     pub fn set_paused(ctx: Context<OwnerOnly>, paused: bool) -> Result<()> {
         ctx.accounts.guard.paused = paused;
@@ -99,7 +108,15 @@ pub mod guard {
             .collect();
         // Forget placed ids that are no longer open (filled, cancelled or expired). A live id is never overwritten.
         prune_placed(&mut ctx.accounts.guard, &before);
-        let mut outcome = check_order(&ctx, &params)?;
+        let mut baseline: Option<Baseline> = None;
+        let mut outcome = check_order(&ctx, &params, &mut baseline)?;
+        if let Some(b) = baseline {
+            // The day's first risk-increasing check stores the baseline, refused or not, so it never moves within a day.
+            let g = &mut ctx.accounts.guard;
+            g.loss_day = b.day;
+            g.baseline_equity = b.equity;
+            g.baseline_flows = b.flows;
+        }
         if !matches!(outcome, Outcome::Refuse { .. }) && !ctx.accounts.guard.placed_order_ids.contains(&0) {
             let n = ctx.accounts.guard.placed_order_ids.len() as i128;
             outcome = Outcome::Refuse { rule: rule::G2_ALLOWLIST, value: n, cap: n, reason: GuardError::TooManyOpenOrders };
@@ -115,11 +132,17 @@ pub mod guard {
                 rule::G4_EXPOSURE => g.refused_g4 += 1,
                 rule::G5_LEVERAGE => g.refused_g5 += 1,
                 rule::G6_PRICE_BAND => g.refused_g6 += 1,
-                _ => g.refused_g7 += 1,
+                rule::G7_PAUSED => g.refused_g7 += 1,
+                rule::G10_DAILY_LOSS => g.refused_g10 += 1,
+                _ => {}
             }
             let lr = LastRefusal { rule: r, reason: u32::from(reason), value, cap, slot };
             g.last_refusal = lr;
-            g.last_refusal_by_rule[(r as usize).min(7)] = lr;
+            if r == rule::G10_DAILY_LOSS {
+                g.last_refusal_g10 = lr;
+            } else {
+                g.last_refusal_by_rule[(r as usize).min(7)] = lr;
+            }
             msg!("guard REFUSED (rule {}): {} (value {}, cap {})", r, reason, value, cap);
             emit_checked(g.key(), &params, false, r, value, cap, u32::from(reason));
             return Ok(());
@@ -130,6 +153,11 @@ pub mod guard {
         // Re-check what Velocity actually stored for the new order (it can write its own auction prices), then record
         // its id so the agent can later cancel it (and only it).
         let placed = stored_order_check(&ctx, &params, &outcome, &before)?;
+        if placed.is_empty() {
+            // Velocity skipped the order (for example a past max_ts): nothing to count, charge or remember.
+            msg!("guard: Velocity stored no order for this call");
+            return err!(GuardError::OrderNotStored);
+        }
         match outcome {
             Outcome::Accept(d) => {
                 // A cap exceeded after the CPI would be a guard bug, not a refusal: fail the transaction.
@@ -456,7 +484,24 @@ fn account_leverage(
 }
 
 /// Pre-CPI checks.
-fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
+/// G10's baseline for a UTC day: equity and Velocity's net deposits at the day's first risk-increasing check.
+#[derive(Clone, Copy)]
+struct Baseline {
+    day: i64,
+    equity: i64,
+    flows: i64,
+}
+
+fn net_flows(user: &velocity::UserView) -> i128 {
+    user.total_deposits as i128 - user.total_withdraws as i128
+}
+
+/// G10: today's loss in quote units, with deposits and withdrawals since the baseline taken out of it.
+pub fn daily_loss(baseline_equity: i128, baseline_flows: i128, equity: i128, flows: i128) -> i128 {
+    baseline_equity + (flows - baseline_flows) - equity
+}
+
+fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option<Baseline>) -> Result<Outcome> {
     let g = &ctx.accounts.guard;
     let l = &g.limits;
     let ra = ctx.remaining_accounts;
@@ -558,6 +603,32 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
         }
     }
     let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
+
+    // G10 daily loss: the day's first risk-increasing check stores a baseline; past the cap, only exits pass.
+    if g.max_daily_loss > 0 {
+        let equity = match account_leverage(ra, &user, &prices, None) {
+            Ok((_, e)) => e,
+            Err(GuardError::OtherSpotBalance) => return refuse(rule::G5_LEVERAGE, 0, 0, GuardError::OtherSpotBalance),
+            Err(e) => return Err(e.into()),
+        };
+        let flows = net_flows(&user);
+        let today = math::utc_day(clock.unix_timestamp);
+        let (b_eq, b_flows) = if g.loss_day == today && g.baseline_equity != 0 {
+            (g.baseline_equity as i128, g.baseline_flows as i128)
+        } else {
+            let b = Baseline {
+                day: today,
+                equity: i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?,
+                flows: i64::try_from(flows).map_err(|_| GuardError::MathOverflow)?,
+            };
+            *baseline = Some(b);
+            (equity, flows)
+        };
+        let loss = daily_loss(b_eq, b_flows, equity, flows);
+        if loss > g.max_daily_loss as i128 {
+            return refuse(rule::G10_DAILY_LOSS, loss, g.max_daily_loss as i128, GuardError::DailyLossExceeded);
+        }
+    }
 
     // G6 price band on every price field.
     if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
@@ -710,6 +781,14 @@ pub struct Guard {
     pub refused_cancels: u64,
     /// The last refusal for each rule (index = rule code, 0..=7), so a later refusal cannot bury an earlier one.
     pub last_refusal_by_rule: [LastRefusal; 8],
+    /// G10 (appended so earlier fields keep their offsets): the owner's daily loss cap in quote units (0 = off),
+    /// the UTC day of the baseline, the baseline equity and Velocity's net deposits at that moment.
+    pub max_daily_loss: u64,
+    pub loss_day: i64,
+    pub baseline_equity: i64,
+    pub baseline_flows: i64,
+    pub refused_g10: u64,
+    pub last_refusal_g10: LastRefusal,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
@@ -880,6 +959,10 @@ pub enum GuardError {
     OrderLifetimeTooLong,
     #[msg("32 orders the guard placed are already open; cancel one first")]
     TooManyOpenOrders,
+    #[msg("G10: today's loss is over the owner's daily loss cap; only exits and cancels pass until the next UTC day")]
+    DailyLossExceeded,
+    #[msg("Velocity stored no order for this call")]
+    OrderNotStored,
 }
 
 #[cfg(test)]
@@ -905,6 +988,16 @@ mod stored_order_tests {
         // A stale exit SELL (limit 0 bps) must not sit below the last price.
         assert!(stored_breach(&slot(1, 1, 91_000_000, 0, 0, 0, 0), oracle, 0).is_some());
         assert!(stored_breach(&slot(1, 1, 91_390_000, 0, 0, 0, 0), oracle, 0).is_none());
+    }
+
+    #[test]
+    fn daily_loss_takes_deposits_and_withdrawals_out() {
+        // baseline 1,000 with 1,000 deposited; equity now 980: a 20 loss
+        assert_eq!(daily_loss(1_000, 1_000, 980, 1_000), 20);
+        // a 500 deposit since: equity 1,480 is still a 20 loss
+        assert_eq!(daily_loss(1_000, 1_000, 1_480, 1_500), 20);
+        // a 100 withdrawal since: equity 900 is no loss
+        assert_eq!(daily_loss(1_000, 1_000, 900, 900), 0);
     }
 
     #[test]

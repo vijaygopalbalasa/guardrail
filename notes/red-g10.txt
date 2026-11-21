@@ -1,0 +1,40 @@
+test g10_cap_zero_is_off ... FAILED
+test g10_an_exit_and_a_cancel_pass_at_the_cap ... FAILED
+test g10_only_the_owner_sets_the_cap ... FAILED
+test g10_a_mid_day_withdrawal_is_not_a_loss ... FAILED
+test g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap ... FAILED
+test g10_a_new_utc_day_resets_the_baseline ... FAILED
+test g10_baseline_does_not_move_across_refused_calls ... FAILED
+test an_order_velocity_does_not_store_fails_instead_of_counting_as_accepted ... FAILED
+test g10_a_mid_day_deposit_does_not_hide_a_loss ... FAILED
+test g10_twin_a_loss_under_the_cap_is_accepted ... FAILED
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_cap_zero_is_off' (133641473) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_an_exit_and_a_cancel_pass_at_the_cap' (133641471) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_only_the_owner_sets_the_cap' (133641474) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_a_mid_day_withdrawal_is_not_a_loss' (133641469) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap' (133641475) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+[owner sets a 20 dUSDT daily loss cap] FAILED InstructionError(1, Custom(101))
+    Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.
+thread 'g10_a_new_utc_day_resets_the_baseline' (133641470) panicked at tests/daily_loss.rs:30:5:
+expected success, got InstructionError(1, Custom(101)). logs:
+Program log: AnchorError occurred. Error Code: InstructionFallbackNotFound. Error Number: 101. Error Message: Fallback functions are not supported.

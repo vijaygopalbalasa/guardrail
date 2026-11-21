@@ -104,3 +104,26 @@ fn probe_exit_price_far_under_oracle() {
     { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
     std::fs::write(format!("{}/../out/probe-exit-price.txt", env!("CARGO_MANIFEST_DIR")), env.log.join("\n")).unwrap();
 }
+
+/// What Velocity records for deposits and withdrawals (for G10's flow adjustment): total_deposits at 4392 and
+/// total_withdraws at 4400, in quote units valued at the quote oracle price.
+#[test]
+fn probe_deposit_and_withdraw_totals() {
+    let mut env = Env::new();
+    env.add_guard_program();
+    env.step(1, 91_390_000);
+    let k = env.trader("owner", 1_000);
+    let a = k.pubkey();
+    let (d0, w0) = env.flows(&a);
+    let c0 = env.raw_collateral(&a);
+    assert_ok(&env.deposit_more("deposit 250", &k, 250));
+    let (d1, w1) = env.flows(&a);
+    let c1 = env.raw_collateral(&a);
+    env.step(2, 91_390_000);
+    assert_ok(&env.withdraw("withdraw 100", &k, 100));
+    let (d2, w2) = env.flows(&a);
+    let c2 = env.raw_collateral(&a);
+    println!("PROBE flows: start d={d0} w={w0} c={c0}; after +250 d={d1} w={w1} c={c1}; after -100 d={d2} w={w2} c={c2}");
+    assert!(d1 > d0 && w1 == w0, "a deposit moves total_deposits");
+    assert!(w2 > w1 && d2 == d1, "a withdraw moves total_withdraws");
+}
