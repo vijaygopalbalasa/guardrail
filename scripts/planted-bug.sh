@@ -91,8 +91,8 @@ plant "R6 G10 baseline never resets on a new day" $LIB "        let (b_eq, b_flo
 plant "R6 G10 refusal filed under G7" $LIB "                rule::G10_DAILY_LOSS => g.refused_g10 += 1," "                rule::G10_DAILY_LOSS => g.refused_g7 += 1,"
 plant "R6 an order Velocity did not store counts as accepted" $LIB "        if placed.is_empty() {" "        if false {"
 plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
-plant "R8 G4 and G5 also refuse risk-reducing orders (exit trap)" $LIB "    let increases = exposure > exposure_before;" "    let increases = exposure >= exposure_before;"
-plant "R8 every order counts as risk-reducing" $LIB "    let increases = exposure > exposure_before;" "    let increases = false && exposure > exposure_before;"
+plant "R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = true || !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);"
+plant "R8 an order that keeps exposure equal by flipping is waived (the review case)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = exposure > exposure_before;"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

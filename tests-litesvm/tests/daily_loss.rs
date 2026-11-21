@@ -183,3 +183,16 @@ fn g10_a_cancel_first_day_starts_the_count_at_that_cancel() {
     env.step(5, price(5.0));
     assert_refused(&bid(&mut env, &g, "a risky bid after a 5% drop", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
 }
+
+/// Over the daily-loss cap, a plain sell of twice the position (exposure stays equal, the position flips) is refused
+/// by G10; a plain sell of part of the position (a true exit) still passes.
+#[test]
+fn g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes() {
+    let (mut env, g) = setup();
+    start_day(&mut env, &g);
+    env.step(5, price(5.0));
+    let flip = Order::resting(1, 10 * BASE, price(5.0) + 20_000);
+    assert_refused(&env.gplace("plain sell of 10 SOL against a 5 SOL long", &g, flip), gerr::DAILY_LOSS_EXCEEDED);
+    let part = Order::resting(1, 2 * BASE, price(5.0) + 30_000);
+    assert!(events(&env.gplace("plain sell of 2 SOL", &g, part))[0].accepted, "a true exit passes");
+}

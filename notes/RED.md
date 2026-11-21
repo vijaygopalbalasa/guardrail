@@ -122,3 +122,9 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - Client and MCP: when reduce_only is left unset, an order that opposes the position and fits inside it (with the
   reduce-only orders already resting) goes in as reduce-only.
 - Plants: two (notes/planted-bug-r8.txt).
+- Review of the R8 change: "worst-case exposure does not rise" was too loose. A plain sell of twice a long keeps the
+  worst case equal (long 5 or short 5) but flips the position, so it could flip back and forth at full exposure while
+  over the daily-loss cap. Red: `r8_a_flip_that_keeps_exposure_equal_is_still_checked_by_g5` and
+  `g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes` (notes/red-r8-flip.txt). Fix: G4, G5 and G10 are waived
+  only for a true exit (opposes the position; size plus every order resting on that side is at most the position),
+  the is_exit test without the reduce-only flag. Plants updated: the review case is one of them.

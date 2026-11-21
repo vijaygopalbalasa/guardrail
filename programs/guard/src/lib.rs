@@ -635,12 +635,14 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams, baseline: &mut Option
     }
     let oracle = prices.iter().find(|(i, _)| *i == p.market_index).unwrap().1;
 
-    // Risk direction: G4, G5 and G10 refuse only orders that raise this market's worst-case exposure. An order that
-    // leaves it no higher (a plain sell that shrinks a long, not flagged reduce-only) is never trapped by them; it still
-    // meets the shape rules, G1, G2, G3 and the G6 band.
+    // Risk direction: G4, G5 and G10 are waived only for a true exit that is not flagged reduce-only: it opposes the
+    // position and, with every order already resting on its side, is no larger than the position. Anything else,
+    // including an order that keeps worst-case exposure equal by flipping the position, goes through them. A waived
+    // order still meets the shape rules, G1, G2, G3 and the G6 band.
     let exposure_before = math::worst_case_base(pos.base, pos.open_bids, pos.open_asks);
     let exposure = math::worst_case_after(pos.base, pos.open_bids, pos.open_asks, p.direction, p.base_asset_amount);
-    let increases = exposure > exposure_before;
+    let resting_same_side = if p.direction == 1 { pos.open_asks.unsigned_abs() } else { pos.open_bids.unsigned_abs() };
+    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);
 
     // G10 daily loss: the day's first risk-increasing check stores a baseline; past the cap, only exits pass.
     if g.max_daily_loss > 0 {

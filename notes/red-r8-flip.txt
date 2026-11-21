@@ -1,0 +1,6 @@
+test r8_a_flip_that_keeps_exposure_equal_is_still_checked_by_g5 ... FAILED
+thread 'r8_a_flip_that_keeps_exposure_equal_is_still_checked_by_g5' (133855358) panicked at tests/audit.rs:379:5:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.01s
+test g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes ... FAILED
+thread 'g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes' (133855368) panicked at tests/daily_loss.rs:195:5:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.01s

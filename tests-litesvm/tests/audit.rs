@@ -361,5 +361,25 @@ fn r8_a_plain_sell_that_reduces_risk_passes_when_leverage_is_over_the_cap() {
     assert_refused(&env.gplace("a sell that flips 10 SOL short past flat", &g, Order::resting(1, 20 * BASE, 91_510_000)), gerr::LEVERAGE_EXCEEDED);
 }
 
+/// A sell of twice the position keeps worst-case exposure equal (long 10 or short 10) but flips the position: it is not
+/// an exit, so G4 and G5 still check it (review of the R8 change).
+#[test]
+fn r8_a_flip_that_keeps_exposure_equal_is_still_checked_by_g5() {
+    let mut l = tight();
+    l.max_order_base = 100 * BASE;
+    let (mut env, g) = setup(l);
+    let flow = env.trader("flow", 1_000_000);
+    assert_ok(&env.gplace("agent bids 10 SOL", &g, Order::resting(0, 10 * BASE, 91_300_000)));
+    env.step(2, P0);
+    assert_eq!(env.cross("flow sells", &flow, &g, 1, 1_000 * BASE, 91_300_000), 10 * BASE as i64);
+    env.step(2, P0);
+    let mut tighter = l;
+    tighter.max_leverage_bps = 500;
+    tighten(&mut env, &g, &tighter);
+    assert_refused(&env.gplace("plain sell of 20 SOL (flip to short 10)", &g, Order::resting(1, 20 * BASE, 91_500_000)), gerr::LEVERAGE_EXCEEDED);
+    // twin: half the position, plain, is a true exit and passes
+    assert!(events(&env.gplace("plain sell of 5 SOL", &g, Order::resting(1, 5 * BASE, 91_510_000)))[0].accepted);
+}
+
 #[allow(dead_code)]
 fn _unused(_: Keypair) {}
