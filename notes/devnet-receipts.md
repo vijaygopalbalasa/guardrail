@@ -1,14 +1,14 @@
 # Devnet receipts
 
-Guardrail's guard program on Solana devnet, with the fixed code (audit rounds 1 and 2 and the reviews in notes/RED.md).
-Guards created before an upgrade that grew the Guard account are kept here as history; they can no longer trade.
+Guardrail's guard program on Solana devnet, with the fixed code (audit findings F1 to F4, then the R5 review: order lifetime and placed order ids).
 Velocity's devnet oracle is weeks old, so orders rest on Velocity devnet and do not fill; the demo guards use a loose
 staleness limit for that reason. Fills at moving prices are shown on a local surfpool fork (see the README).
 
 - Program: [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet) (sha256 of the deployed bytes in notes/devnet-guard-so.sha256)
-- Deploy: [53pydz8dEqPa12xx...](https://explorer.solana.com/tx/53pydz8dEqPa12xxVRHmLSURHDoF6MZCYXRHvn7HG2qmRbLQTWzBEjE9UhcKQ5KNg8YENY2qmpRUGpT8c3ng2s2C?cluster=devnet) (upgrade in place after audit round 2, Nov 21; same program id)
-- Earlier upgrades: first-call baseline [P6hr1PaMyMvV6DNZ...](https://explorer.solana.com/tx/P6hr1PaMyMvV6DNZNJyT4NEi3RzbkqouUodY3ShrffjNSHuidXthL81WmshkHU7mfHi27PeZczravpPPVSkYZnr?cluster=devnet), G10 [664VGAmNMAg67SuM...](https://explorer.solana.com/tx/664VGAmNMAg67SuM7KT4rJEGZphonZCCVNSuYYaSP9wK6SXKgpSk4iwZ2kpTpK8ReRYNwzgekpGPXLb7jwm8rFgi?cluster=devnet), R5 fixes [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet)
+- Deploy: [3KJqKwYppJVwfHDq...](https://explorer.solana.com/tx/3KJqKwYppJVwfHDqCJoAzG6xBtkQti29AFSepjBj9dFkV4joDwQrW23cCGZj8VXNn2z3GZeHqTFSTnGxfLfXd9XZ?cluster=devnet) (upgrade in place after audit round 2 and its review, Nov 21; same program id)
+- Earlier upgrades: audit round 2 [53pydz8dEqPa12xx...](https://explorer.solana.com/tx/53pydz8dEqPa12xxVRHmLSURHDoF6MZCYXRHvn7HG2qmRbLQTWzBEjE9UhcKQ5KNg8YENY2qmpRUGpT8c3ng2s2C?cluster=devnet), first-call baseline [P6hr1PaMyMvV6DNZ...](https://explorer.solana.com/tx/P6hr1PaMyMvV6DNZNJyT4NEi3RzbkqouUodY3ShrffjNSHuidXthL81WmshkHU7mfHi27PeZczravpPPVSkYZnr?cluster=devnet), G10 [664VGAmNMAg67SuM...](https://explorer.solana.com/tx/664VGAmNMAg67SuM7KT4rJEGZphonZCCVNSuYYaSP9wK6SXKgpSk4iwZ2kpTpK8ReRYNwzgekpGPXLb7jwm8rFgi?cluster=devnet), R5 fixes [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet)
 - First deploy with the audit fixes: [4c2TQWreEgks7ocw...](https://explorer.solana.com/tx/4c2TQWreEgks7ocw9fr8Hkd2dggPtvoLeAJupWBYTw5yHszuR96ENoPdGXvR7CzpqcexxjCrVxJ3Www2n2CxnTZC?cluster=devnet)
+- A permissionless G10 checkpoint on the language-model guard, signed by a key that is neither its owner nor its agent: [5td94jNBiRjZpC6W...](https://explorer.solana.com/tx/5td94jNBiRjZpC6WMWSva4iRMyXZve3y92R6mKRmWvar2uTnMfXLdMGiJfYXboeaYVKFviMH43Wm3QQDwgEmk7bh?cluster=devnet)
 
 ## Guard HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS (language-model agent, current program)
 
