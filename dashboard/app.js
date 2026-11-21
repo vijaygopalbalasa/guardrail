@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=21";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=21";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=22";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=22";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);

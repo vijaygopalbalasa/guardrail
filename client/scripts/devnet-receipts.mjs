@@ -19,7 +19,7 @@ lines.push(`- Program: [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](${addr("BZ
 lines.push(`- Deploy: [${deploySig.slice(0, 16)}...](${tx(deploySig)})`, "");
 for (const f of setups) {
   const d = JSON.parse(readFileSync(f, "utf8"));
-  lines.push(`## Guard ${d.guard} (${f.includes("calm") ? "calm agent" : f.includes("llm3") ? "language-model agent, current program" : f.includes("r9") ? "runaway agent, current program" : f.includes("llm2") ? "language-model agent, after the G10 upgrade" : f.includes("llm") ? "language-model agent, before the R5 upgrade" : f.includes("r6") ? "runaway agent, after the G10 upgrade" : f.includes("r5") ? "runaway agent, after the R5 upgrade, before G10" : "runaway agent"})`, "");
+  lines.push(`## Guard ${d.guard} (${f.includes("calm") ? "calm agent" : f.includes("llm4") ? "language-model agent, current program" : f.includes("r11") ? "runaway agent, current program" : f.includes("llm3") ? "language-model agent, after audit round 2" : f.includes("r9") ? "runaway agent, after audit round 2" : f.includes("llm2") ? "language-model agent, after the G10 upgrade" : f.includes("llm") ? "language-model agent, before the R5 upgrade" : f.includes("r6") ? "runaway agent, after the G10 upgrade" : f.includes("r5") ? "runaway agent, after the R5 upgrade, before G10" : "runaway agent"})`, "");
   lines.push(`- Guard account: [${d.guard}](${addr(d.guard)}); owner ${d.owner}`);
   lines.push(`- init_guard + delegate: [${d.initSig.slice(0, 16)}...](${tx(d.initSig)})`);
   const sigs = (await retry(() => conn.getSignaturesForAddress(new PublicKey(d.guard), { limit: 100 }))).reverse();
