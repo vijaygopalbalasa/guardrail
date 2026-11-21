@@ -152,8 +152,10 @@ fn r(k: Pubkey) -> AccountMeta {
 impl Env {
     pub fn new() -> Self {
         let mut svm = LiteSVM::new();
-        let so = std::env::current_dir().unwrap().join("../fixtures/velocity-devnet.so");
-        svm.add_program_from_file(VELOCITY, &so).expect("load fixtures/velocity-devnet.so");
+        // VELOCITY_SO picks another Velocity binary (e.g. velocity-mainnet.so) against the same cloned accounts.
+        let so_name = std::env::var("VELOCITY_SO").unwrap_or_else(|_| "velocity-devnet.so".into());
+        let so = std::env::current_dir().unwrap().join("../fixtures").join(&so_name);
+        svm.add_program_from_file(VELOCITY, &so).unwrap_or_else(|e| panic!("load fixtures/{so_name}: {e:?}"));
         let mut slot0 = 0;
         for (addr, name) in [
             (STATE, "state"),

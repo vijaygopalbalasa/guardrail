@@ -24,7 +24,7 @@ for (const l of log) {
 const last = log.find((l) => l.startsWith("LOCAL FORK"));
 const fm = last.match(/SOL \$([\d.]+) -> \$([\d.]+); guarded position ([\d.]+) SOL, unrealized PnL (-?[\d.]+) dUSDT on ([\d,]+) collateral; accepted (\d+), refused (\{.*?\})/);
 const fills = {
-  label: "LOCAL FORK OF DEVNET (surfpool): Velocity's real program, the SOL price moved by a cheatcode, real fills from a second account. Recorded Nov 21 2026. Not live trading.",
+  label: "Velocity's real program on a local copy of devnet; the SOL price moved by our script; real fills from a second account. Recorded Nov 21 2026. Not live trading.",
   agent: "The scripted runaway agent: it doubles its order every step and retries smaller when refused.",
   capSol: 6, collateral: 1000,
   start: Number(fm[1]), end: Number(fm[2]), position: Number(fm[3]), upnl: Number(fm[4]), accepted: Number(fm[6]), refused: JSON.parse(fm[7]),

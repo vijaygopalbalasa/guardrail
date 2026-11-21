@@ -1,0 +1,36 @@
+Velocity MAINNET binary check (Nov 22 2026). No mainnet deploy was made.
+
+Binary
+  solana program dump -u mainnet-beta vELoC1audYbSYVRXn1vPaV8Axoa9oU6BYmNGZZBDZ1P fixtures/velocity-mainnet.so
+  mainnet: 5,247,760 bytes, sha256 c36c76b6cffbedc706b7943057c64b27898dd243c8a914877cafbf7b220295fd
+  devnet:  6,050,397 bytes, sha256 4837da62613ccf9e3a47ffa821861ea5bc528e6e41e50c916017caa8590dc737
+  The two builds differ, so the whole LiteSVM suite was rerun against the mainnet one.
+
+Whole suite on the mainnet binary (same cloned accounts):
+  cd tests-litesvm && VELOCITY_SO=velocity-mainnet.so cargo test --release
+  audit 16, audit_r2 15, audit_r3 6, audit_r4 6, audit_r5 6, daily_loss 15, limits 47, probe 3, runaway 2, sweep 1:
+  117 passed, 0 failed. Check that the variable takes effect: VELOCITY_SO=nope.so fails with "load fixtures/nope.so".
+  The runaway and sweep output (every HEADLINE and sweep row) is byte for byte the same on both binaries:
+  HEADLINE  unguarded: worst loss 412.44 dUSDT of 1000.00 (41.2%) ... refused by Velocity margin 88
+  HEADLINE  guarded:   worst loss 94.47 dUSDT of 1000.00 (9.4%) ... refused by Velocity 0, breaches 0
+
+Account layouts read by the guard, devnet fixture vs live mainnet account (same addresses; PDAs of the same program id):
+  State  2etx5N...: 1,752 bytes both, same discriminator; signer at 488 identical (FchXiT9J...).
+  Spot 0 2QpHj5...: 1,064 bytes both, same discriminator; decimals at 696 = 6 both; deposit interest at 328 plausible.
+  Perp 0 FDejXb...: 1,560 bytes both, same discriminator; oracle at 312 = 2k3UHX6e... both; oracle_source at 673 = 12 (PythLazer) both.
+  User: 3 live mainnet User accounts (4,496 bytes = the guard's USER_LEN, discriminator 9f755fe3ef973aec) decoded with the
+  guard's offsets (perp positions 424 + 80 each: base +8, open_bids +40, open_asks +48, market_index +76; orders 1064 + 104
+  each: market +84, status +86; deposits 4392, withdraws 4400) give consistent values: positions on markets 0 to 3,
+  open_bids/open_asks non-zero exactly on the markets where open orders rest, deposits above withdraws.
+  No layout or offset difference found.
+
+Not checked: a mainnet fill path with mainnet oracle data (the cloned oracle and markets are devnet copies), and mainnet
+admin settings such as margin ratios on markets other than SOL-PERP.
+
+Mainnet deploy cost (question for the owner; not deployed)
+  guard.so is 358,000 bytes. Rent-exempt minimum (solana rent, mainnet-beta):
+    354,000 bytes: 1.79897024 SOL
+    358,045 bytes (program data for this binary): about 1.8197 SOL
+    384,045 bytes (with the same 26 KB headroom given on devnet): 1.95159884 SOL
+  The deploy buffer needs the same rent while it runs and gets it back afterwards; fees are a few thousand signatures
+  (about 0.01 to 0.02 SOL plus any priority fee). Each guard account (1,135 bytes) costs 0.00641604 SOL rent, paid by its owner.

@@ -1,5 +1,5 @@
 {
- "label": "LOCAL FORK OF DEVNET (surfpool): Velocity's real program, the SOL price moved by a cheatcode, real fills from a second account. Recorded Nov 21 2026. Not live trading.",
+ "label": "Velocity's real program on a local copy of devnet; the SOL price moved by our script; real fills from a second account. Recorded Nov 21 2026. Not live trading.",
  "agent": "The scripted runaway agent: it doubles its order every step and retries smaller when refused.",
  "capSol": 6,
  "collateral": 1000,
