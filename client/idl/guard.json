@@ -212,7 +212,7 @@
     {
       "name": "migrate_guard",
       "docs": [
-        "Owner only: grows a guard made under an older (shorter) layout to the current size. Fields are only ever",
+        "Owner only: grows a guard made under an older append-only layout (865, 950, 967 or 999 bytes) to the current size. Fields are only ever",
         "appended, so the old bytes keep their meaning and the new ones start at zero (G10 off unless it was set, no last",
         "equity seen, no keeper). The owner pays the extra rent."
       ],
@@ -951,6 +951,22 @@
             "type": "i64"
           },
           {
+            "name": "day_high_equity",
+            "docs": [
+              "The highest equity known for day_high_day (from that day's baseline and every reading), and the net deposits",
+              "then; a new day's baseline without a midnight mark is never below it. Taken from the reserved bytes."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "day_high_flows",
+            "type": "i64"
+          },
+          {
+            "name": "day_high_day",
+            "type": "i64"
+          },
+          {
             "name": "reserved",
             "docs": [
               "Room for future fields, so they need no migration (zero now)."
@@ -958,7 +974,7 @@
             "type": {
               "array": [
                 "u8",
-                128
+                104
               ]
             }
           }

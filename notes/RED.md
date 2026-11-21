@@ -172,3 +172,23 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
   owner's own key, and readings in the last hour before 00:00 UTC only raise the last equity seen that day. The audit's
   probe is refused both with the keeper's mark and without it.
 - Red: notes/red-audit-r3.txt (6 of 6). Plants: 5, all caught (notes/planted-bug-r12.txt).
+
+## Round 13 (Nov 21): audit round 4 (guardrail-audit-r4.md), tests in tests-litesvm/tests/audit_r4.rs
+
+- 1 (Low): migrate_guard accepted pre-865 layouts that are not prefixes (Limits grew in the middle). Now only 865, 950,
+  967 or 999 bytes migrate; anything else is refused (BadGuardAccount) and recovers with close_guard and init_guard.
+- 2 (Low, residual R3-2): with the keeper missing its mark, a 22:59 dip or a 23:59 dip as the first call of that day
+  still lowered the next baseline. Now the guard keeps the highest equity known per day (starting from that day's
+  baseline, raised by every reading; three fields taken from the reserved bytes, so no migration) and a new day's
+  baseline without the owner's or keeper's midnight mark is max(equity now, last equity seen, that high), all
+  adjusted for deposits since. Consequence, stated in the README: without a mark the baseline never falls, so losses
+  carry over until the keeper marks a day (the old "new day resets" test now uses the keeper's mark, and a new test
+  shows the carry). The round-3 last-hour rule is subsumed by the day's high and was removed (its plant could no
+  longer fail anything).
+- 3 (Low): scripts/keeper.mjs now schedules by the chain's clock (getBlockTime), retries every 30 s until the guard's
+  loss_day is the chain's day (up to --tries, default 60), logs each try and prints an ALERT if the day is not marked.
+- 4 (Info): set_keeper(default) is refused while a cap is set; migrated guards with a cap must name a keeper (README),
+  and the dashboard warns "No keeper set" for a capped guard without one.
+- 5 (Info): the old-layout devnet guards are labelled "history (old layout, not migrated)" in the receipts and README.
+- Red: notes/red-audit-r4.txt. Plants: 4 new, all caught; the R9 "ignores the last equity seen" plant is caught by a new
+  test of a guard from before the day-high fields (notes/planted-bug-run.txt).

@@ -198,3 +198,4 @@ table.orders td.c-tx { white-space: nowrap; color: var(--ink-2); }
   .controls select { flex: 1 1 100%; }
   .final-strip { font-size: 14px; }
 }
+.warn { color: var(--ink); font-size: 13.5px; border-left: 3px solid var(--refuse); padding: 4px 0 4px 10px; margin: 0 0 12px; }

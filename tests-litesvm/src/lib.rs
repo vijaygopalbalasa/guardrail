@@ -936,6 +936,13 @@ impl Env {
         self.send(label, vec![ix], &[&owner])
     }
 
+    /// Zeroes the day-high fields (bytes 1007..1031): what a guard from before they existed holds there.
+    pub fn clear_day_high(&mut self, g: &Guarded) {
+        let mut a = self.svm.get_account(&g.guard).unwrap();
+        a.data[1007..1031].fill(0);
+        self.svm.set_account(g.guard, a).unwrap();
+    }
+
     /// Cuts the guard account down to `len` bytes: the shape a guard made by an older binary has (fields are only ever
     /// appended, so an older guard is a prefix of the current one).
     pub fn truncate_guard(&mut self, g: &Guarded, len: usize) {

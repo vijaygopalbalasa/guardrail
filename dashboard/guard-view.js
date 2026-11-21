@@ -71,6 +71,8 @@ export function decodeGuard(u8) {
   if (u8.length >= r.o + 8 * 5 + 45) {
     g.dailyLoss = { max: r.u64(), day: r.i64(), baselineEquity: r.i64(), baselineFlows: r.i64() };
     g.refused.G10 = r.u64();
+    r.o += 45 + 8 + 8 + 1; // last G10 refusal, last equity seen, its deposits, has_last_seen
+    if (u8.length >= r.o + 32) g.dailyLoss.keeper = r.key();
   }
   return g;
 }

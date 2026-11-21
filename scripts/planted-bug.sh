@@ -127,7 +127,6 @@ plant "R12 migrate does not grow the account" $LIB "        guard.realloc(new_le
 plant "R12 close keeps the rent" $LIB "        **owner.try_borrow_mut_lamports()? += lamports;
         **guard.try_borrow_mut_lamports()? = 0;" "        let _ = (&owner, lamports);"
 plant "R12 a daily loss cap without a keeper" $LIB "        require!(max_daily_loss == 0 || ctx.accounts.guard.keeper != Pubkey::default(), GuardError::KeeperRequired);" ""
-plant "R12 a reading in the last hour before midnight may lower the last equity seen" $LIB "    g.last_seen_equity = if last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };" "    g.last_seen_equity = if false && last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };"
 plant "R13 migrate accepts any shorter length" $LIB "        require!(MIGRATABLE_LENGTHS.contains(&guard.data_len()), GuardError::BadGuardAccount);" "        require!(guard.data_len() < new_len, GuardError::BadGuardAccount);"
 plant "R13 a new day's baseline ignores the previous day's high" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high.min(eq)) };"
 plant "R13 the day's high does not start from its baseline" $LIB "        adj(g.baseline_equity, g.baseline_flows).max(eq)" "        eq"

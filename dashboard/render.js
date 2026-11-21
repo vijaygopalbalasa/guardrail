@@ -125,6 +125,9 @@ export function renderHeadroom(doc, box, g, velocity, decisions, nowSec) {
   if (lastAcc) meter("G5 leverage at the last accepted order", num(lastAcc.value), num(l.maxLeverageBps), `${(num(lastAcc.value) / 1e4).toFixed(2)}x of ${(num(l.maxLeverageBps) / 1e4).toFixed(2)}x`);
   const biggest = Math.max(0, ...decisions.filter((d) => d.accepted).map((d) => num(d.size)));
   meter("G1 largest accepted order", biggest, num(l.maxOrderBase), `${sol(biggest)} of ${sol(l.maxOrderBase)} SOL`);
+  if (g.dailyLoss && num(g.dailyLoss.max) && (!g.dailyLoss.keeper || g.dailyLoss.keeper === "11111111111111111111111111111111")) {
+    rows.push(h(doc, "p", { className: "warn" }, "No keeper set: G10 needs one to mark each UTC day at midnight. The owner names one with set_keeper."));
+  }
   if (g.dailyLoss && num(g.dailyLoss.max)) {
     const dl = g.dailyLoss, eq = velocity.equity;
     if (eq && num(dl.day) === today && num(dl.baselineEquity) !== 0) {

@@ -30,7 +30,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [4CmcwNKFfnjoYQuM...](https://explorer.solana.com/tx/4CmcwNKFfnjoYQuMwoKnpeBCTyuEaGEhd1wuFmoqPLTkew6pgb2Yp74HahevhfH8NKiJ7m7dg21FvkT9yDZvajW?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [5SLXwUQqwUt32EKV...](https://explorer.solana.com/tx/5SLXwUQqwUt32EKVTA7uaJ9yaPToWVRrPo74kJkz4xisQH3qj2eN7M42Lsa7642soTz7fszEC2vEAtiPtqmZj8RE?cluster=devnet)
 
-## Guard 9AxE8fGTu6Uk4MfEcrnPbnLcH9WnaDaUpmr8VbLnP6PF (language-model agent, before audit round 3 (old layout))
+## Guard 9AxE8fGTu6Uk4MfEcrnPbnLcH9WnaDaUpmr8VbLnP6PF (language-model agent, before audit round 3 (old layout); history (old layout, not migrated))
 
 - Guard account: [9AxE8fGTu6Uk4MfEcrnPbnLcH9WnaDaUpmr8VbLnP6PF](https://explorer.solana.com/address/9AxE8fGTu6Uk4MfEcrnPbnLcH9WnaDaUpmr8VbLnP6PF?cluster=devnet); owner 4sHrhSUMGjaGk4NJzfTmZd8nGd2mC4cHyCRj5zU5t3fK
 - init_guard + delegate: [y4zFFoexJmh5tHFv...](https://explorer.solana.com/tx/y4zFFoexJmh5tHFvnGyfLAxzn2qauSxtjDvvgxv4oTdb38tQVN3CvQC2BSveStm2TiUpJMbiffsisMGiiqGpVPU?cluster=devnet)
@@ -38,7 +38,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - accepted order: [2aHT6uDu4ShNzscU...](https://explorer.solana.com/tx/2aHT6uDu4ShNzscUWyAMLHJhXmaooCAtmXTuim9UK3vmgMHZqjnJ5MUNaWB14Qgf3oSwSvG1bNrnJ4EDC9GWWdk5?cluster=devnet)
 - refused by G4 exposure (ExposureExceeded): [23s8AV3SoRpxkAWk...](https://explorer.solana.com/tx/23s8AV3SoRpxkAWkkM7UcBmtk9m8zNX6DDuWRngJz51E2syFway7nvf7TH18yt7LNPpuh9QsEZ4EFXsZ2rq2VWHk?cluster=devnet)
 
-## Guard AqMLdTG8HDZTZWwMQAmN8kciCGFF16nrDWpSFSh9QA26 (runaway agent, before audit round 3 (old layout))
+## Guard AqMLdTG8HDZTZWwMQAmN8kciCGFF16nrDWpSFSh9QA26 (runaway agent, before audit round 3 (old layout); history (old layout, not migrated))
 
 - Guard account: [AqMLdTG8HDZTZWwMQAmN8kciCGFF16nrDWpSFSh9QA26](https://explorer.solana.com/address/AqMLdTG8HDZTZWwMQAmN8kciCGFF16nrDWpSFSh9QA26?cluster=devnet); owner Av8MohP7SfjgYeifJyfmuuJC3dyZTJqoPBACagmgxDPU
 - init_guard + delegate: [diiRU1dhVH5LyPzi...](https://explorer.solana.com/tx/diiRU1dhVH5LyPziL5CCyjuov5rkKVJEsWbppJgQS6SeMumaisHyw769sLG3Ey1CF9d7pXnTNufzk9hu15YEnn9?cluster=devnet)
@@ -49,7 +49,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [4o1G7CFFaS9gS1m7...](https://explorer.solana.com/tx/4o1G7CFFaS9gS1m7RmWYV2MhfiDV29uxYUtuKcfu2H3W4KwTPjCcZRiv2z7PA6rZc8UzmhYLzNAFum2bCbixmBfH?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [4ZcMrPTrZ6kbmv8H...](https://explorer.solana.com/tx/4ZcMrPTrZ6kbmv8HN3QnCxkCkW3E8gMPQKF1UwiA1DqMcCSnhmbfP46W4T3hzdPzGCkNGNBqjeaxMhX5mE75foQo?cluster=devnet)
 
-## Guard HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS (language-model agent, after audit round 2)
+## Guard HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS (language-model agent, after audit round 2; history (old layout, not migrated))
 
 - Guard account: [HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS](https://explorer.solana.com/address/HHpGNsHr1jPn8xAdXBF1k57Q2W37Qwbcj1ApV2DhaHoS?cluster=devnet); owner 6RUGGjBn2ukgJz2AArmSGy2iJyK3NxNYpk2MwsmeK6Qa
 - init_guard + delegate: [35So5guzQoQXt1tu...](https://explorer.solana.com/tx/35So5guzQoQXt1tuttakZiQ1QKDhATsBUEmyPXU4vXYj3wuSQF3qiWQSoxjaNCLTcSPTvoT2upYfzMfmKLUSBrdx?cluster=devnet)
@@ -57,7 +57,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - accepted order: [2wssxLyA9vMgSpk7...](https://explorer.solana.com/tx/2wssxLyA9vMgSpk7bBvMWG9Kegixo5ZUc5F1YDMExVLmrLRmTAbTN8GmZfCukMBjuRrST6NRnQsEi49VVvYJRVH7?cluster=devnet)
 - refused by G4 exposure (ExposureExceeded): [5jUcyfq8grHbYCvq...](https://explorer.solana.com/tx/5jUcyfq8grHbYCvq5vbvMdoqBsfod3Dxts9jthnXD81PgjJKn2xwh2JMiuCBwwJAJgn9igBUWfWH7rq67USvw9Sc?cluster=devnet)
 
-## Guard J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb (runaway agent, after audit round 2)
+## Guard J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb (runaway agent, after audit round 2; history (old layout, not migrated))
 
 - Guard account: [J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb](https://explorer.solana.com/address/J5G6LggMrmj1XQoJkjb7n4SsRBWjdcxF9Zo92V7ozLRb?cluster=devnet); owner 7QPUUqz8EBHhoWoUbifXBVdehyauaWsLDCH2ZzxKhoEU
 - init_guard + delegate: [3BsrSpmeQF86qDMC...](https://explorer.solana.com/tx/3BsrSpmeQF86qDMCoMKuynH57PkUKCgYEPYjv2XbdnBLLyHsX4dj6Qe6Ti61NZ9L4fBhDQG1FdmhUKtjHvz1WzGr?cluster=devnet)
@@ -68,7 +68,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [3Pd8hKa7hLf2L635...](https://explorer.solana.com/tx/3Pd8hKa7hLf2L635pk9U6gngstnSY9DUCiLN3cy2o5rpWqCiy6us1kP7UFmMA9ZX66FU6uDvM9HTy7QmQzSYP8QP?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [2sw8PxEAL9Vk2pkf...](https://explorer.solana.com/tx/2sw8PxEAL9Vk2pkfbiUbp4njpPF7GbA58issn6Kt32eMFQBZMM9frrbkscEjCvDiJEfSSwxJm73BwtXPio9wY1Hj?cluster=devnet)
 
-## Guard 4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6 (language-model agent, after the G10 upgrade)
+## Guard 4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6 (language-model agent, after the G10 upgrade; history (old layout, not migrated))
 
 - Guard account: [4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6](https://explorer.solana.com/address/4VWusXJ79GZtK6M9qBCUbGG9NxwMtTNtGLAgcfag36v6?cluster=devnet); owner DSQHLMYr6diFQ14jDfmK5FADZb8bh3raHyvy1CAcPGRC
 - init_guard + delegate: [5WeMKXQmbhFHHC9z...](https://explorer.solana.com/tx/5WeMKXQmbhFHHC9zS6Y8gJqkPrnn9SxxExNQcEZWLMmRfEzLnmJ1Me3S2E9BWQmRjHdW4nTEB3vHyUYejXoSSjwj?cluster=devnet)
@@ -76,7 +76,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - accepted order: [4ffUA5jfmcXwCvDA...](https://explorer.solana.com/tx/4ffUA5jfmcXwCvDAZALHYydg9LFYrXc4qPHZ1at3bYwgqwYaux6dEvu1n2mE3hyUGL9i6tzM8Mzrwt4813AjTWYP?cluster=devnet)
 - refused by G4 exposure (ExposureExceeded): [3dX8o9rK6KDftjj6...](https://explorer.solana.com/tx/3dX8o9rK6KDftjj6PCDQnRfgMRTTZQ8dsyNBhPgiymqTN22CseGuwhKn8ps2MMdRxK2PLBzteA2mmmQTThnEA9aT?cluster=devnet)
 
-## Guard HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM (runaway agent, after the G10 upgrade)
+## Guard HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM (runaway agent, after the G10 upgrade; history (old layout, not migrated))
 
 - Guard account: [HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM](https://explorer.solana.com/address/HMnCj9kmouZS14WnLjn57wua6i1U4WZoVpWooFNyRXcM?cluster=devnet); owner 82mnXnUarcheQHgknMG3uYGwxJ7ghQN1L7VrS8BqdRhX
 - init_guard + delegate: [268B2cxLEeABm4mt...](https://explorer.solana.com/tx/268B2cxLEeABm4mtPWiLEQDtCNrxmX9nhpSDcAsCtqpo44KMpAHBwecvsSRnj2gzqA1zmEpd3FMTgiP7QK73j3QQ?cluster=devnet)
@@ -87,7 +87,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [RQCAg1hHZTu8AMCe...](https://explorer.solana.com/tx/RQCAg1hHZTu8AMCeSkULHN69GH5bEQnTWsjrXcuAVZMnX6iuTf18kxDaBnRSbxg8qu4gdpvbBnYe1F5WHxhV6ME?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [7HrRUd7NEKxz8nWy...](https://explorer.solana.com/tx/7HrRUd7NEKxz8nWyC8dzELHdYKXRg4QjtYayvXJhjU9rhLDMNciYCRt3cXRvBVVVLt8fq7KRgtoDh3h6deAN9Lf?cluster=devnet)
 
-## Guard GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ (runaway agent, after the R5 upgrade, before G10)
+## Guard GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ (runaway agent, after the R5 upgrade, before G10; history (old layout, not migrated))
 
 - Guard account: [GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ](https://explorer.solana.com/address/GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ?cluster=devnet); owner 2WV7NA3o48WUpU6Rh7XWLr969789xyXJkBY99VjjBMJ8
 - init_guard + delegate: [23cHUeudJYShSfET...](https://explorer.solana.com/tx/23cHUeudJYShSfETodzjunHQ28mSnncd22gwVvyrB9TRUwLuNbbSoasYQWeZkuddMJZnJj6wKpTZtPHHGHBHiV53?cluster=devnet)
@@ -98,7 +98,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [4rZv7jfkDPTWKRtL...](https://explorer.solana.com/tx/4rZv7jfkDPTWKRtLfeKvADWYRKrL1S3kyyEasXnGfsqmV2UBqyPaEZLu2C2MWZwD9Sv4Qt1q8zm1XtgReZupwstH?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [4LKc4Zq5QM4zo6zB...](https://explorer.solana.com/tx/4LKc4Zq5QM4zo6zBFJLUE1eWsrKYnDzZ8tiSaFkMbBXutxTrPPciXUAZevA9Xkzi95DR4MbGvNV41SsijLYFFnit?cluster=devnet)
 
-## Guard 6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h (language-model agent, before the R5 upgrade)
+## Guard 6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h (language-model agent, before the R5 upgrade; history (old layout, not migrated))
 
 - Guard account: [6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h](https://explorer.solana.com/address/6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h?cluster=devnet); owner Na2srj12TcQ778fVuEB1pSQpyR94mPzQmbLXAHidhPU
 - init_guard + delegate: [2WfBbemJpvbaDtXW...](https://explorer.solana.com/tx/2WfBbemJpvbaDtXWH13tZ8eZik8NqhRvod1gHGh3jUFETiyT78BQnaPLsC8af2ZyECV6xqHZjJX8KQndgWLF7rWg?cluster=devnet)
@@ -106,7 +106,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - accepted order: [sJ6LBtpVa9bW9SR5...](https://explorer.solana.com/tx/sJ6LBtpVa9bW9SR5MfAiRVJCriF6XevY9zJu7nKFsdLv8XJJmEwGD8QJkFo345FCXbbmhpkCJWdXVYp5AALzwLj?cluster=devnet)
 - refused by G4 exposure (ExposureExceeded): [5m1RHS7Jduc8VNYc...](https://explorer.solana.com/tx/5m1RHS7Jduc8VNYc3RWFPj1iuQrHBi9HCDZt9db4rhnjK7U7wD22aTrtwt158aj2YdkQodEgWGc3mytfBCQQ9iBx?cluster=devnet)
 
-## Guard 3JSerd6KBZrW85CHMATFHqKdGAqLYKscWaX29oYf4Yeb (runaway agent)
+## Guard 3JSerd6KBZrW85CHMATFHqKdGAqLYKscWaX29oYf4Yeb (runaway agent; history (old layout, not migrated))
 
 - Guard account: [3JSerd6KBZrW85CHMATFHqKdGAqLYKscWaX29oYf4Yeb](https://explorer.solana.com/address/3JSerd6KBZrW85CHMATFHqKdGAqLYKscWaX29oYf4Yeb?cluster=devnet); owner Ac1C1ipfLasLAwHWcNQCFVKbcXvjsSPKvJr7aGUgdgKD
 - init_guard + delegate: [5puRFH9Rh59ijQFj...](https://explorer.solana.com/tx/5puRFH9Rh59ijQFjmUoyoJLnR7gLP4USQ5gQiTt7qe5zxwgKEZGsdCDakTVc4v3oTua4jTUJUnRQssdYFL6ib2Er?cluster=devnet)
@@ -117,7 +117,7 @@ staleness limit for that reason. Fills at moving prices are shown on a local sur
 - refused by G3 daily notional (DailyNotionalExceeded): [2EWAPMKMoKSPiAbh...](https://explorer.solana.com/tx/2EWAPMKMoKSPiAbhsnpzBCwYK6YDsVx5WEnoim7Ce5wiVjfnv7ou9P8LuqHY95ChBMZFGfj9jLAGqbrfro2fNB2V?cluster=devnet)
 - refused by G6 price band (PriceOutsideBand): [4PCJRof5GnzLe68K...](https://explorer.solana.com/tx/4PCJRof5GnzLe68Kot4DArhnBBq8R1zCFdYQ23CKCnDKEq7fLtXcrYLHEUGXFq5Yr8KACDSYo7HkQ8HjsRhGLQXW?cluster=devnet)
 
-## Guard 8gnjzC3g7FHDBV7pAjjT7u3XgDk3MVncAw2eVdsneMfy (calm agent)
+## Guard 8gnjzC3g7FHDBV7pAjjT7u3XgDk3MVncAw2eVdsneMfy (calm agent; history (old layout, not migrated))
 
 - Guard account: [8gnjzC3g7FHDBV7pAjjT7u3XgDk3MVncAw2eVdsneMfy](https://explorer.solana.com/address/8gnjzC3g7FHDBV7pAjjT7u3XgDk3MVncAw2eVdsneMfy?cluster=devnet); owner DHEMmLniLTKaLsVmbr4juWEuzuUiMq7gspRKrKBgAdVD
 - init_guard + delegate: [5dUxZHHEVbTRZEs2...](https://explorer.solana.com/tx/5dUxZHHEVbTRZEs26fmsta3PawVRV4GyU2WYkQtrHdHx7GqLsvBBXess3HmpDof7URioYww1mFgW9EhyiKoGExC?cluster=devnet)

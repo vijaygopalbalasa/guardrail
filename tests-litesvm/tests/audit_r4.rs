@@ -43,6 +43,10 @@ fn r4_1_a_guard_older_than_the_append_only_layouts_cannot_migrate_but_can_close(
 /// (at `dip_at` on `dip_day` days later), the price recovers by midnight, and at 02:00 it dips 5% again and the
 /// agent bids.
 fn keeper_misses(dip_day: u64, dip_at: (i64, i64)) -> TxResult {
+    keeper_misses_with(dip_day, dip_at, false)
+}
+
+fn keeper_misses_with(dip_day: u64, dip_at: (i64, i64), no_day_high: bool) -> TxResult {
     let (mut env, g) = setup();
     let flow = env.trader("flow", 1_000_000);
     assert_ok(&env.gplace("agent bids 5 SOL", &g, Order::resting(0, 5 * BASE, P0)));
@@ -52,6 +56,9 @@ fn keeper_misses(dip_day: u64, dip_at: (i64, i64)) -> TxResult {
     let owner = g.owner.insecure_clone();
     assert_ok(&env.set_daily_loss("keeper named (it will not run) and cap 20", &g, &owner, 20 * QUOTE));
     assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
+    if no_day_high {
+        env.clear_day_high(&g); // a guard from before the day-high fields: only the last equity seen is carried
+    }
     let dip = (P0 as f64 * 0.95) as u64;
     env.step(dip_day * 216_000, P0);
     env.step(secs_to(&env, dip_at.0, dip_at.1), dip);
@@ -81,4 +88,23 @@ fn r4_4_the_keeper_cannot_be_removed_while_a_cap_is_set() {
     assert_refused_tx(&env.set_keeper("remove the keeper with the cap on", &g, &owner, &Pubkey::default()), gerr::KEEPER_REQUIRED);
     assert_ok(&env.set_daily_loss_only("turn the cap off", &g, &owner, 0));
     assert_ok(&env.set_keeper("then the keeper can go", &g, &owner, &Pubkey::default()));
+}
+
+#[test]
+fn r4_2_a_guard_without_a_day_high_still_carries_the_last_equity_seen() {
+    // A guard from before the day-high fields: day 1 is seen only at the high; the next day the first call is a bid at a
+    // 5% dip. The carried last equity seen (the high) keeps the baseline up, so the bid is refused.
+    let (mut env, g) = setup();
+    let flow = env.trader("flow", 1_000_000);
+    assert_ok(&env.gplace("agent bids 5 SOL", &g, Order::resting(0, 5 * BASE, P0)));
+    env.step(2, P0);
+    env.cross("flow sells", &flow, &g, 1, 1_000 * BASE, P0);
+    env.step(2, P0);
+    let owner = g.owner.insecure_clone();
+    assert_ok(&env.set_daily_loss("keeper named and cap 20", &g, &owner, 20 * QUOTE));
+    assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
+    env.clear_day_high(&g);
+    let dip = (P0 as f64 * 0.95) as u64;
+    env.step(secs_to(&env, 2, 0), dip);
+    assert_refused(&env.gplace("next day 02:00: a bid at the dip", &g, small_bid(dip)), gerr::DAILY_LOSS_EXCEEDED);
 }

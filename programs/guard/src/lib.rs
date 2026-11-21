@@ -653,11 +653,8 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     };
     g.day_high_flows = flows;
     g.day_high_day = today;
-    // In the last hour before 00:00 UTC a reading may only raise the last equity seen that day (audit round 3, R3-2):
-    // a dip just before midnight cannot become the next day's carried baseline.
-    let carried_now = g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows));
-    let last_hour = clock.unix_timestamp.rem_euclid(86_400) >= 82_800;
-    g.last_seen_equity = if last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };
+    // (The round-3 "last hour only raises" rule is subsumed by day_high above: the day's high covers every reading.)
+    g.last_seen_equity = eq;
     g.last_seen_flows = flows;
     g.last_seen_day = today;
     g.has_last_seen = true;
