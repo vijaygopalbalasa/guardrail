@@ -209,3 +209,20 @@ fn g10_a_flip_over_the_cap_is_refused_but_a_true_exit_passes() {
     let part = Order::resting(1, 2 * BASE, price(5.0) + 30_000);
     assert!(events(&env.gplace("plain sell of 2 SOL", &g, part))[0].accepted, "a true exit passes");
 }
+
+/// The day's baseline stays where it was taken: an intraday rise does not move it. The price rises 5% after the open
+/// (the guard sees it), then falls back to 1% under the open: the day's loss is about 4.6 dUSDT, under the 20 cap, so a
+/// bid passes. If the baseline were taken again on a later call (at the intraday high), the loss would read about 27.
+#[test]
+fn g10_the_baseline_is_not_taken_again_later_in_the_day() {
+    let (mut env, g) = setup();
+    start_day(&mut env, &g);
+    let base = env.guard_state(&g).baseline_equity;
+    let up = (P0 as f64 * 1.05) as u64;
+    env.step(5, up);
+    assert!(events(&bid(&mut env, &g, "a call at the intraday high", up))[0].accepted);
+    env.step(5, price(1.0));
+    let r = bid(&mut env, &g, "a bid 1% under the open", price(1.0));
+    assert!(events(&r)[0].accepted, "the loss is measured from the open, not from the intraday high");
+    assert_eq!(env.guard_state(&g).baseline_equity, base, "the baseline did not move");
+}

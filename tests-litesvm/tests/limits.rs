@@ -611,7 +611,8 @@ fn g8_guard_source_reaches_only_place_and_cancel_on_velocity() {
     // The compiled program loads constants as immediates, so check the source: exactly two Velocity instruction
     // discriminators exist, they are place_perp_order and cancel_order, and there is exactly one CPI call site.
     use sha2::{Digest, Sha256};
-    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../programs/guard/src/");
+    // Run-time path (cargo test runs in the package directory), so a copy of the repository checks its own source.
+    let dir = format!("{}/../programs/guard/src/", std::env::current_dir().unwrap().display());
     let vel = std::fs::read_to_string(format!("{dir}velocity.rs")).unwrap();
     let lib = std::fs::read_to_string(format!("{dir}lib.rs")).unwrap();
     let consts: Vec<&str> = vel.lines().filter(|l| l.trim_start().starts_with("pub const IX_")).collect();

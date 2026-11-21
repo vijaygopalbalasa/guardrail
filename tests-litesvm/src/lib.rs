@@ -152,8 +152,8 @@ fn r(k: Pubkey) -> AccountMeta {
 impl Env {
     pub fn new() -> Self {
         let mut svm = LiteSVM::new();
-        let so = concat!(env!("CARGO_MANIFEST_DIR"), "/../fixtures/velocity-devnet.so");
-        svm.add_program_from_file(VELOCITY, so).expect("load fixtures/velocity-devnet.so");
+        let so = std::env::current_dir().unwrap().join("../fixtures/velocity-devnet.so");
+        svm.add_program_from_file(VELOCITY, &so).expect("load fixtures/velocity-devnet.so");
         let mut slot0 = 0;
         for (addr, name) in [
             (STATE, "state"),
@@ -769,8 +769,10 @@ pub fn assert_ok(r: &TxResult) {
 
 impl Env {
     pub fn add_guard_program(&mut self) {
-        let so = concat!(env!("CARGO_MANIFEST_DIR"), "/../target/deploy/guard.so");
-        self.svm.add_program_from_file(GUARD, so).expect("load target/deploy/guard.so (build it first)");
+        // Resolved at run time from the package directory (cargo test runs there), so a copy of the repository (a
+        // planted-bug run in a copy-on-write clone) loads its own build, not the one the test binary was compiled next to.
+        let so = std::env::current_dir().unwrap().join("../target/deploy/guard.so");
+        self.svm.add_program_from_file(GUARD, &so).expect("load target/deploy/guard.so (build it first)");
     }
 
     pub fn init_guard_ix(owner: &Pubkey, agent: &Pubkey, limits: &Limits) -> Instruction {
