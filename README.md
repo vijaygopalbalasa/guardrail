@@ -20,7 +20,7 @@ layout are labelled "history (old layout, not migrated)": their transactions sta
 from devnet): [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app); watch the replay:
 [guardrail-perps.vercel.app/replay.html](https://guardrail-perps.vercel.app/replay.html).
 
-Caveat on this first screen: devnet only. Reviewed by an independent audit pass, not a professional firm. The owner
+Caveat on this first screen: devnet only. Four internal review rounds; every finding and fix is in the repo (`audits/`). The owner
 can always trade directly or remove the delegate. No real users yet. The guard wraps Velocity's `place_perp_order` and
 `cancel_order` only. It does not wrap `place_and_take`, so the agent cannot take liquidity immediately at all; that
 is a missing feature, not a bypass, because the agent's key has no direct path to the account.
