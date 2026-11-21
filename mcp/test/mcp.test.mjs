@@ -26,6 +26,7 @@ test("MCP: exactly three tools, none changes limits; place (accepted and refused
     maxOrderBase: toBase(2), markets: [{ marketIndex: 0, maxExposureBase: toBase(10) }],
     allowedOrderTypes: ORDER_TYPE_BITS.limit, dailyNotionalCap: 1_000_000_000n, maxLeverageBps: 30_000, priceBandBps: 300,
     maxOracleStalenessSlots: 1_000_000n,
+  exitMaxStalenessSlots: 2_000_000n,
   });
   const dir = mkdtempSync(join(tmpdir(), "guardrail-mcp-"));
   const agentPath = join(dir, "agent.json");

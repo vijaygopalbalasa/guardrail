@@ -35,6 +35,8 @@ export interface Limits {
   maxLeverageBps: number;
   priceBandBps: number;
   maxOracleStalenessSlots: bigint;
+  /** Exits with an older oracle may only be priced on the owner-favourable side of the last price. */
+  exitMaxStalenessSlots: bigint;
 }
 
 export const ORDER_TYPE_BITS = { market: 1, limit: 2, oracle: 16 } as const;
@@ -77,7 +79,7 @@ export function encodeLimits(l: Limits): Buffer {
     const m = l.markets[i] ?? { marketIndex: 0, maxExposureBase: 0n };
     w.u16(m.marketIndex).u64(m.maxExposureBase);
   }
-  w.u8(l.allowedOrderTypes).u64(l.dailyNotionalCap).u32(l.maxLeverageBps).u32(l.priceBandBps).u64(l.maxOracleStalenessSlots);
+  w.u8(l.allowedOrderTypes).u64(l.dailyNotionalCap).u32(l.maxLeverageBps).u32(l.priceBandBps).u64(l.maxOracleStalenessSlots).u64(l.exitMaxStalenessSlots);
   return w.done();
 }
 
@@ -122,6 +124,7 @@ function readLimits(r: Reader): Limits {
     maxLeverageBps: r.u32(),
     priceBandBps: r.u32(),
     maxOracleStalenessSlots: r.u64(),
+    exitMaxStalenessSlots: r.u64(),
   };
 }
 

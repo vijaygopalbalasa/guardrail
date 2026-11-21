@@ -18,6 +18,7 @@ const limits = {
   maxLeverageBps: 30_000,
   priceBandBps: 300,
   maxOracleStalenessSlots: 1_000_000n,
+  exitMaxStalenessSlots: 2_000_000n,
 };
 
 test("client: accepted order, refused order with its verdict, counters, cancel, revoked agent", async () => {

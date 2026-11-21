@@ -19,6 +19,7 @@ function measure(rule, v, cap, reason) {
     if (reason === 6015) return "trigger orders are not supported";
     return "order shape not allowed";
   }
+  if (rule === 6 && reason === 6028) return `exit with an oracle ${v} slots old (over ${cap}) priced against the owner`;
   if (rule === 5 && reason === 6022) return "a non-quote spot balance or quote borrow exists";
   if (rule === 5 && reason === 6024) return "account equity is not positive";
   switch (rule) {
@@ -84,7 +85,7 @@ function render({ guard: g, velocity, decisions }) {
     <dt>G5 leverage</dt><dd>${(l.maxLeverageBps / 1e4).toFixed(2)}x worst case</dd>
     <dt>G6 band</dt><dd>${(l.priceBandBps / 100).toFixed(2)}% of oracle</dd>
     <dt>G6 oracle age</dt><dd>${l.maxOracleStalenessSlots} slots</dd>
-    <dt>G9 exits</dt><dd>always, inside the band</dd>
+    <dt>G9 exits</dt><dd>always, inside the band; oracle older than ${l.exitMaxStalenessSlots} slots: owner-favourable prices only</dd>
     <dt>withdraw</dt><dd>impossible</dd></dl>`;
 }
 

@@ -150,6 +150,7 @@ fn validate_limits(l: &Limits) -> Result<()> {
     require!((1..=10_000).contains(&l.price_band_bps), GuardError::InvalidLimits);
     require!(l.max_leverage_bps >= 1, GuardError::InvalidLimits);
     require!(l.max_oracle_staleness_slots >= 1, GuardError::InvalidLimits);
+    require!(l.exit_max_staleness_slots >= l.max_oracle_staleness_slots, GuardError::InvalidLimits);
     for (i, a) in l.markets.iter().enumerate() {
         if a.max_exposure_base == 0 {
             continue;
@@ -183,6 +184,34 @@ fn band_breach(p: &OrderParams, oracle: i64, band: u32) -> Option<(i128, &'stati
         let ok = if relative { math::offset_within_band(a as i128, oracle, band) } else { math::within_band(a as i128, oracle, band) };
         if !ok {
             return Some((if relative { off(a as i128) } else { dev(a as i128) }, "auction price"));
+        }
+    }
+    None
+}
+
+/// G9 with a very stale oracle: the first price field on the owner-unfavourable side of the last oracle price.
+/// A sell must be at or above it, a buy at or below it; offsets and relative auction prices must not cross zero
+/// the wrong way; an exit must carry a price (a Market order without one, or a Limit with neither price nor offset,
+/// is refused).
+fn unfavourable_for_stale_exit(p: &OrderParams, oracle: i64) -> Option<&'static str> {
+    let sell = p.direction == 1;
+    let ok_abs = |x: i128| if sell { x >= oracle as i128 } else { x <= oracle as i128 };
+    let ok_rel = |x: i128| if sell { x >= 0 } else { x <= 0 };
+    let offset = p.oracle_price_offset.unwrap_or(0);
+    if p.price == 0 && offset == 0 && p.order_type != order_type::ORACLE {
+        return Some("missing price");
+    }
+    if p.price != 0 && !ok_abs(p.price as i128) {
+        return Some("price");
+    }
+    if offset != 0 && !ok_rel(offset as i128) {
+        return Some("oracle_price_offset");
+    }
+    let relative = p.order_type == order_type::ORACLE || (p.order_type == order_type::LIMIT && offset != 0);
+    for a in [p.auction_start_price, p.auction_end_price].into_iter().flatten() {
+        let ok = if relative { ok_rel(a as i128) } else { ok_abs(a as i128) };
+        if !ok {
+            return Some("auction price");
         }
     }
     None
@@ -322,8 +351,15 @@ fn check_order(ctx: &Context<AgentTrade>, p: &OrderParams) -> Result<Outcome> {
     // but its price must stay inside the band computed from the oracle's last price, so an exit cannot hand the
     // position's value to a partner far from the market.
     if math::is_exit(p.reduce_only, p.direction, p.base_asset_amount, pos.base) {
-        let (oracle, _age) = market_price(ra, p.market_index, clock.slot)?;
-        if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
+        let (oracle, age) = market_price(ra, p.market_index, clock.slot)?;
+        if age > l.exit_max_staleness_slots {
+            // Very stale: the band would be centred on an old price, so only owner-favourable prices are allowed.
+            // At worst such an exit does not fill; it can never give value away.
+            if let Some(what) = unfavourable_for_stale_exit(p, oracle) {
+                msg!("guard: stale exit ({} slots) refused: {} is on the unfavourable side of {}", age, what, oracle);
+                return refuse(rule::G6_PRICE_BAND, age as i128, l.exit_max_staleness_slots as i128, GuardError::StaleExitUnfavourable);
+            }
+        } else if let Some((bps, _)) = band_breach(p, oracle, l.price_band_bps) {
             return refuse(rule::G6_PRICE_BAND, bps, l.price_band_bps as i128, GuardError::PriceOutsideBand);
         }
         msg!("guard: G9 exit (reduce-only, opposite to a {} position, size {})", pos.base, p.base_asset_amount);
@@ -479,6 +515,9 @@ pub struct Limits {
     pub price_band_bps: u32,
     /// G6: the oracle must have been posted within this many slots.
     pub max_oracle_staleness_slots: u64,
+    /// G9: exits with an oracle older than this may only be priced on the owner-favourable side of the last oracle
+    /// price (sell at or above it, buy at or below it). Must be at least max_oracle_staleness_slots.
+    pub exit_max_staleness_slots: u64,
 }
 
 #[account]
@@ -659,4 +698,6 @@ pub enum GuardError {
     PostTradeCheckFailed,
     #[msg("arithmetic overflow")]
     MathOverflow,
+    #[msg("G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price")]
+    StaleExitUnfavourable,
 }

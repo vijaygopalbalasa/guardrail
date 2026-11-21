@@ -56,6 +56,8 @@ plant "G9 exits blocked by limits (no bypass)" $LIB "    if math::is_exit(p.redu
 plant "G8 a third Velocity instruction (withdraw) appears" $VEL "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];" "pub const IX_CANCEL_ORDER: [u8; 8] = [95, 129, 237, 240, 8, 49, 223, 132];
 pub const IX_WITHDRAW: [u8; 8] = [183, 18, 70, 156, 148, 109, 161, 34];"
 plant "post-trade check off by one (refuses at the cap)" $LIB "if exposure > d.exposure_cap as i128 || lev > l.max_leverage_bps as i128 {" "if exposure >= d.exposure_cap as i128 || lev > l.max_leverage_bps as i128 {"
+plant "stale exit favourable-side check removed" $LIB "            if let Some(what) = unfavourable_for_stale_exit(p, oracle) {" "            if let Some(what) = None::<&str> {"
+plant "stale exit threshold ignored (always the band)" $LIB "        if age > l.exit_max_staleness_slots {" "        if false {"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

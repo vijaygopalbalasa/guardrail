@@ -980,10 +980,12 @@ fn moderately_stale_exit_still_uses_the_normal_band() {
     open_long(&mut env, &g, BASE);
     env.step(1, P0);
     env.advance(30);
-    let mut exit = Order::resting(1, BASE, 91_000_000); // below the last price, inside the band
+    let mut exit = Order::limit(1, BASE, 91_000_000); // below the last price, inside the band (not post-only: it crosses)
     exit.reduce_only = true;
     let r = env.gplace("exit 30 slots stale at 91.00", &g, exit);
-    accepted(&env, &g, &r, &exit, rule::G9);
+    assert_ok(&r);
+    let ev = events(&r);
+    assert!(ev[0].accepted && ev[0].rule == rule::G9, "band mode accepts it");
 }
 
 #[test]

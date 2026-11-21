@@ -21,6 +21,7 @@ const limits = {
   maxLeverageBps: 20_000,
   priceBandBps: 200,
   maxOracleStalenessSlots: 1_000_000n,
+  exitMaxStalenessSlots: 2_000_000n,
 };
 const { guard } = await client.initGuard(owner, agent.publicKey, limits);
 const place = async (label, order) => {

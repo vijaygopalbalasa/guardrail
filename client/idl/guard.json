@@ -489,6 +489,11 @@
       "code": 6027,
       "name": "MathOverflow",
       "msg": "arithmetic overflow"
+    },
+    {
+      "code": 6028,
+      "name": "StaleExitUnfavourable",
+      "msg": "G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price"
     }
   ],
   "types": [
@@ -680,6 +685,14 @@
             "name": "max_oracle_staleness_slots",
             "docs": [
               "G6: the oracle must have been posted within this many slots."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "exit_max_staleness_slots",
+            "docs": [
+              "G9: exits with an oracle older than this may only be priced on the owner-favourable side of the last oracle",
+              "price (sell at or above it, buy at or below it). Must be at least max_oracle_staleness_slots."
             ],
             "type": "u64"
           }

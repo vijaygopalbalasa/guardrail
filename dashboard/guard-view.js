@@ -12,7 +12,7 @@ export const REASONS = {
   6000: "OrderTooLarge", 6001: "MarketNotAllowed", 6002: "OrderTypeNotAllowed", 6003: "BuilderFieldsRefused",
   6004: "DailyNotionalExceeded", 6005: "ExposureExceeded", 6006: "LeverageExceeded", 6007: "PriceOutsideBand",
   6008: "StaleOracle", 6009: "Paused", 6013: "NotPerp", 6014: "BitFlagsRefused", 6015: "TriggerOrdersRefused",
-  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity",
+  6016: "ZeroSize", 6022: "OtherSpotBalance", 6024: "NonPositiveEquity", 6028: "StaleExitUnfavourable",
 };
 
 const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -54,7 +54,7 @@ export function decodeGuard(u8) {
   const maxOrderBase = r.u64();
   const markets = [];
   for (let i = 0; i < 8; i++) { const m = { marketIndex: r.u16(), maxExposureBase: r.u64() }; if (m.maxExposureBase > 0n) markets.push(m); }
-  g.limits = { maxOrderBase, markets, allowedOrderTypes: r.u8(), dailyNotionalCap: r.u64(), maxLeverageBps: r.u32(), priceBandBps: r.u32(), maxOracleStalenessSlots: r.u64() };
+  g.limits = { maxOrderBase, markets, allowedOrderTypes: r.u8(), dailyNotionalCap: r.u64(), maxLeverageBps: r.u32(), priceBandBps: r.u32(), maxOracleStalenessSlots: r.u64(), exitMaxStalenessSlots: r.u64() };
   g.day = r.i64();
   g.dayNotional = r.u64();
   r.u8();

@@ -28,4 +28,5 @@ export const GUARD_ERRORS: Record<number, string> = {
   6025: "InvalidLimits",
   6026: "PostTradeCheckFailed",
   6027: "MathOverflow",
+  6028: "StaleExitUnfavourable",
 };
