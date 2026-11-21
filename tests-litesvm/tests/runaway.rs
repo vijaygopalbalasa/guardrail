@@ -10,6 +10,8 @@ use solana_signer::Signer;
 
 const P0: u64 = 91_390_000;
 const STEPS: usize = 14;
+/// G10 in the headline guarded runs: 50 dUSDT a day, 5% of the 1,000 dUSDT account.
+const DAILY_LOSS: u64 = 50_000_000;
 
 fn guarded_limits() -> Limits {
     let mut l = Limits::loose();
@@ -59,18 +61,25 @@ fn name(code: u32) -> String {
         6007 => "G6 price band",
         6022 | 6024 => "G5 balances / equity",
         6009 => "G7 paused",
+        6032 => "G10 daily loss",
         _ => "other",
     }
     .to_string()
 }
 
-fn run(guarded: bool, limits: Limits) -> Run {
+/// `daily_loss`: the owner's G10 cap in quote units (0 = off).
+fn run(guarded: bool, limits: Limits, daily_loss: u64) -> Run {
     let mut env = Env::new();
     env.quiet = true; // the unguarded run's expected Velocity margin refusals would flood the output
     env.add_guard_program();
     env.step(1, P0);
     let g = if guarded {
-        env.guarded(1_000, limits)
+        let g = env.guarded(1_000, limits);
+        if daily_loss > 0 {
+            let owner = g.owner.insecure_clone();
+            assert_ok(&env.set_daily_loss("owner sets the daily loss cap", &g, &owner, daily_loss));
+        }
+        g
     } else {
         // Unguarded: the owner makes the agent key the Velocity delegate directly.
         let owner = env.trader("owner", 1_000);
@@ -101,6 +110,7 @@ fn run(guarded: bool, limits: Limits) -> Run {
                 break;
             }
             let this = chunk.min(left);
+            let pre_eq = equity(&env, &owner, price);
             let o = Order::resting(0, this, bid_price);
             let r = if guarded {
                 env.gplace(&format!("step {step}: agent -> guard BUY {}", this as f64 / 1e9), &g, o)
@@ -132,7 +142,10 @@ fn run(guarded: bool, limits: Limits) -> Run {
                     let w = worst(&env, &owner);
                     let eq = equity(&env, &owner, price);
                     let lev = if eq > 0 { w * price as i128 / BASE as i128 * 10_000 / eq } else { i128::MAX };
-                    if guarded && (w > limits.markets[0].1 as i128 || lev > limits.max_leverage_bps as i128 || day_notional > limits.daily_notional_cap as i128 || this > limits.max_order_base) {
+                    // G10 at acceptance: the loss since the day's start (no deposits or withdrawals in this replay),
+                    // measured before this order, must not be over the cap.
+                    let g10 = daily_loss > 0 && out.start_equity - pre_eq > daily_loss as i128;
+                    if guarded && (w > limits.markets[0].1 as i128 || lev > limits.max_leverage_bps as i128 || day_notional > limits.daily_notional_cap as i128 || this > limits.max_order_base || g10) {
                         out.breaches += 1;
                     }
                     env.step(2, price);
@@ -177,12 +190,12 @@ fn run(guarded: bool, limits: Limits) -> Run {
     if guarded {
         let st = env.guard_state(&g);
         out.lines.push(format!(
-            "Guard account counters (on chain): accepted {}, refused G1 {} G2 {} G3 {} G4 {} G5 {} G6 {} G7 {}; last refusal rule {} reason {} value {} cap {} slot {}",
-            st.accepted_count, st.refused[1], st.refused[2], st.refused[3], st.refused[4], st.refused[5], st.refused[6], st.refused[7],
+            "Guard account counters (on chain): accepted {}, refused G1 {} G2 {} G3 {} G4 {} G5 {} G6 {} G7 {} G10 {}; last refusal rule {} reason {} value {} cap {} slot {}",
+            st.accepted_count, st.refused[1], st.refused[2], st.refused[3], st.refused[4], st.refused[5], st.refused[6], st.refused[7], st.refused_g10,
             st.last_refusal.rule, st.last_refusal.reason, st.last_refusal.value, st.last_refusal.cap, st.last_refusal.slot
         ));
         assert_eq!(st.accepted_count, out.accepted as u64, "on-chain accepted count matches the replay");
-        let on_chain: u64 = st.refused.iter().sum();
+        let on_chain: u64 = st.refused.iter().sum::<u64>() + st.refused_g10;
         let tallied: u32 = out.refused_by.values().sum();
         assert_eq!(on_chain, tallied as u64, "on-chain refusal counters match the replay");
     }
@@ -206,16 +219,16 @@ fn run(guarded: bool, limits: Limits) -> Run {
 
 #[test]
 fn replay_runaway_agent_unguarded_vs_guarded() {
-    let u = run(false, guarded_limits());
-    let g = run(true, guarded_limits());
+    let u = run(false, guarded_limits(), 0);
+    let g = run(true, guarded_limits(), DAILY_LOSS);
     // Same agent with the exposure cap loosened to 100 SOL, so the daily notional limit binds instead.
     let mut l2 = guarded_limits();
     l2.markets[0] = (0, 100 * BASE);
-    let g2 = run(true, l2);
+    let g2 = run(true, l2, DAILY_LOSS);
     let mut report = vec![
         "REPLAY: Velocity devnet binary, devnet state cloned Nov 21 2026; SOL price written by the test: $91.39 falling 1% per step.".to_string(),
         "Agent loop: every step it wants to add double the previous size (0.5, 1, 2, 4 ... SOL), bidding 0.1% under the oracle; when an order is refused it halves the order and retries (up to 12 tries a step). A flow account sells into each accepted bid. Tries: 4ok = 4 SOL accepted, 8xG1 = 8 SOL refused by G1, xV = refused by Velocity margin.".to_string(),
-        format!("Guard limits: G1 4 SOL per order, G4 10 SOL worst-case exposure, G3 1,500 dUSDT a day, G5 2x, G6 2% band, Limit orders only."),
+        format!("Guard limits: G1 4 SOL per order, G4 10 SOL worst-case exposure, G3 1,500 dUSDT a day, G5 2x, G6 2% band, G10 50 dUSDT daily loss, Limit orders only."),
         String::new(),
         "UNGUARDED (agent is the Velocity delegate)".to_string(),
     ];
@@ -241,13 +254,17 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
         "HEADLINE  guarded (G4 at 100 SOL): worst loss {:.2} dUSDT ({:.1}%), max position {:.2} SOL, max leverage {:.2}x, orders accepted {}, refused by the guard {:?}, refused by Velocity {}, breaches {}",
         loss(&g2), loss(&g2) / (g2.start_equity as f64 / 1e6) * 100.0, g2.max_position as f64 / 1e9, g2.max_leverage_bps as f64 / 1e4, g2.accepted, g2.refused_by, g2.velocity_refused, g2.breaches
     ));
-    report.push("Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).".to_string());
+    report.push("Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, or was accepted while the day's loss was over the G10 cap, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).".to_string());
     let text = report.join("\n");
     println!("{text}");
     { let _ = std::fs::create_dir_all(concat!(env!("CARGO_MANIFEST_DIR"), "/../out")); }
     std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/runaway-replay.txt"), &text).unwrap();
     // Playback data for the dashboard: per-step state of each run (REPLAY, prices written by the test).
-    let g3 = run(true, leverage_limits());
+    let g3 = run(true, leverage_limits(), 0);
+    // Only the daily-loss brake can bind: G1, G3, G4 and G5 loose, G10 at 20 dUSDT (2% of the account).
+    let mut l4 = leverage_limits();
+    l4.max_leverage_bps = 1_000_000;
+    let g4 = run(true, l4, 20_000_000);
     let as_json = |id: &str, title: &str, limits: &str, r: &Run| serde_json::json!({
         "id": id, "title": title, "limits": limits, "steps": r.steps,
         "summary": {
@@ -262,15 +279,25 @@ fn replay_runaway_agent_unguarded_vs_guarded() {
         "collateral": u.start_equity as f64 / 1e6,
         "runs": [
             as_json("unguarded", "Unguarded: the agent is Velocity's delegate", "none (Velocity's own 5x margin check only)", &u),
-            as_json("guarded", "Guarded", "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%", &g),
+            as_json("guarded", "Guarded", "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%, G10 50 dUSDT daily loss", &g),
             as_json("guarded-g3", "Guarded, exposure cap loosened", "G4 100 SOL, the rest as guarded", &g2),
             as_json("guarded-g5", "Guarded, only leverage can bind", "G1, G3 and G4 loose; G5 2x", &g3),
+            as_json("guarded-g10", "Guarded, only the daily loss brake can bind", "G1, G3, G4 and G5 loose; G10 20 dUSDT a day", &g4),
         ]
     });
     std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/replay.json"), serde_json::to_string_pretty(&replay).unwrap()).unwrap();
     assert_eq!(g.breaches, 0, "zero breaches guarded");
     assert_eq!(g2.breaches, 0, "zero breaches guarded (second limit set)");
     assert_eq!(g3.breaches, 0, "zero breaches guarded (leverage limit set)");
+    assert_eq!(g4.breaches, 0, "zero breaches guarded (daily loss brake only)");
+    assert!(g.refused_by.get("G10 daily loss").copied().unwrap_or(0) > 0, "G10 binds in the headline guarded run");
+    assert!(g4.refused_by.get("G10 daily loss").copied().unwrap_or(0) > 0, "G10 binds when it is the only tight limit");
+    let g10_line = format!(
+        "HEADLINE  guarded (only G10 at 20 dUSDT): worst loss {:.2} dUSDT ({:.1}%), max position {:.2} SOL, max leverage {:.2}x, orders accepted {}, refused by the guard {:?}, refused by Velocity {}, breaches {}",
+        loss(&g4), loss(&g4) / (g4.start_equity as f64 / 1e6) * 100.0, g4.max_position as f64 / 1e9, g4.max_leverage_bps as f64 / 1e4, g4.accepted, g4.refused_by, g4.velocity_refused, g4.breaches
+    );
+    println!("{g10_line}");
+    std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../out/runaway-replay.txt"), format!("{text}\n{g10_line}\nThe daily-loss brake stops new risk; it does not close a position, so a held position keeps losing as the price falls.\n")).unwrap();
     assert!(loss(&g2) < loss(&u));
     assert!(loss(&g) < loss(&u), "guarded loses less");
 }
@@ -289,8 +316,8 @@ fn leverage_limits() -> Limits {
 fn replay_leverage_cap_binds_when_losses_shrink_equity() {
     // The same runaway agent and price path, with every limit loose except G5 (2x). As the long loses, equity falls,
     // and the leverage cap is what stops the agent; it never breaches, and it loses less than unguarded.
-    let u = run(false, guarded_limits());
-    let g = run(true, leverage_limits());
+    let u = run(false, guarded_limits(), 0);
+    let g = run(true, leverage_limits(), 0);
     let loss = |r: &Run| (r.start_equity - r.min_equity) as f64 / 1e6;
     println!(
         "G5 REPLAY guarded: worst loss {:.2} dUSDT, max position {:.2} SOL, max leverage {:.2}x, accepted {}, refused {:?}, breaches {}; unguarded worst loss {:.2}",

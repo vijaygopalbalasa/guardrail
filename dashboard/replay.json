@@ -830,7 +830,7 @@
     },
     {
       "id": "guarded",
-      "limits": "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%",
+      "limits": "G1 4 SOL per order, G4 10 SOL worst case, G3 1,500 dUSDT a day, G5 2x, G6 2%, G10 50 dUSDT daily loss",
       "steps": [
         {
           "collateral": 999.999999,
@@ -1460,58 +1460,58 @@
               "value": 8000000000.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 4.0,
-              "value": 14000000000.0
+              "value": 53558354.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 2.0,
-              "value": 12000000000.0
+              "value": 53558354.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 1.0,
-              "value": 11000000000.0
+              "value": 53558354.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.5,
-              "value": 10500000000.0
+              "value": 53558354.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.25,
-              "value": 10250000000.0
+              "value": 53558354.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.125,
-              "value": 10125000000.0
+              "value": 53558354.0
             }
           ],
           "equity": 946.441645,
@@ -1592,49 +1592,49 @@
               "value": 8000000000.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 4.0,
-              "value": 14000000000.0
+              "value": 61906994.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 2.0,
-              "value": 12000000000.0
+              "value": 61906994.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 1.0,
-              "value": 11000000000.0
+              "value": 61906994.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.5,
-              "value": 10500000000.0
+              "value": 61906994.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.25,
-              "value": 10250000000.0
+              "value": 61906994.0
             }
           ],
           "equity": 938.093005,
@@ -1724,40 +1724,40 @@
               "value": 8000000000.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 4.0,
-              "value": 14000000000.0
+              "value": 70172144.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 2.0,
-              "value": 12000000000.0
+              "value": 70172144.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 1.0,
-              "value": 11000000000.0
+              "value": 70172144.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 0.5,
-              "value": 10500000000.0
+              "value": 70172144.0
             }
           ],
           "equity": 929.827855,
@@ -1856,31 +1856,31 @@
               "value": 8000000000.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 4.0,
-              "value": 14000000000.0
+              "value": 78354644.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 2.0,
-              "value": 12000000000.0
+              "value": 78354644.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 1.0,
-              "value": 11000000000.0
+              "value": 78354644.0
             }
           ],
           "equity": 921.645355,
@@ -1988,22 +1988,22 @@
               "value": 8000000000.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 4.0,
-              "value": 14000000000.0
+              "value": 86455324.0
             },
             {
-              "by": "G4 exposure",
-              "cap": 10000000000.0,
-              "reason": 6005,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 4,
+              "rule": 10,
               "size": 2.0,
-              "value": 12000000000.0
+              "value": 86455324.0
             }
           ],
           "equity": 913.544675,
@@ -2040,7 +2040,8 @@
         "maxPosition": 10.0,
         "refusedBy": {
           "G1 order size": 55,
-          "G4 exposure": 50
+          "G10 daily loss": 20,
+          "G4 exposure": 30
         },
         "velocityRefused": 0,
         "worstLoss": 94.474994,
@@ -2404,58 +2405,58 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1832555617.0
+              "value": 52603388.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1662192717.0
+              "value": 52603388.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1577011267.0
+              "value": 52603388.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.5,
-              "value": 1534420542.0
+              "value": 52603388.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.25,
-              "value": 1513125179.0
+              "value": 52603388.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.125,
-              "value": 1502477498.0
+              "value": 52603388.0
             }
           ],
           "equity": 947.396611,
@@ -2518,58 +2519,58 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1829148357.0
+              "value": 66977766.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1660489087.0
+              "value": 66977766.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1576159452.0
+              "value": 66977766.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.5,
-              "value": 1533994634.0
+              "value": 66977766.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.25,
-              "value": 1512912225.0
+              "value": 66977766.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.125,
-              "value": 1502371021.0
+              "value": 66977766.0
             }
           ],
           "equity": 933.022233,
@@ -2641,58 +2642,58 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1825775169.0
+              "value": 81208403.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1658802493.0
+              "value": 81208403.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1575316155.0
+              "value": 81208403.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.5,
-              "value": 1533572986.0
+              "value": 81208403.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.25,
-              "value": 1512701401.0
+              "value": 81208403.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.125,
-              "value": 1502265609.0
+              "value": 81208403.0
             }
           ],
           "equity": 918.791596,
@@ -2773,49 +2774,49 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1822435713.0
+              "value": 95296733.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1657132765.0
+              "value": 95296733.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1574481291.0
+              "value": 95296733.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.5,
-              "value": 1533155554.0
+              "value": 95296733.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.25,
-              "value": 1512492685.0
+              "value": 95296733.0
             }
           ],
           "equity": 904.703266,
@@ -2905,40 +2906,40 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1819129653.0
+              "value": 109244173.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1655479735.0
+              "value": 109244173.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1573654776.0
+              "value": 109244173.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 0.5,
-              "value": 1532742296.0
+              "value": 109244173.0
             }
           ],
           "equity": 890.755826,
@@ -3037,31 +3038,31 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1815856653.0
+              "value": 123052142.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1653843235.0
+              "value": 123052142.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 1.0,
-              "value": 1572836526.0
+              "value": 123052142.0
             }
           ],
           "equity": 876.947857,
@@ -3169,22 +3170,22 @@
               "value": 8000000000.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 4.0,
-              "value": 1812616381.0
+              "value": 136722040.0
             },
             {
-              "by": "G3 daily notional",
-              "cap": 1500000000.0,
-              "reason": 6004,
+              "by": "G10 daily loss",
+              "cap": 50000000.0,
+              "reason": 6032,
               "result": "refused",
-              "rule": 3,
+              "rule": 10,
               "size": 2.0,
-              "value": 1652223099.0
+              "value": 136722040.0
             }
           ],
           "equity": 863.277959,
@@ -3221,7 +3222,8 @@
         "maxPosition": 16.875,
         "refusedBy": {
           "G1 order size": 55,
-          "G3 daily notional": 44
+          "G10 daily loss": 32,
+          "G3 daily notional": 12
         },
         "velocityRefused": 0,
         "worstLoss": 150.255233,
@@ -4395,6 +4397,1157 @@
         "worstLossPct": 19.102134919102134
       },
       "title": "Guarded, only leverage can bind"
+    },
+    {
+      "id": "guarded-g10",
+      "limits": "G1, G3, G4 and G5 loose; G10 20 dUSDT a day",
+      "steps": [
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 0.5,
+              "result": "accepted",
+              "size": 0.5
+            }
+          ],
+          "equity": 1000.054823,
+          "leverage": 0.0456,
+          "lossPct": -0.0054824000054824,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 0.5,
+          "price": 91.39,
+          "step": 0,
+          "upnl": 0.054824,
+          "wants": 0.5
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 1.0,
+              "result": "accepted",
+              "size": 1.0
+            }
+          ],
+          "equity": 999.705859,
+          "leverage": 0.1357,
+          "lossPct": 0.029414000029414,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 1.5,
+          "price": 90.4761,
+          "step": 1,
+          "upnl": -0.29414,
+          "wants": 1.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 2.0,
+              "result": "accepted",
+              "size": 2.0
+            }
+          ],
+          "equity": 998.563667,
+          "leverage": 0.3139,
+          "lossPct": 0.1436332001436332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 3.5,
+          "price": 89.571339,
+          "step": 2,
+          "upnl": -1.436332,
+          "wants": 2.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 4.0,
+              "result": "accepted",
+              "size": 4.0
+            }
+          ],
+          "equity": 995.854277,
+          "leverage": 0.6678,
+          "lossPct": 0.4145722004145722,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 7.5,
+          "price": 88.675625,
+          "step": 3,
+          "upnl": -4.145722,
+          "wants": 4.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "filled": 8.0,
+              "result": "accepted",
+              "size": 8.0
+            }
+          ],
+          "equity": 990.046305,
+          "leverage": 1.3744,
+          "lossPct": 0.9953694009953693,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 87.788868,
+          "step": 4,
+          "upnl": -9.953694,
+          "wants": 8.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 23560974.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.125,
+              "value": 23560974.0
+            }
+          ],
+          "equity": 976.439025,
+          "leverage": 1.3796,
+          "lossPct": 2.3560974023560974,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 86.910979,
+          "step": 5,
+          "upnl": -23.560974,
+          "wants": 16.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 37032179.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.125,
+              "value": 37032179.0
+            }
+          ],
+          "equity": 962.96782,
+          "leverage": 1.3849,
+          "lossPct": 3.703217903703218,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 86.041869,
+          "step": 6,
+          "upnl": -37.032179,
+          "wants": 32.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 50368673.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.125,
+              "value": 50368673.0
+            }
+          ],
+          "equity": 949.631326,
+          "leverage": 1.3903,
+          "lossPct": 5.036867305036867,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 85.18145,
+          "step": 7,
+          "upnl": -50.368673,
+          "wants": 64.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 63571806.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.125,
+              "value": 63571806.0
+            }
+          ],
+          "equity": 936.428193,
+          "leverage": 1.3958,
+          "lossPct": 6.357180606357181,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 84.329635,
+          "step": 8,
+          "upnl": -63.571806,
+          "wants": 128.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 256.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 76642909.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.125,
+              "value": 76642909.0
+            }
+          ],
+          "equity": 923.35709,
+          "leverage": 1.4014,
+          "lossPct": 7.664290907664291,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 83.486338,
+          "step": 9,
+          "upnl": -76.642909,
+          "wants": 256.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 512.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 256.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 89583301.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.25,
+              "value": 89583301.0
+            }
+          ],
+          "equity": 910.416698,
+          "leverage": 1.4071,
+          "lossPct": 8.95833010895833,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 82.651474,
+          "step": 10,
+          "upnl": -89.583301,
+          "wants": 512.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1024.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 512.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 256.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 102394284.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 0.5,
+              "value": 102394284.0
+            }
+          ],
+          "equity": 897.605715,
+          "leverage": 1.4129,
+          "lossPct": 10.239428410239428,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 81.824959,
+          "step": 11,
+          "upnl": -102.394284,
+          "wants": 1024.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2048.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1024.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 512.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 256.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 115077159.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1.0,
+              "value": 115077159.0
+            }
+          ],
+          "equity": 884.92284,
+          "leverage": 1.4188,
+          "lossPct": 11.507715911507715,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 81.006709,
+          "step": 12,
+          "upnl": -115.077159,
+          "wants": 2048.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4096.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2048.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 1024.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 512.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 256.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 128.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 64.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 32.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 16.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 8.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 4.0,
+              "value": 127633213.0
+            },
+            {
+              "by": "G10 daily loss",
+              "cap": 20000000.0,
+              "reason": 6032,
+              "result": "refused",
+              "rule": 10,
+              "size": 2.0,
+              "value": 127633213.0
+            }
+          ],
+          "equity": 872.366786,
+          "leverage": 1.4249,
+          "lossPct": 12.76332131276332,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 80.196641,
+          "step": 13,
+          "upnl": -127.633213,
+          "wants": 4096.0
+        },
+        {
+          "collateral": 999.999999,
+          "decisions": [],
+          "equity": 859.936298,
+          "final": true,
+          "leverage": 1.431,
+          "lossPct": 14.00637011400637,
+          "openAsks": 0.0,
+          "openBids": 0.0,
+          "position": 15.5,
+          "price": 79.394674,
+          "step": 14,
+          "upnl": -140.063701,
+          "wants": 0.0
+        }
+      ],
+      "summary": {
+        "accepted": 5,
+        "breaches": 0,
+        "maxLeverage": 1.4249,
+        "maxPosition": 15.5,
+        "refusedBy": {
+          "G10 daily loss": 98
+        },
+        "velocityRefused": 0,
+        "worstLoss": 140.063701,
+        "worstLossPct": 14.006370114006373
+      },
+      "title": "Guarded, only the daily loss brake can bind"
     }
   ]
 }

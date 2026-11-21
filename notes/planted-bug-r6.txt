@@ -1,0 +1,50 @@
+=== R6 G10 check removed
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test g10_an_exit_and_a_cancel_pass_at_the_cap ... FAILED
+test g10_a_new_utc_day_resets_the_baseline ... FAILED
+test g10_a_mid_day_deposit_does_not_hide_a_loss ... FAILED
+test g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap ... FAILED
+test g10_baseline_does_not_move_across_refused_calls ... FAILED
+test result: FAILED. 5 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+=== R6 G10 ignores deposits and withdrawals
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test g10_a_mid_day_withdrawal_is_not_a_loss ... FAILED
+test g10_a_mid_day_deposit_does_not_hide_a_loss ... FAILED
+test result: FAILED. 8 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test stored_order_tests::daily_loss_takes_deposits_and_withdrawals_out ... FAILED
+test result: FAILED. 13 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+=== R6 G10 baseline re-taken on every call
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test g10_a_mid_day_deposit_does_not_hide_a_loss ... FAILED
+test g10_a_new_utc_day_resets_the_baseline ... FAILED
+test g10_baseline_does_not_move_across_refused_calls ... FAILED
+test g10_an_exit_and_a_cancel_pass_at_the_cap ... FAILED
+test g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap ... FAILED
+test result: FAILED. 5 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+=== R6 G10 baseline never resets on a new day
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test g10_a_new_utc_day_resets_the_baseline ... FAILED
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+=== R6 G10 refusal filed under G7
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test g10_refuses_risk_increasing_orders_once_the_days_loss_passes_the_cap ... FAILED
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+=== R6 an order Velocity did not store counts as accepted
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test an_order_velocity_does_not_store_fails_instead_of_counting_as_accepted ... FAILED
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+=== restored
+sources restored byte for byte
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

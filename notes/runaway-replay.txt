@@ -1,6 +1,6 @@
 REPLAY: Velocity devnet binary, devnet state cloned Nov 21 2026; SOL price written by the test: $91.39 falling 1% per step.
 Agent loop: every step it wants to add double the previous size (0.5, 1, 2, 4 ... SOL), bidding 0.1% under the oracle; when an order is refused it halves the order and retries (up to 12 tries a step). A flow account sells into each accepted bid. Tries: 4ok = 4 SOL accepted, 8xG1 = 8 SOL refused by G1, xV = refused by Velocity margin.
-Guard limits: G1 4 SOL per order, G4 10 SOL worst-case exposure, G3 1,500 dUSDT a day, G5 2x, G6 2% band, Limit orders only.
+Guard limits: G1 4 SOL per order, G4 10 SOL worst-case exposure, G3 1,500 dUSDT a day, G5 2x, G6 2% band, G10 50 dUSDT daily loss, Limit orders only.
 
 UNGUARDED (agent is the Velocity delegate)
 step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
@@ -28,12 +28,12 @@ step  5 price $ 86.91 wants +  16.00 SOL, tries: 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG
 step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    972.00 leverage  0.89x
 step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    963.39 leverage  0.88x
 step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    954.87 leverage  0.88x
-step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 0.125xG4 position  10.000 SOL equity    946.44 leverage  0.88x
-step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 0.25xG4 position  10.000 SOL equity    938.09 leverage  0.88x
-step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 0.5xG4 position  10.000 SOL equity    929.83 leverage  0.88x
-step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 1xG4 position  10.000 SOL equity    921.65 leverage  0.88x
-step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG4 2xG4 position  10.000 SOL equity    913.54 leverage  0.88x
-Guard account counters (on chain): accepted 6, refused G1 55 G2 0 G3 0 G4 50 G5 0 G6 0 G7 0; last refusal rule 4 reason 6005 value 12000000000 cap 10000000000 slot 524554096
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 0.125xG1 position  10.000 SOL equity    946.44 leverage  0.88x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 position  10.000 SOL equity    938.09 leverage  0.88x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 position  10.000 SOL equity    929.83 leverage  0.88x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 position  10.000 SOL equity    921.65 leverage  0.88x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 position  10.000 SOL equity    913.54 leverage  0.88x
+Guard account counters (on chain): accepted 6, refused G1 55 G2 0 G3 0 G4 30 G5 0 G6 0 G7 0 G10 20; last refusal rule 10 reason 6032 value 86455324 cap 50000000 slot 524554096
 
 GUARDED, exposure cap loosened to 100 SOL (the daily notional cap G3 binds)
 step  0 price $ 91.39 wants +   0.50 SOL, tries: 0.5ok                                        position   0.500 SOL equity   1000.05 leverage  0.05x
@@ -43,16 +43,18 @@ step  3 price $ 88.68 wants +   4.00 SOL, tries: 4ok                            
 step  4 price $ 87.79 wants +   8.00 SOL, tries: 8xG1 4ok 4ok                                 position  15.500 SOL equity    990.05 leverage  1.37x
 step  5 price $ 86.91 wants +  16.00 SOL, tries: 16xG1 8xG1 4xG3 2xG3 1ok 1xG3 0.5xG3 0.25ok 0.25xG3 0.125ok 0.125xG3 position  16.875 SOL equity    976.58 leverage  1.50x
 step  6 price $ 86.04 wants +  32.00 SOL, tries: 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    961.92 leverage  1.51x
-step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    947.40 leverage  1.52x
-step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    933.02 leverage  1.53x
-step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 0.125xG3 position  16.875 SOL equity    918.79 leverage  1.53x
-step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 0.25xG3 position  16.875 SOL equity    904.70 leverage  1.54x
-step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 0.5xG3 position  16.875 SOL equity    890.76 leverage  1.55x
-step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 1xG3 position  16.875 SOL equity    876.95 leverage  1.56x
-step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG3 2xG3 position  16.875 SOL equity    863.28 leverage  1.57x
-Guard account counters (on chain): accepted 9, refused G1 55 G2 0 G3 44 G4 0 G5 0 G6 0 G7 0; last refusal rule 3 reason 6004 value 1652223099 cap 1500000000 slot 524554102
+step  7 price $ 85.18 wants +  64.00 SOL, tries: 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 0.125xG1 position  16.875 SOL equity    947.40 leverage  1.52x
+step  8 price $ 84.33 wants + 128.00 SOL, tries: 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 0.125xG1 position  16.875 SOL equity    933.02 leverage  1.53x
+step  9 price $ 83.49 wants + 256.00 SOL, tries: 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 0.125xG1 position  16.875 SOL equity    918.79 leverage  1.53x
+step 10 price $ 82.65 wants + 512.00 SOL, tries: 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 0.25xG1 position  16.875 SOL equity    904.70 leverage  1.54x
+step 11 price $ 81.82 wants +1024.00 SOL, tries: 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 0.5xG1 position  16.875 SOL equity    890.76 leverage  1.55x
+step 12 price $ 81.01 wants +2048.00 SOL, tries: 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 1xG1 position  16.875 SOL equity    876.95 leverage  1.56x
+step 13 price $ 80.20 wants +4096.00 SOL, tries: 4096xG1 2048xG1 1024xG1 512xG1 256xG1 128xG1 64xG1 32xG1 16xG1 8xG1 4xG1 2xG1 position  16.875 SOL equity    863.28 leverage  1.57x
+Guard account counters (on chain): accepted 9, refused G1 55 G2 0 G3 12 G4 0 G5 0 G6 0 G7 0 G10 32; last refusal rule 10 reason 6032 value 136722040 cap 50000000 slot 524554102
 
 HEADLINE  unguarded: worst loss 412.44 dUSDT of 1000.00 (41.2%), end loss 412.44, max position 55.00 SOL, max leverage 6.98x, orders accepted 11, refused by Velocity margin 88
-HEADLINE  guarded:   worst loss 94.47 dUSDT of 1000.00 (9.4%), end loss 94.47, max position 10.00 SOL, max leverage 0.89x, orders accepted 6, refused by the guard {"G1 order size": 55, "G4 exposure": 50}, refused by Velocity 0, breaches 0
-HEADLINE  guarded (G4 at 100 SOL): worst loss 150.26 dUSDT (15.0%), max position 16.88 SOL, max leverage 1.57x, orders accepted 9, refused by the guard {"G1 order size": 55, "G3 daily notional": 44}, refused by Velocity 0, breaches 0
-Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).
+HEADLINE  guarded:   worst loss 94.47 dUSDT of 1000.00 (9.4%), end loss 94.47, max position 10.00 SOL, max leverage 0.89x, orders accepted 6, refused by the guard {"G1 order size": 55, "G10 daily loss": 20, "G4 exposure": 30}, refused by Velocity 0, breaches 0
+HEADLINE  guarded (G4 at 100 SOL): worst loss 150.26 dUSDT (15.0%), max position 16.88 SOL, max leverage 1.57x, orders accepted 9, refused by the guard {"G1 order size": 55, "G10 daily loss": 32, "G3 daily notional": 12}, refused by Velocity 0, breaches 0
+Breach = an accepted order that left order size, worst-case exposure, leverage or daily notional over its cap at acceptance, or was accepted while the day's loss was over the G10 cap, measured from raw account bytes. Leverage drifting up afterwards from price alone is not counted (shown in the leverage column).
+HEADLINE  guarded (only G10 at 20 dUSDT): worst loss 140.06 dUSDT (14.0%), max position 15.50 SOL, max leverage 1.42x, orders accepted 5, refused by the guard {"G10 daily loss": 98}, refused by Velocity 0, breaches 0
+The daily-loss brake stops new risk; it does not close a position, so a held position keeps losing as the price falls.
