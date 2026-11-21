@@ -33,3 +33,14 @@ without a worst price; G9 exit skips the band; G5 borrow in another spot market 
 
 ## Runaway replay (tests/runaway.rs, notes/runaway-replay.txt)
 Same agent loop and price path, unguarded vs guarded; headline lines at the end of the report.
+
+## Round 3 (2026-11-21): refusals as recorded successes, stale exits
+- Refusals return Ok, do not call Velocity, leave the Velocity User byte-identical, bump exactly one per-rule
+  counter and store last_refusal (tests: every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter and
+  others). Red before the change: notes/red3-run.txt (33 failed).
+- Stale exits: past exit_max_staleness_slots, an exit may only be priced on the owner-favourable side of the last
+  oracle price (sell at or above, buy at or below; no market order without a price; offsets and auction prices
+  checked the same way). Red: notes/red4-run.txt. Green: 46 replay tests (notes/green-run.txt).
+- Planted bugs: 29 plants, all caught (notes/planted-bug-run.txt). The script now aborts if a plant site is not
+  unique; an earlier run had two plants silently not applied because a refactor duplicated their text.
+- Full suite including client, MCP and dashboard on a local validator: notes/test-all-run.txt.
