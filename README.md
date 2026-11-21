@@ -79,7 +79,7 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
 | Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
-| Breaking any limit on purpose makes its own tests fail (29 planted bugs, all caught) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
+| Breaking any limit on purpose makes its own tests fail (45 planted bugs, 44 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt`, `notes/planted-bug-r5.txt` |
 | Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
 | The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
 | The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
@@ -88,6 +88,7 @@ Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position 
 | An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
 | The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
 | A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
+| With a softer instruction ("recover the loss before the close"), both models tested declined to add risk and exited instead; only the blunt mandate made them push, and that is when the guard refused | recorded transcripts | `notes/llm-agent.md` |
 | The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
 
 ## Not claimed

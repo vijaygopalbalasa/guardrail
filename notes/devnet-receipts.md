@@ -1,11 +1,31 @@
 # Devnet receipts
 
-Guardrail's guard program on Solana devnet, with the fixed code (after audit findings F1 to F4).
+Guardrail's guard program on Solana devnet, with the fixed code (audit findings F1 to F4, then the R5 review: order lifetime and placed order ids).
 Velocity's devnet oracle is weeks old, so orders rest on Velocity devnet and do not fill; the demo guards use a loose
 staleness limit for that reason. Fills at moving prices are shown on a local surfpool fork (see the README).
 
 - Program: [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet) (sha256 of the deployed bytes in notes/devnet-guard-so.sha256)
-- Deploy: [4c2TQWreEgks7ocw...](https://explorer.solana.com/tx/4c2TQWreEgks7ocw9fr8Hkd2dggPtvoLeAJupWBYTw5yHszuR96ENoPdGXvR7CzpqcexxjCrVxJ3Www2n2CxnTZC?cluster=devnet)
+- Deploy: [61kwLX5YuAKCh949...](https://explorer.solana.com/tx/61kwLX5YuAKCh9498rNqJM1PzB5D8vaS25rdyGsZGUsC3ePEH4QrhwBMCYsjLu73oe3qrMYWZaQkrJLvuN9zumq8?cluster=devnet) (upgrade in place, Nov 21; same program id)
+- First deploy with the audit fixes: [4c2TQWreEgks7ocw...](https://explorer.solana.com/tx/4c2TQWreEgks7ocw9fr8Hkd2dggPtvoLeAJupWBYTw5yHszuR96ENoPdGXvR7CzpqcexxjCrVxJ3Www2n2CxnTZC?cluster=devnet)
+
+## Guard GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ (runaway agent, after the R5 upgrade)
+
+- Guard account: [GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ](https://explorer.solana.com/address/GVyy5VbPerEqCSNKk2UZ3afzb7MV2y5VAdL8baZnFCSQ?cluster=devnet); owner 2WV7NA3o48WUpU6Rh7XWLr969789xyXJkBY99VjjBMJ8
+- init_guard + delegate: [23cHUeudJYShSfET...](https://explorer.solana.com/tx/23cHUeudJYShSfETodzjunHQ28mSnncd22gwVvyrB9TRUwLuNbbSoasYQWeZkuddMJZnJj6wKpTZtPHHGHBHiV53?cluster=devnet)
+- accepted order: [4Y7PA4LuooVFhAQu...](https://explorer.solana.com/tx/4Y7PA4LuooVFhAQuJnwuMtSnGqgNbhmi9LzK27a25FYF6UqAoQoqGomsuiUJAqCZsNZSjWesWRQPmSYyiKcYcWfC?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded): [2emMMPkHHFEaD6A4...](https://explorer.solana.com/tx/2emMMPkHHFEaD6A4Pxj3oT9jFJLMKpNrYUaL9wH2JvQP5RYdEqV2mQeDKqFA2TJmEp2BGbhy4qiCjEyJJQmr1EZg?cluster=devnet)
+- cancel of a guard-placed order: [3uLwzvA2JFjgj6bu...](https://explorer.solana.com/tx/3uLwzvA2JFjgj6bund3pshhEGsfM93DjoSdwKz5NG3SnwnttePipW5ehyoBUNgB3Jom8QvWyMskMcVyCYzgbZxqe?cluster=devnet)
+- refused by G1 order size (OrderTooLarge): [4RY5PQ7QX2zwEpzZ...](https://explorer.solana.com/tx/4RY5PQ7QX2zwEpzZLPvsG5Ut35NMx1yLNHbfujgQjQbgxcxMR6wQCfQ4AzBPgKNw2miYgJEj2VErejzfX3rqtKnv?cluster=devnet)
+- refused by G3 daily notional (DailyNotionalExceeded): [4rZv7jfkDPTWKRtL...](https://explorer.solana.com/tx/4rZv7jfkDPTWKRtLfeKvADWYRKrL1S3kyyEasXnGfsqmV2UBqyPaEZLu2C2MWZwD9Sv4Qt1q8zm1XtgReZupwstH?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand): [4LKc4Zq5QM4zo6zB...](https://explorer.solana.com/tx/4LKc4Zq5QM4zo6zBFJLUE1eWsrKYnDzZ8tiSaFkMbBXutxTrPPciXUAZevA9Xkzi95DR4MbGvNV41SsijLYFFnit?cluster=devnet)
+
+## Guard 6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h (language-model agent, before the R5 upgrade)
+
+- Guard account: [6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h](https://explorer.solana.com/address/6b87jkEU46X3crEzURwdGmoMPnmYR4sy4HgAGSUSTv8h?cluster=devnet); owner Na2srj12TcQ778fVuEB1pSQpyR94mPzQmbLXAHidhPU
+- init_guard + delegate: [2WfBbemJpvbaDtXW...](https://explorer.solana.com/tx/2WfBbemJpvbaDtXWH13tZ8eZik8NqhRvod1gHGh3jUFETiyT78BQnaPLsC8af2ZyECV6xqHZjJX8KQndgWLF7rWg?cluster=devnet)
+- refused by G1 order size (OrderTooLarge): [5yCeCLrJn1KX5itW...](https://explorer.solana.com/tx/5yCeCLrJn1KX5itWy7NyBf1Jb3L47H3QDaF23aXmfvVbyZrW4VvLhszsdHub1PF4MUxoDLk4VdRKb9PwpJGTyvzh?cluster=devnet)
+- accepted order: [sJ6LBtpVa9bW9SR5...](https://explorer.solana.com/tx/sJ6LBtpVa9bW9SR5MfAiRVJCriF6XevY9zJu7nKFsdLv8XJJmEwGD8QJkFo345FCXbbmhpkCJWdXVYp5AALzwLj?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded): [5m1RHS7Jduc8VNYc...](https://explorer.solana.com/tx/5m1RHS7Jduc8VNYc3RWFPj1iuQrHBi9HCDZt9db4rhnjK7U7wD22aTrtwt158aj2YdkQodEgWGc3mytfBCQQ9iBx?cluster=devnet)
 
 ## Guard 3JSerd6KBZrW85CHMATFHqKdGAqLYKscWaX29oYf4Yeb (runaway agent)
 

@@ -61,3 +61,21 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 - Plants: 39 of 40 caught. The one not caught by the replay tests is the post-CPI stored-order check itself: every
   order that would reach it is already refused by the pre-check, so it is defense in depth; the stored-order rule is
   covered by unit tests on the audit's real stored orders, and its plant is caught there.
+
+## Round 5 (Nov 21): review of e328f57, order lifetime and placed order ids
+
+- Probe first (`r5_velocity_stores_max_ts_zero_as_no_expiry_and_skips_a_past_one`): Velocity stores max_ts 0 as
+  "never expires" and skips an order whose max_ts is in the past or negative ("max_ts < now, skipping order").
+  So the old bound on max_ts - now let max_ts 0 through with no lifetime at all.
+- Fix 1: with a lifetime cap set, max_ts must satisfy now < max_ts <= now + cap, or the order is a recorded refusal
+  (OrderLifetimeTooLong). After the CPI the guard also checks the stored Order.max_ts the same way.
+- Fix 2: the guard no longer uses a ring. Before each order it forgets ids that are no longer open on the Velocity
+  User (filled, cancelled by anyone, expired), and writes the new id into a free slot. With 32 guard orders open the
+  next order is a recorded refusal (TooManyOpenOrders, 6031); a live id is never evicted, so the agent can always
+  cancel its own open orders.
+- Red: 4 tests failed on the old program (lifetime: max_ts 0 accepted, past max_ts reached Velocity; the oldest open
+  order could not be cancelled after 32 more placements; the 33rd order reached Velocity and failed there).
+  A fifth test (ids the owner cancelled directly are pruned) guards the prune itself.
+- Plants: 5 of 5 caught (notes/planted-bug-r5.txt); the stored max_ts plant is caught by the program unit test.
+- Devnet: upgraded in place (same id), deployed bytes match the build (sha256 in notes/devnet-guard-so.sha256);
+  receipts rerun with a fresh runaway guard (notes/devnet-receipts.md).

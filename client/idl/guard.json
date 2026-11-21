@@ -10,7 +10,8 @@
     {
       "name": "cancel_order",
       "docs": [
-        "G9: cancels are always allowed, even while paused."
+        "G9: the agent may always cancel an order the guard placed, even while paused. It may not cancel the owner's",
+        "own orders or cancel everything (None); such a request is a recorded refusal."
       ],
       "discriminator": [
         95,
@@ -336,6 +337,19 @@
   ],
   "events": [
     {
+      "name": "CancelChecked",
+      "discriminator": [
+        224,
+        126,
+        158,
+        18,
+        154,
+        102,
+        4,
+        224
+      ]
+    },
+    {
       "name": "OrderChecked",
       "discriminator": [
         94,
@@ -494,9 +508,51 @@
       "code": 6028,
       "name": "StaleExitUnfavourable",
       "msg": "G9: with a very stale oracle an exit must be priced on the owner-favourable side of the last oracle price"
+    },
+    {
+      "code": 6029,
+      "name": "CancelNotAllowed",
+      "msg": "the agent may cancel only orders the guard placed, by id"
+    },
+    {
+      "code": 6030,
+      "name": "OrderLifetimeTooLong",
+      "msg": "the order's max_ts is not in the future or is later than the owner's order lifetime allows"
+    },
+    {
+      "code": 6031,
+      "name": "TooManyOpenOrders",
+      "msg": "32 orders the guard placed are already open; cancel one first"
     }
   ],
   "types": [
+    {
+      "name": "CancelChecked",
+      "docs": [
+        "Emitted for every cancel the agent asks for."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "guard",
+            "type": "pubkey"
+          },
+          {
+            "name": "order_id",
+            "type": "u32"
+          },
+          {
+            "name": "accepted",
+            "type": "bool"
+          },
+          {
+            "name": "reason",
+            "type": "u32"
+          }
+        ]
+      }
+    },
     {
       "name": "Guard",
       "type": {
@@ -589,6 +645,49 @@
               "defined": {
                 "name": "LastRefusal"
               }
+            }
+          },
+          {
+            "name": "placed_order_ids",
+            "docs": [
+              "Order ids the guard placed that are still open (0 = free slot). The agent may cancel only these."
+            ],
+            "type": {
+              "array": [
+                "u32",
+                32
+              ]
+            }
+          },
+          {
+            "name": "placed_cursor",
+            "docs": [
+              "Unused since ids go into free slots; kept so the account layout does not change."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "cancel_count",
+            "type": "u64"
+          },
+          {
+            "name": "refused_cancels",
+            "type": "u64"
+          },
+          {
+            "name": "last_refusal_by_rule",
+            "docs": [
+              "The last refusal for each rule (index = rule code, 0..=7), so a later refusal cannot bury an earlier one."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "LastRefusal"
+                  }
+                },
+                8
+              ]
             }
           }
         ]
@@ -693,6 +792,13 @@
             "docs": [
               "G9: exits with an oracle older than this may only be priced on the owner-favourable side of the last oracle",
               "price (sell at or above it, buy at or below it). Must be at least max_oracle_staleness_slots."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_order_lifetime_secs",
+            "docs": [
+              "Non-exit orders must carry max_ts no later than now + this many seconds (0: no bound)."
             ],
             "type": "u64"
           }

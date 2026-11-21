@@ -29,4 +29,7 @@ export const GUARD_ERRORS: Record<number, string> = {
   6026: "PostTradeCheckFailed",
   6027: "MathOverflow",
   6028: "StaleExitUnfavourable",
+  6029: "CancelNotAllowed",
+  6030: "OrderLifetimeTooLong",
+  6031: "TooManyOpenOrders",
 };
