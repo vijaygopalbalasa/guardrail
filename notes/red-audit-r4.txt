@@ -1,0 +1,5 @@
+test r4_4_the_keeper_cannot_be_removed_while_a_cap_is_set ... FAILED
+test r4_1_a_guard_older_than_the_append_only_layouts_cannot_migrate_but_can_close ... FAILED
+test r4_2_a_dip_at_2259_does_not_lower_the_next_days_baseline ... FAILED
+test r4_2_a_dip_at_2359_as_the_first_call_of_that_day_does_not_lower_the_baseline ... FAILED
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s

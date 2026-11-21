@@ -21,7 +21,7 @@ open(p, 'w').write(s.replace(old, new))
 PY
   if [ $? -ne 0 ]; then echo "PLANT NOT APPLIED, aborting"; restore; exit 1; fi
   if ! ./scripts/build.sh > notes/build-plant.log 2>&1; then echo "BUILD FAILED, aborting"; tail -5 notes/build-plant.log; restore; exit 1; fi
-  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 2>&1) | grep -E "\.\.\. FAILED|^test result"
+  (cd tests-litesvm && cargo test --release --no-fail-fast --test limits --test audit --test daily_loss --test audit_r2 --test audit_r3 --test audit_r4 2>&1) | grep -E "\.\.\. FAILED|^test result"
   if [ "${5:-}" = "unit" ]; then cargo test --release --manifest-path programs/guard/Cargo.toml 2>&1 | grep -E "\.\.\. FAILED|^test result: .*passed" | head -2; fi
   restore
 }
@@ -93,7 +93,7 @@ plant "R6 an order Velocity did not store counts as accepted" $LIB "        if p
 plant "R7 G10 baseline not taken on the first exit or cancel of the day" $LIB "    if g.max_daily_loss == 0 || (g.loss_day == today && g.baseline_equity != 0) {" "    if true {"
 plant "R8 G4 and G5 also refuse true exits that are not flagged reduce-only (exit trap)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = true || !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);"
 plant "R8 an order that keeps exposure equal by flipping is waived (the review case)" $LIB "    let increases = !math::is_exit(true, p.direction, p.base_asset_amount, pos.base, resting_same_side);" "    let increases = exposure > exposure_before;"
-plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried.min(eq)) };"
+plant "R9 N2 a new day's baseline ignores the last equity seen" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried.min(eq)).max(prev_high) };"
 plant "R9 N2 checkpoint accepts any Velocity account" $LIB "    #[account(mut, has_one = velocity_user)]
     pub guard: Account<'info, Guard>,
     /// CHECK: read only, bound to the guard by has_one" "    #[account(mut)]
@@ -112,7 +112,7 @@ plant "R10 an observation is skipped when the caller leaves accounts out" $LIB "
     }" "            Err(_) => return Ok(()),
         }
     }"
-plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried) };" "        g.baseline_equity = eq.max(carried);"
+plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = eq.max(carried).max(prev_high);"
 plant "R11 anyone's first-hour checkpoint marks the day at midnight" $LIB "        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);" "        let trusted = caller != Pubkey::default() || caller == g.owner || g.keeper == Pubkey::default();"
 plant "R11 a state error (stale or unsupported oracle) fails cancels and exits" $LIB "            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
             Err(_) => return Ok(()),
@@ -128,6 +128,10 @@ plant "R12 close keeps the rent" $LIB "        **owner.try_borrow_mut_lamports()
         **guard.try_borrow_mut_lamports()? = 0;" "        let _ = (&owner, lamports);"
 plant "R12 a daily loss cap without a keeper" $LIB "        require!(max_daily_loss == 0 || ctx.accounts.guard.keeper != Pubkey::default(), GuardError::KeeperRequired);" ""
 plant "R12 a reading in the last hour before midnight may lower the last equity seen" $LIB "    g.last_seen_equity = if last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };" "    g.last_seen_equity = if false && last_hour && g.has_last_seen && g.last_seen_day == today { eq.max(carried_now) } else { eq };"
+plant "R13 migrate accepts any shorter length" $LIB "        require!(MIGRATABLE_LENGTHS.contains(&guard.data_len()), GuardError::BadGuardAccount);" "        require!(guard.data_len() < new_len, GuardError::BadGuardAccount);"
+plant "R13 a new day's baseline ignores the previous day's high" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };" "        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high.min(eq)) };"
+plant "R13 the day's high does not start from its baseline" $LIB "        adj(g.baseline_equity, g.baseline_flows).max(eq)" "        eq"
+plant "R13 the keeper can be removed while a cap is set" $LIB "        require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);" ""
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

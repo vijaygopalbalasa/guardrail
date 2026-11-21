@@ -96,16 +96,29 @@ fn g10_an_exit_and_a_cancel_pass_at_the_cap() {
 }
 
 #[test]
-fn g10_a_new_utc_day_resets_the_baseline() {
+fn g10_a_new_utc_day_resets_the_baseline_at_the_keepers_midnight_mark() {
     let (mut env, g) = setup();
     start_day(&mut env, &g);
     let day0 = env.guard_state(&g).loss_day;
     env.step(5, price(5.0));
     assert_refused(&bid(&mut env, &g, "refused today", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
-    env.step(DAY_SLOTS, price(5.0));
+    let to_midnight = 86_400 - env.now().rem_euclid(86_400);
+    env.step(((to_midnight + 300) * 5 / 2) as u64, price(5.0)); // 00:05 UTC
+    let keeper = g.owner.insecure_clone(); // the harness names the owner as keeper
+    assert_ok(&env.checkpoint_as("the keeper marks the new day at 00:05", &g, &keeper));
     let r = bid(&mut env, &g, "first bid of the next day", price(5.0));
     assert!(events(&r)[0].accepted, "new day, new baseline");
     assert_eq!(env.guard_state(&g).loss_day, day0 + 1);
+}
+
+#[test]
+fn g10_without_a_midnight_mark_the_loss_carries_into_the_next_day() {
+    let (mut env, g) = setup();
+    start_day(&mut env, &g);
+    env.step(5, price(5.0));
+    assert_refused(&bid(&mut env, &g, "refused today", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
+    env.step(DAY_SLOTS, price(5.0));
+    assert_refused(&bid(&mut env, &g, "next day, no keeper mark", price(5.0)), gerr::DAILY_LOSS_EXCEEDED);
 }
 
 #[test]

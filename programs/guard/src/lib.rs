@@ -107,19 +107,22 @@ pub mod guard {
 
     /// G10, owner only: the keeper whose first-hour checkpoint marks the day at midnight (Pubkey::default() = none).
     pub fn set_keeper(ctx: Context<OwnerOnly>, keeper: Pubkey) -> Result<()> {
+        require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);
         ctx.accounts.guard.keeper = keeper;
         msg!("guard: keeper set to {}", keeper);
         Ok(())
     }
 
-    /// Owner only: grows a guard made under an older (shorter) layout to the current size. Fields are only ever
+    /// Owner only: grows a guard made under an older append-only layout (865, 950, 967 or 999 bytes) to the current size. Fields are only ever
     /// appended, so the old bytes keep their meaning and the new ones start at zero (G10 off unless it was set, no last
     /// equity seen, no keeper). The owner pays the extra rent.
     pub fn migrate_guard(ctx: Context<GuardByOwner>) -> Result<()> {
         let guard = ctx.accounts.guard.to_account_info();
         check_guard_account(&guard, &ctx.accounts.owner.key(), ctx.program_id)?;
         let new_len = 8 + Guard::INIT_SPACE;
-        require!(guard.data_len() < new_len, GuardError::BadGuardAccount);
+        // Only the append-only layouts (each an exact prefix of the current one) can grow in place; anything older
+        // (Limits grew in the middle before 865 bytes) is recovered with close_guard and init_guard.
+        require!(MIGRATABLE_LENGTHS.contains(&guard.data_len()), GuardError::BadGuardAccount);
         let need = Rent::get()?.minimum_balance(new_len).saturating_sub(guard.lamports());
         if need > 0 {
             anchor_lang::system_program::transfer(
@@ -563,6 +566,9 @@ fn lifetime_breach(l: &Limits, p: &OrderParams, now: i64) -> Option<i128> {
     (life > l.max_order_lifetime_secs as i128).then(|| life.min(i64::MAX as i128))
 }
 
+/// Guard sizes that are exact prefixes of the current layout (fields only appended since 865 bytes).
+const MIGRATABLE_LENGTHS: [usize; 4] = [865, 950, 967, 999];
+
 /// A guard account of any layout: owned by this program, the Guard discriminator, the signer as its owner, and the
 /// guard PDA of the Velocity user it names.
 fn check_guard_account(acc: &AccountInfo, owner: &Pubkey, program_id: &Pubkey) -> Result<()> {
@@ -627,12 +633,26 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     }
     let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return Ok(()) };
     let today = math::utc_day(clock.unix_timestamp);
+    let adj = |e: i64, f: i64| e.saturating_add(flows.saturating_sub(f));
     if g.max_daily_loss > 0 && g.loss_day != today {
-        let carried = if g.has_last_seen { g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows)) } else { eq };
+        // Without the owner's or keeper's midnight mark the new day's baseline never falls below the last equity seen
+        // or the highest equity known for the last day observed (audit round 4): losses carry over until a mark.
+        let carried = if g.has_last_seen { adj(g.last_seen_equity, g.last_seen_flows) } else { eq };
+        let prev_high = if g.day_high_day != 0 { adj(g.day_high_equity, g.day_high_flows) } else { eq };
         g.loss_day = today;
-        g.baseline_equity = if direct { eq } else { eq.max(carried) };
+        g.baseline_equity = if direct { eq } else { eq.max(carried).max(prev_high) };
         g.baseline_flows = flows;
     }
+    // The highest equity known for today, starting from today's baseline.
+    g.day_high_equity = if g.day_high_day == today {
+        adj(g.day_high_equity, g.day_high_flows).max(eq)
+    } else if g.loss_day == today {
+        adj(g.baseline_equity, g.baseline_flows).max(eq)
+    } else {
+        eq
+    };
+    g.day_high_flows = flows;
+    g.day_high_day = today;
     // In the last hour before 00:00 UTC a reading may only raise the last equity seen that day (audit round 3, R3-2):
     // a dip just before midnight cannot become the next day's carried baseline.
     let carried_now = g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows));
@@ -978,8 +998,13 @@ pub struct Guard {
     pub keeper: Pubkey,
     /// The UTC day of last_seen_equity.
     pub last_seen_day: i64,
+    /// The highest equity known for day_high_day (from that day's baseline and every reading), and the net deposits
+    /// then; a new day's baseline without a midnight mark is never below it. Taken from the reserved bytes.
+    pub day_high_equity: i64,
+    pub day_high_flows: i64,
+    pub day_high_day: i64,
     /// Room for future fields, so they need no migration (zero now).
-    pub reserved: [u8; 128],
+    pub reserved: [u8; 104],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
