@@ -1,0 +1,27 @@
+# DRAFT (the repository is local; nothing is pushed). Runs the README's "Try it in two minutes" on Ubuntu from a
+# fresh checkout, with the toolchain fetched from official sources.
+name: linux-try-it
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  try-it:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev libudev-dev bzip2 python3 perl procps
+      - name: Rust (rustup)
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Solana CLI 4.2.2 (Agave release)
+        run: |
+          curl -sSfL https://github.com/anza-xyz/agave/releases/download/v4.2.2/solana-release-x86_64-unknown-linux-gnu.tar.bz2 | tar -xj -C "$HOME"
+          echo "$HOME/solana-release/bin" >> "$GITHUB_PATH"
+      - name: platform-tools v1.54
+        run: |
+          mkdir -p "$HOME/.cache/solana/v1.54/platform-tools"
+          curl -sSfL https://github.com/anza-xyz/platform-tools/releases/download/v1.54/platform-tools-linux-x86_64.tar.bz2 | tar -xj -C "$HOME/.cache/solana/v1.54/platform-tools"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: README steps 0 to 7
+        run: bash scripts/linux-try-it.sh
