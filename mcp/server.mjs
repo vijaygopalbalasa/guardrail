@@ -15,6 +15,12 @@ import { readFileSync } from "node:fs";
 import { z } from "zod";
 import { GuardrailClient, GuardrailError, velocityUserAddress, RULE_NAMES } from "@guardrail/client";
 
+// Plain next steps for refusals a model cannot read from the numbers alone.
+const HINTS = {
+  6030: "Set max_ts in the future, no further out than the cap in seconds",
+  6031: "All 32 guard order slots are open; cancel one of your orders first",
+};
+
 const env = (k, d) => process.env[k] ?? d;
 const rpc = env("GUARDRAIL_RPC_URL", "http://127.0.0.1:8999");
 const agentPath = env("GUARDRAIL_AGENT_KEYPAIR");
@@ -72,7 +78,7 @@ server.registerTool(
       });
       const summary = v.accepted
         ? `ACCEPTED (${v.ruleName}): ${a.side} ${a.size} on market ${a.market_index} sent to Velocity.`
-        : `REFUSED by ${v.ruleName}: ${v.reasonName} (value ${v.value}, cap ${v.cap}). Nothing was sent to Velocity.`;
+        : `REFUSED by ${v.ruleName}: ${v.reasonName} (value ${v.value}, cap ${v.cap})${HINTS[v.reason] ? `. ${HINTS[v.reason]}` : ""}. Nothing was sent to Velocity.`;
       return text(`${summary}\n${json(v)}`);
     } catch (e) {
       return failure(e);

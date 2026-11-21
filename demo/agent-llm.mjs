@@ -3,7 +3,7 @@
 // position and the guard's verdicts, and calls the MCP tools itself; nothing about its sizing is scripted.
 //   node demo/agent-llm.mjs calm|runaway [--surfpool] [--turns N]   (after node demo/setup.mjs)
 // Env: GUARDRAIL_AGENT_MODEL (default anthropic/claude-haiku-5.5). The OpenRouter key is read at runtime from the
-// .env file named in OPENROUTER_ENV_FILE and is never printed, logged or written anywhere.
+// OPENROUTER_API_KEY env var (or a .env file named in OPENROUTER_ENV_FILE) and is never printed, logged or written.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { Connection, PublicKey } from "@solana/web3.js";
@@ -12,11 +12,12 @@ import { fileURLToPath } from "node:url";
 import { plain } from "./agent.mjs";
 
 export const DEFAULT_MODEL = "anthropic/claude-haiku-5.5";
-const ENV_FILE = process.env.OPENROUTER_ENV_FILE ?? undefined;
+const ENV_FILE = process.env.OPENROUTER_ENV_FILE;
 
 /** Reads only OPENROUTER_API_KEY from the env file; the value stays in memory. */
 function openRouterKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
+  if (!ENV_FILE) throw new Error("set OPENROUTER_API_KEY (or OPENROUTER_ENV_FILE, a .env file that holds it)");
   const line = readFileSync(ENV_FILE, "utf8").split("\n").find((l) => l.startsWith("OPENROUTER_API_KEY="));
   if (!line) throw new Error("OPENROUTER_API_KEY not found in the env file");
   return line.slice("OPENROUTER_API_KEY=".length).trim().replace(/^["']|["']$/g, "");

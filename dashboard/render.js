@@ -41,6 +41,8 @@ export function measure(rule, v, cap, reason) {
     if (reason === 6002) return `${ORDER_TYPES[num(v)] ?? num(v)} orders are not allowed`;
     if (reason === 6003) return "builder fields must be empty";
     if (reason === 6015) return "trigger orders are not supported";
+    if (reason === 6030) return `max_ts not in the future or more than ${num(cap)} s away`;
+    if (reason === 6031) return `${num(cap)} guard orders already open; cancel one first`;
     return "order shape not allowed";
   }
   if (rule === 6 && reason === 6028) return `exit with an oracle ${num(v)} slots old (over ${num(cap)}) priced against the owner`;
