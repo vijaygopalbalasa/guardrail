@@ -12,9 +12,9 @@ step 4; (cd tests-litesvm && cargo test --release) 2>&1 | grep -E "test result|^
 step 5; npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start || fail=1
 step 6; (node demo/setup.mjs && node demo/agent.mjs runaway) 2>&1 | tail -3 || fail=1
 step 7; node client/scripts/demo-seed.mjs | tail -1 || fail=1
-(cd dashboard && python3 -m http.server 8780 >/dev/null 2>&1 & echo $! > /tmp/http.pid); sleep 1
+PIDF=$(mktemp); (cd dashboard && python3 -m http.server 8780 >/dev/null 2>&1 & echo $! > "$PIDF"); sleep 1
 curl -s -o /dev/null -w "dashboard http %{http_code}\n" http://127.0.0.1:8780/ || fail=1
-kill "$(cat /tmp/http.pid)"; ./scripts/local-validator.sh stop
+kill "$(cat "$PIDF")"; rm -f "$PIDF"; ./scripts/local-validator.sh stop
 echo; echo "git status after the run:"; git status --short
 echo "RESULT: $([ $fail = 0 ] && echo PASS || echo FAIL)"
 exit $fail
