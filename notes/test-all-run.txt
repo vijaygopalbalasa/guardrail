@@ -1,7 +1,7 @@
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
 test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
@@ -13,5 +13,5 @@ test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fin
 ℹ fail 0
 ℹ pass 10
 ℹ fail 0
-dashboard: (cd dashboard && python3 -m http.server 8780) then open http://127.0.0.1:8780/?guard=8eoK7fEfs4wt1eY8kFofAzLWa2E5YTmQp64CzFRh3xQe
+dashboard: (cd dashboard && python3 -m http.server 8780) then open http://127.0.0.1:8780/?guard=CbuuwS4hSKticdFRExdh6VUL5SQ22i5mCzjXhCKXGkmv
 test-all exit 0
