@@ -151,3 +151,10 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
   UTC day sets that day's first baseline to the equity then (a midnight mark); anyone can call it, so an owner's
   keeper at 00:00 UTC keeps it there, and a caller later in that hour can hide at most that hour's move.
   Red on the previous program: notes/red-n2b.txt (3 tests). Plants: 2 more (notes/planted-bug-r10.txt).
+- Review of the strict observation: (1) the first-hour midnight mark was permissionless, so the agent could checkpoint
+  at 00:59 after a drop and set the day's baseline at the low. Now only the owner or the keeper the owner names
+  (`set_keeper`, default none) gets the midnight mark; anyone else gets max(equity now, last seen + flows). (2) observe
+  failed calls on state errors (unsupported oracle, overflow, an account that does not load), which could block cancels
+  and exits. Now only a missing account (MissingMarketAccount; every account is found by key, so leaving one out is the
+  caller's only choice) fails the call; state errors skip the observation. Red: notes/red-n2cd.txt. Plants: 2 more,
+  and the R10 plant site updated (notes/planted-bug-r11.txt).

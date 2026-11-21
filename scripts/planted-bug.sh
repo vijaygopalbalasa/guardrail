@@ -106,10 +106,20 @@ plant "R9 N4 the owner's reduce-only orders count against the agent's exits" $VE
 plant "R9 N5 surplus reduce-only orders pass" $LIB "    if p.reduce_only {
         return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)" "    if false {
         return refuse(rule::G2_ALLOWLIST, (p.base_asset_amount as i128)"
-plant "R10 an observation is skipped when the caller leaves accounts out" $LIB "        let (p, age) = market_price(ra, m, clock.slot)?;
-        stale |= age > g.limits.max_oracle_staleness_slots;" "        let Ok((p, age)) = market_price(ra, m, clock.slot) else { return Ok(()) };
-        stale |= age > g.limits.max_oracle_staleness_slots;"
+plant "R10 an observation is skipped when the caller leaves accounts out" $LIB "            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
+            Err(_) => return Ok(()),
+        }
+    }" "            Err(_) => return Ok(()),
+        }
+    }"
 plant "R10 a first-hour checkpoint does not mark the day at midnight" $LIB "        g.baseline_equity = if direct { eq } else { eq.max(carried) };" "        g.baseline_equity = eq.max(carried);"
+plant "R11 anyone's first-hour checkpoint marks the day at midnight" $LIB "        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);" "        let trusted = caller != Pubkey::default() || caller == g.owner || g.keeper == Pubkey::default();"
+plant "R11 a state error (stale or unsupported oracle) fails cancels and exits" $LIB "            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
+            Err(_) => return Ok(()),
+        }
+    }" "            Err(e) => return Err(e.into()),
+        }
+    }"
 echo "=== restored"
 cmp $B1 $LIB && cmp $B2 $MATH && cmp $B3 $VEL && echo "sources restored byte for byte"
 ./scripts/build.sh > notes/build.log 2>&1

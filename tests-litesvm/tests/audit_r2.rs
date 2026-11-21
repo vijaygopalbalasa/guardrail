@@ -3,6 +3,7 @@
 
 use guardrail_tests::*;
 use solana_instruction::AccountMeta;
+use solana_keypair::Keypair;
 use solana_signer::Signer;
 
 const P0: u64 = 91_390_000;
@@ -218,14 +219,15 @@ fn n2b_no_account_choice_lowers_the_next_days_baseline() {
 #[test]
 fn n2b_a_checkpoint_in_the_first_hour_marks_the_day_at_midnight() {
     let p_low = (P0 as f64 * 0.95) as u64;
-    for (label, extra_secs, expect_refused) in [("checkpoint at 00:10 UTC", 600i64, false), ("checkpoint at 03:00 UTC", 3 * 3600, true)] {
+    for (label, extra_secs, expect_refused) in [("the owner checkpoints at 00:10 UTC", 600i64, false), ("the owner checkpoints at 03:00 UTC", 3 * 3600, true)] {
         let (mut env, g) = g10_setup();
         assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
         env.step(5, p_low); // the loss happens on day 1
         let now = env.now();
         let to_midnight = 86_400 - now.rem_euclid(86_400);
         env.step(((to_midnight + extra_secs) * 5 / 2) as u64, p_low);
-        assert_ok(&env.checkpoint(label, &g));
+        let owner = g.owner.insecure_clone();
+        assert_ok(&env.checkpoint_as(label, &g, &owner));
         let r = env.gplace("day 2: a bid at the same low", &g, small_bid(p_low));
         if expect_refused {
             assert_refused(&r, gerr::DAILY_LOSS_EXCEEDED);
@@ -233,4 +235,69 @@ fn n2b_a_checkpoint_in_the_first_hour_marks_the_day_at_midnight() {
             assert!(events(&r)[0].accepted, "{label}: yesterday's loss stays yesterday's");
         }
     }
+}
+
+// ---------------------------------------------------------------- review: only the owner or its keeper marks midnight
+
+/// Day 1 at the high, then a new UTC day: the price drops in the first hour and `caller` checkpoints at 00:59.
+fn first_hour_drop_then_checkpoint(caller: &str) -> TxResult {
+    let (mut env, g) = g10_setup();
+    let keeper = Keypair::new();
+    env.svm.airdrop(&keeper.pubkey(), 1_000_000_000).unwrap();
+    let owner = g.owner.insecure_clone();
+    assert_ok(&env.set_keeper("owner names a keeper", &g, &owner, &keeper.pubkey()));
+    assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
+    let to_midnight = 86_400 - env.now().rem_euclid(86_400);
+    env.step(((to_midnight + 60) * 5 / 2) as u64, P0); // 00:01 UTC, no call
+    let p_low = (P0 as f64 * 0.95) as u64;
+    env.step(((58 * 60) * 5 / 2) as u64, p_low); // 00:59, after a 5% drop
+    let signer = match caller { "owner" => owner, "keeper" => keeper, _ => g.agent.insecure_clone() };
+    assert_ok(&env.checkpoint_as(&format!("{caller} checkpoints at 00:59"), &g, &signer));
+    env.gplace("a bid at the low", &g, small_bid(p_low))
+}
+
+#[test]
+fn n2c_the_agents_first_hour_checkpoint_does_not_lower_the_baseline() {
+    assert_refused(&first_hour_drop_then_checkpoint("agent"), gerr::DAILY_LOSS_EXCEEDED);
+}
+
+#[test]
+fn n2c_the_owner_or_its_keeper_marks_the_day_in_the_first_hour() {
+    for who in ["owner", "keeper"] {
+        assert!(events(&first_hour_drop_then_checkpoint(who))[0].accepted, "{who}: the day is marked at 00:59");
+    }
+}
+
+#[test]
+fn n2c_only_the_owner_names_the_keeper() {
+    let (mut env, g) = g10_setup();
+    let agent = g.agent.insecure_clone();
+    assert!(env.set_keeper("the agent names itself keeper", &g, &agent, &agent.pubkey()).is_err());
+}
+
+// ---------------------------------------------------------------- review: state errors skip, missing accounts fail
+
+#[test]
+fn n2d_cancels_pass_with_a_stale_or_unsupported_oracle_but_not_with_a_substituted_one() {
+    let (mut env, g) = g10_setup();
+    assert!(events(&env.gplace("a resting bid", &g, small_bid(P0)))[0].accepted);
+    let id = env.last_guard_order(&g).unwrap();
+    // stale: the clock moves past the staleness limit with no oracle update
+    env.advance(2_000_000);
+    assert_ok(&env.gcancel("a refused cancel with a stale oracle", &g, Some(999_999)));
+    assert_ok(&env.gcancel("the agent cancels its order with a stale oracle", &g, Some(id)));
+    // unsupported: the market's oracle source changes (Velocity's state, not the caller's choice)
+    env.step(2, P0);
+    let mut pm = env.svm.get_account(&PERP0).unwrap();
+    pm.data[673] = 0;
+    env.svm.set_account(PERP0, pm).unwrap();
+    assert_ok(&env.gcancel("a refused cancel with an unsupported oracle source", &g, Some(999_999)));
+    let mut pm = env.svm.get_account(&PERP0).unwrap();
+    pm.data[673] = 12;
+    env.svm.set_account(PERP0, pm).unwrap();
+    // substituted: another account where the SOL oracle should be
+    let fake = env.trader("not an oracle", 1);
+    let mut acc = without(SOL_ORACLE);
+    acc.insert(0, AccountMeta::new_readonly(user_pda(&fake.pubkey()), false));
+    assert!(env.gcancel_with("a refused cancel with a substituted oracle", &g, 999_999, &acc).is_err());
 }

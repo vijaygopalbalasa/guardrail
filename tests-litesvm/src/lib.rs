@@ -818,19 +818,31 @@ impl Env {
         self.gplace_as(label, g, &g.agent.insecure_clone(), o, &[])
     }
 
-    /// Anyone takes the day's G10 baseline with fresh prices: the permissionless checkpoint, signed only by the
-    /// harness's fee payer (neither the owner nor the agent).
+    /// Anyone takes the day's G10 baseline with fresh prices: the permissionless checkpoint, signed by the harness's
+    /// fee payer (neither the owner nor the agent).
     pub fn checkpoint(&mut self, label: &str, g: &Guarded) -> TxResult {
-        let mut accounts = vec![w(g.guard), r(g.user)];
+        let payer = self.payer.insecure_clone();
+        self.checkpoint_as(label, g, &payer)
+    }
+
+    /// The checkpoint signed by `caller` (the owner, the owner's keeper, the agent or anyone).
+    pub fn checkpoint_as(&mut self, label: &str, g: &Guarded, caller: &Keypair) -> TxResult {
+        let mut accounts = vec![AccountMeta::new_readonly(caller.pubkey(), true), w(g.guard), r(g.user)];
         accounts.extend(Self::maps());
-        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[])
+        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[caller])
     }
 
     /// The checkpoint instruction with a chosen Velocity user account (to show it must be the guard's own).
     pub fn checkpoint_with_user(&mut self, label: &str, g: &Guarded, user: &Pubkey) -> TxResult {
-        let mut accounts = vec![w(g.guard), r(*user)];
+        let payer = self.payer.insecure_clone();
+        let mut accounts = vec![AccountMeta::new_readonly(payer.pubkey(), true), w(g.guard), r(*user)];
         accounts.extend(Self::maps());
-        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[])
+        self.send(label, vec![Instruction { program_id: GUARD, accounts, data: disc("checkpoint").to_vec() }], &[&payer])
+    }
+
+    pub fn set_keeper(&mut self, label: &str, g: &Guarded, signer: &Keypair, keeper: &Pubkey) -> TxResult {
+        let ix = Self::owner_ix("set_keeper", &signer.pubkey(), g, keeper.as_ref().to_vec());
+        self.send(label, vec![ix], &[signer])
     }
 
     pub fn gplace_as(&mut self, label: &str, g: &Guarded, signer: &Keypair, o: Order, extra: &[AccountMeta]) -> TxResult {

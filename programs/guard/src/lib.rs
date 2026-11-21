@@ -94,8 +94,19 @@ pub mod guard {
         let clock = Clock::get()?;
         let ui = ctx.accounts.velocity_user.to_account_info();
         let first_hour = clock.unix_timestamp.rem_euclid(86_400) < 3_600;
-        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, first_hour)?;
+        // The midnight mark only for the owner or the keeper the owner named; anyone else gets the max rule.
+        let g = &ctx.accounts.guard;
+        let caller = ctx.accounts.caller.key();
+        let trusted = caller == g.owner || (g.keeper != Pubkey::default() && caller == g.keeper);
+        observe_guard(&mut ctx.accounts.guard, &ui, ctx.remaining_accounts, &clock, first_hour && trusted)?;
         msg!("guard: checkpoint, day {} baseline {}", ctx.accounts.guard.loss_day, ctx.accounts.guard.baseline_equity);
+        Ok(())
+    }
+
+    /// G10, owner only: the keeper whose first-hour checkpoint marks the day at midnight (Pubkey::default() = none).
+    pub fn set_keeper(ctx: Context<OwnerOnly>, keeper: Pubkey) -> Result<()> {
+        ctx.accounts.guard.keeper = keeper;
+        msg!("guard: keeper set to {}", keeper);
         Ok(())
     }
 
@@ -538,26 +549,32 @@ fn observe(ctx: &mut Context<AgentTrade>) -> Result<()> {
 /// skips the observation. `direct`: a checkpoint in the first hour of the UTC day sets the day's baseline to the
 /// equity now.
 fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock: &Clock, direct: bool) -> Result<()> {
-    let user = velocity::UserView::load(user_ai).ok_or(GuardError::NotVelocityUser)?;
+    // Every account is found by its key, so the only choice a caller has is to leave one out: that, and only that,
+    // fails the call (MissingMarketAccount). Anything that comes from the account's or a market's own state (a stale or
+    // unsupported oracle, an account that does not load, an overflow, a balance the guard cannot value) skips the
+    // observation and lets the call (a cancel, an exit) go on.
+    let Some(user) = velocity::UserView::load(user_ai) else { return Ok(()) };
     let mut prices = vec![];
     let mut stale = false;
     for m in user.active_markets() {
-        let (p, age) = market_price(ra, m, clock.slot)?;
-        stale |= age > g.limits.max_oracle_staleness_slots;
-        prices.push((m, p));
+        match market_price(ra, m, clock.slot) {
+            Ok((p, age)) => {
+                stale |= age > g.limits.max_oracle_staleness_slots;
+                prices.push((m, p));
+            }
+            Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
+            Err(_) => return Ok(()),
+        }
     }
     let equity = match account_leverage(ra, &user, &prices, None) {
         Ok((_, e)) => e,
-        // A balance the guard cannot value (any spot balance but the quote deposit) is the account's state, not the
-        // caller's choice: no observation, and risk-increasing orders are refused by G5 as before.
-        Err(GuardError::OtherSpotBalance) => return Ok(()),
-        Err(e) => return Err(e.into()),
+        Err(GuardError::MissingMarketAccount) => return err!(GuardError::MissingMarketAccount),
+        Err(_) => return Ok(()),
     };
     if stale {
         return Ok(());
     }
-    let eq = i64::try_from(equity).map_err(|_| GuardError::MathOverflow)?;
-    let flows = i64::try_from(net_flows(&user)).map_err(|_| GuardError::MathOverflow)?;
+    let (Ok(eq), Ok(flows)) = (i64::try_from(equity), i64::try_from(net_flows(&user))) else { return Ok(()) };
     let today = math::utc_day(clock.unix_timestamp);
     if g.max_daily_loss > 0 && g.loss_day != today {
         let carried = if g.has_last_seen { g.last_seen_equity.saturating_add(flows.saturating_sub(g.last_seen_flows)) } else { eq };
@@ -901,6 +918,8 @@ pub struct Guard {
     pub last_seen_equity: i64,
     pub last_seen_flows: i64,
     pub has_last_seen: bool,
+    /// The owner's keeper: its checkpoint in the first hour of a UTC day marks the day at midnight (default: none).
+    pub keeper: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Default, Debug, PartialEq, Eq, InitSpace)]
@@ -979,6 +998,7 @@ pub struct InitGuard<'info> {
 /// Permissionless: any signer pays the fee; the guard must belong to this Velocity user.
 #[derive(Accounts)]
 pub struct Checkpoint<'info> {
+    pub caller: Signer<'info>,
     #[account(mut, has_one = velocity_user)]
     pub guard: Account<'info, Guard>,
     /// CHECK: read only, bound to the guard by has_one; UserView::load checks the owner and discriminator.
