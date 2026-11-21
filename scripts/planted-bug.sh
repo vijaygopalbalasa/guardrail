@@ -141,7 +141,6 @@ plant "R13 migrate accepts any shorter length" $LIB "        require!(MIGRATABLE
 plant "R13 a new day's baseline ignores the previous day's high" $LIB "    if let Some(x) = day_high {
         b = b.max(adj(x));
     }" "    let _ = day_high;"
-plant "R13 the day's high does not start from its baseline" $LIB "            h = h.max(adj(g.baseline_equity, g.baseline_flows));" ""
 plant "R13 the keeper can be removed while a cap is set" $LIB "        require!(keeper != Pubkey::default() || ctx.accounts.guard.max_daily_loss == 0, GuardError::KeeperRequired);" ""
 plant "R14 a guard upgraded mid-day forgets the high it saw before" $LIB "            h = h.max(adj(g.last_seen_equity, g.last_seen_flows));" ""
 plant "R15 the keeper may be the agent (set_keeper)" $LIB "        require!(keeper == Pubkey::default() || keeper != ctx.accounts.guard.agent, GuardError::KeeperIsAgent);" ""

@@ -103,3 +103,30 @@ fn r5_twin_the_carry_holds_from_the_previous_day() {
     env.step(secs_to(&env, 2, 0), low); // the next day, 02:00, no mark
     assert_refused(&env.gplace("day 2: a bid at the low", &g, small_bid(low)), gerr::DAILY_LOSS_EXCEEDED);
 }
+
+/// With no day high, the last equity seen on the previous day still counts when it is above that day's baseline: the
+/// baseline is taken 2% down, the price rises and the guard sees the high, the guard is upgraded (no day high), and the
+/// next day the first call is a bid at a dip.
+#[test]
+fn r5_with_no_day_high_the_previous_days_last_equity_seen_counts() {
+    let mut env = Env::new();
+    env.add_guard_program();
+    let low1 = (P0 as f64 * 0.98) as u64 / 10 * 10;
+    env.step(1, low1);
+    let g = env.guarded(1_000, Limits::loose());
+    env.step(2, low1);
+    let flow = env.trader("flow", 1_000_000);
+    assert_ok(&env.gplace("agent bids 5 SOL", &g, Order::resting(0, 5 * BASE, low1)));
+    env.step(2, low1);
+    env.cross("flow sells", &flow, &g, 1, 1_000 * BASE, low1);
+    env.step(2, low1);
+    let owner = g.owner.insecure_clone();
+    assert_ok(&env.set_daily_loss("keeper (the owner) and cap 20", &g, &owner, 20 * QUOTE));
+    assert!(events(&env.gplace("day 1: the baseline", &g, small_bid(low1)))[0].accepted);
+    env.step(5, P0);
+    assert!(events(&env.gplace("day 1: a call at the high", &g, small_bid(P0)))[0].accepted);
+    env.clear_day_high(&g);
+    let dip = (P0 as f64 * 0.95) as u64;
+    env.step(secs_to(&env, 2, 0), dip);
+    assert_refused(&env.gplace("day 2, 02:00: a bid at the dip", &g, small_bid(dip)), gerr::DAILY_LOSS_EXCEEDED);
+}

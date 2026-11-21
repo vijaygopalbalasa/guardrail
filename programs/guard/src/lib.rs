@@ -674,10 +674,8 @@ fn observe_guard(g: &mut Guard, user_ai: &AccountInfo, ra: &[AccountInfo], clock
     g.day_high_equity = if g.day_high_day == today {
         adj(g.day_high_equity, g.day_high_flows).max(eq)
     } else {
+        // (Today's baseline need not seed it: a new day's baseline already carries the stored previous day's baseline.)
         let mut h = eq;
-        if g.loss_day == today {
-            h = h.max(adj(g.baseline_equity, g.baseline_flows));
-        }
         if g.has_last_seen && g.last_seen_day == today {
             h = h.max(adj(g.last_seen_equity, g.last_seen_flows));
         }

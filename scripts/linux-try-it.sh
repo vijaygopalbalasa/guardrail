@@ -9,7 +9,7 @@ cat fixtures/velocity-devnet.so.sha256
 step 2; ./scripts/build.sh 2>&1 | tail -2; [ -f target/deploy/guard.so ] || fail=1
 step 3; (cd tests-litesvm && cargo test --release --test runaway -- --nocapture) 2>&1 | grep -E "HEADLINE|test result|^error" || fail=1
 step 4; (cd tests-litesvm && cargo test --release) 2>&1 | grep -E "test result|^error" || fail=1
-step 5; npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start || fail=1
+step 5; npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && ./scripts/local-validator.sh start || fail=1
 step 6; (node demo/setup.mjs && node demo/agent.mjs runaway) 2>&1 | tail -3 || fail=1
 step 8; node client/scripts/demo-seed.mjs | tail -1 || fail=1
 PIDF=$(mktemp); (cd dashboard && python3 -m http.server 8780 >/dev/null 2>&1 & echo $! > "$PIDF"); sleep 1

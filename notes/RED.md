@@ -212,3 +212,7 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
   the baseline is the equity now. Without marks G10 acts as a drawdown cap from the last high seen until the owner
   resets it (README "Not claimed").
 - Red: notes/red-audit-r5.txt (4 of 5; the previous-day carry twin passed before). Plants: 5 new.
+- Final copy run before the last changes: 73 of 76 caught. Two survivors were real test gaps or redundancy: R9 (the
+  previous day's last equity seen) now has a test where it is the only thing above the stored baseline
+  (r5_with_no_day_high_the_previous_days_last_equity_seen_counts); R13's "day high starts from the baseline" became
+  redundant once the stored previous day's baseline is carried, so that line and its plant were removed.
