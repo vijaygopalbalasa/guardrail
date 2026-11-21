@@ -1,0 +1,95 @@
+{
+ "label": "LOCAL FORK OF DEVNET (surfpool): Velocity's real program, the SOL price moved by a cheatcode, real fills from a second account. Recorded Nov 21 2026. Not live trading.",
+ "agent": "The scripted runaway agent: it doubles its order every step and retries smaller when refused.",
+ "capSol": 6,
+ "collateral": 1000,
+ "start": 91.39,
+ "end": 82.65,
+ "position": 6,
+ "upnl": -40.42,
+ "accepted": 5,
+ "refused": {
+  "G4 exposure": 33,
+  "G1 order size": 21
+ },
+ "steps": [
+  {
+   "price": 91.39,
+   "position": 0.5,
+   "upnl": 0.06,
+   "accepted": 1,
+   "refused": 0
+  },
+  {
+   "price": 90.48,
+   "position": 1.5,
+   "upnl": -0.28,
+   "accepted": 1,
+   "refused": 0
+  },
+  {
+   "price": 89.57,
+   "position": 3.5,
+   "upnl": -1.42,
+   "accepted": 1,
+   "refused": 0
+  },
+  {
+   "price": 88.68,
+   "position": 6,
+   "upnl": -4.27,
+   "accepted": 2,
+   "refused": 6
+  },
+  {
+   "price": 87.79,
+   "position": 6,
+   "upnl": -9.6,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 86.91,
+   "position": 6,
+   "upnl": -14.86,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 86.04,
+   "position": 6,
+   "upnl": -20.08,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 85.18,
+   "position": 6,
+   "upnl": -25.24,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 84.33,
+   "position": 6,
+   "upnl": -30.35,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 83.49,
+   "position": 6,
+   "upnl": -35.41,
+   "accepted": 0,
+   "refused": 8
+  },
+  {
+   "price": 82.65,
+   "position": 6,
+   "upnl": -40.42,
+   "accepted": 0,
+   "refused": 0,
+   "final": true
+  }
+ ]
+}

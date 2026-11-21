@@ -4,7 +4,7 @@
 
 ![Equity lost by the same runaway agent on a falling SOL price: 41.2% unguarded, 9.4% through Guardrail (replay on Velocity's real program)](docs/replay.png)
 
-The same runaway agent on a 12% fall loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
+The same runaway agent on a 13% fall ($91.39 to $79.39) loses **41.2%** unguarded and **9.4%** through Guardrail. A normal grid bot on 30
 random price paths loses the same median (1.1%) either way, 26.6% vs 22.6% on its worst path, with **0 limit
 breaches** in every run.
 
@@ -28,7 +28,7 @@ is a missing feature, not a bypass, because the agent's key has no direct path t
 ## Headline (REPLAY on Velocity's real program)
 
 The same runaway agent, the same falling market, run twice. The agent doubles a losing long every step and retries
-with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps. Collateral: 1,000 dUSDT. The
+with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps, plus a final mark 1% lower ($79.39, a 13% fall), where the worst loss is measured. Collateral: 1,000 dUSDT. The
 unguarded run was stopped only by Velocity's own 5x margin check, after it had already reached 55 SOL.
 
 | | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
@@ -79,8 +79,8 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 | The hosted dashboard reads the guard from devnet RPC (the language-model agent's guard, each order linked to its transaction) | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) | `dashboard/` (the site is a copy of it) |
 | The audit's High finding (an Oracle order with no worst price) is refused, in replay and live on a surfpool fork | `f1_oracle_order_without_offset_cannot_fill_far_from_the_oracle`, `demo/f1-probe.mjs` | `tests-litesvm/tests/audit.rs`, `notes/surfpool-f1-probe.txt` |
 | A refused order never reaches Velocity: the Velocity account stays byte-identical and exactly one refusal counter goes up | `every_refusal_leaves_velocity_untouched_and_bumps_exactly_one_counter` | `tests-litesvm/tests/limits.rs` |
-| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (46 replay tests in all) | `tests-litesvm/tests/limits.rs` |
-| Breaking any limit on purpose makes its own tests fail (50 planted bugs, 49 caught; the one not caught removes the post-CPI stored-order check, which the pre-check already makes unreachable, see `notes/RED.md`) | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
+| Each limit refuses an order over its cap, and an accepted twin that differs in one field passes | `g1_...` to `g9_...` and the other tests in the file (47 tests in the file) | `tests-litesvm/tests/limits.rs` |
+| 70 of 71 planted bugs caught; the one not caught is a backup check (the post-CPI stored-order check) that the earlier checks make unreachable, see `notes/RED.md` | `scripts/planted-bug.sh` | `notes/planted-bug-run.txt` |
 | Tests were written first and failed before the code | red runs | `notes/RED.md`, `notes/red*-run.txt` |
 | The limit math holds for 20,000 random cases per property | `math::props::*` | `programs/guard/src/math.rs` |
 | The agent key cannot trade around the guard or withdraw | `g8_agent_cannot_withdraw_or_trade_around_the_guard` | `tests-litesvm/tests/limits.rs` |
@@ -111,7 +111,7 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 ## Try it in two minutes (the first build takes about 2 minutes more)
 
 Row Q needs only Node 22 or newer and a devnet wallet keypair file with about 0.2 devnet SOL (faucet.solana.com).
-Steps 0 to 7 need Rust, solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and
+Steps 0 to 8 need Rust (step 7 also needs an OpenRouter key; CI skips it), solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and
 network access to Solana devnet. Run every command from the repository root.
 
 | Step | Command | What you should see |
@@ -125,7 +125,7 @@ network access to Solana devnet. Run every command from the repository root.
 | 5. A local chain | `npm --prefix client install && npm --prefix client run build && npm --prefix mcp install && npm --prefix demo install && ./scripts/local-validator.sh start` | prints a slot number: a validator with Velocity cloned from devnet and the guard |
 | 6. An agent hitting the limits | `node demo/setup.mjs && node demo/agent.mjs runaway` | one line per tool call: accepted, or refused by G1, G3, G4 or G6, then a summary |
 | 7. A language-model agent with a bad mandate | `OPENROUTER_API_KEY=... node demo/agent-llm.mjs runaway` (after step 6's setup) | each turn: the model's one-line reason, its tool call and the guard's verdict; logged to `out/llm-run-*.jsonl` |
-| 7. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision; `/replay.html` plays the unguarded and guarded replays side by side, step by step |
+| 8. The dashboard | `node client/scripts/demo-seed.mjs`, then `(cd dashboard && python3 -m http.server 8780)` and open the URL the seed printed | limits, accepted vs refused by rule, the last refusal, every decision; `/replay.html` plays the unguarded and guarded replays side by side, step by step |
 
 If the hash in step 1 differs, Velocity has upgraded its devnet program since Nov 21 2026 and its account layouts may
 have moved; the committed hash is the version every test here was run against. Stop the validator with

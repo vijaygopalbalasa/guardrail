@@ -431,3 +431,25 @@ export function renderReplayRun(doc, box, run, i, collateral, opts = {}) {
   const chart = renderPositionChart(doc, chartBox, run, i, { maxY: top, width: opts.width ?? 520, key });
   return { chartBox, chart };
 }
+
+/** The recorded run with real fills on a local fork of devnet: headline figures and one row per step. */
+export function renderFillsRun(doc, box, f) {
+  const refused = Object.values(f.refused ?? {}).reduce((a, b) => a + num(b), 0);
+  const byRule = Object.entries(f.refused ?? {}).map(([k, n]) => `${k} ${num(n)}`).join(", ");
+  const rows = (f.steps ?? []).map((st, j) => h(doc, "tr", null,
+    h(doc, "td", null, st.final ? "end" : String(j + 1)),
+    h(doc, "td", null, `$${num(st.price).toFixed(2)}`),
+    h(doc, "td", null, `${fmt(st.position, 3)} SOL`),
+    h(doc, "td", null, `${num(st.upnl).toFixed(2)}`),
+    h(doc, "td", null, st.final ? "" : `${num(st.accepted)} accepted, ${num(st.refused)} refused`)));
+  box.replaceChildren(
+    h(doc, "p", { className: "replay-strip-inline" }, h(doc, "span", { className: "replay-tag" }, "Local fork"), String(f.label)),
+    h(doc, "div", { className: "figures" },
+      h(doc, "div", null, h(doc, "div", { className: "figure" }, `${fmt(f.position, 3)} SOL`), h(doc, "div", { className: "figure-label" }, `held, at the ${fmt(f.capSol)} SOL cap`)),
+      h(doc, "div", null, h(doc, "div", { className: "figure" }, num(f.upnl).toFixed(2)), h(doc, "div", { className: "figure-label" }, `dUSDT unrealized on ${fmt(f.collateral)} as SOL fell $${num(f.start).toFixed(2)} to $${num(f.end).toFixed(2)}`)),
+      h(doc, "div", null, h(doc, "div", { className: "figure" }, String(refused)), h(doc, "div", { className: "figure-label" }, `orders refused (${byRule}), ${num(f.accepted)} accepted and filled`))),
+    h(doc, "div", { className: "scroll-x" }, h(doc, "table", { className: "fills" },
+      h(doc, "thead", null, h(doc, "tr", null, ["Step", "SOL", "Position", "uPnL (dUSDT)", "Orders"].map((t) => h(doc, "th", null, t)))),
+      h(doc, "tbody", null, rows))),
+    h(doc, "p", { className: "note" }, String(f.agent)));
+}

@@ -309,7 +309,7 @@ fn sweep_grid_agent_on_30_random_paths() {
         assert_eq!(wb, 0, "zero breaches with the 4% band");
     }
     lines.push(format!("SWEEP  G5 (leverage) bound on seeds {g5_runs:?}; G6 (price band) on seeds {g6_runs:?}; G10 (daily loss) on seeds {g10_runs:?}."));
-    lines.push("For contrast, the runaway (martingale) replay on a path where SOL falls 12% in 14 steps is one more row, in tests/runaway.rs and notes/runaway-replay.txt; there the unguarded run was stopped only by Velocity's own 5x margin check.".to_string());
+    lines.push("For contrast, the runaway (martingale) replay on a path where SOL falls 13% ($91.39 to $79.39 over 14 steps and a final mark) is one more row, in tests/runaway.rs and notes/runaway-replay.txt; there the unguarded run was stopped only by Velocity's own 5x margin check.".to_string());
     lines.push("Breach = an accepted order over G1, G4, G3 or the band, or a risk-increasing order accepted over G5 or while the day's loss was over G10, at acceptance, measured from raw account bytes.".to_string());
     let text = lines.join("\n");
     println!("{text}");

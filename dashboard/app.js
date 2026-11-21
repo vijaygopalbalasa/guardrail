@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=25";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=25";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=26";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=26";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -9,7 +9,12 @@ const fetchJson = async (p) => { try { const r = await fetch(p); return r.ok ? a
 const PROGRAM = "BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy";
 
 themeToggle($("theme"));
-const [feed, headline] = await Promise.all([fetchJson("./agent-feed.json"), fetchJson("./headline.json")]);
+const [feed, headline, fills, snapshot] = await Promise.all([fetchJson("./agent-feed.json"), fetchJson("./headline.json"), fetchJson("./fills-run.json"), fetchJson("./snapshot.json")]);
+if (fills) {
+  const refused = Object.values(fills.refused ?? {}).reduce((a, b) => a + Number(b), 0);
+  $("hero").textContent = `The runaway agent kept doubling a losing long. Guardrail refused ${refused} of its orders and held it at ${Number(fills.position)} SOL, its ${Number(fills.capSol)} SOL cap, while SOL fell from $${Number(fills.start).toFixed(2)} to $${Number(fills.end).toFixed(2)}.`;
+  renderFillsRun(document, $("fills"), fills);
+}
 // With no parameters the page shows the recorded language-model run's guard on devnet.
 const useFeed = !q.get("guard") && !q.get("rpc") && feed?.guard;
 const RPC = useFeed ? allowedRpc(feed.rpc) : allowedRpc(q.get("rpc"));
@@ -47,7 +52,7 @@ function heroLine(g, velocity) {
   const held = base === 0
     ? `left ${sol(bids)} SOL of bids resting${bids >= cap && cap > 0 ? ` at the owner's ${sol(cap)} SOL cap` : ""}. None has filled${CLUSTER === "devnet" ? " (devnet's oracle is stale)" : ""}`
     : `holds ${sol(Math.abs(base))} SOL with ${sol(bids)} SOL bid, against a ${sol(cap)} SOL cap`;
-  $("hero").textContent = acc + ref === 0
+  $("live-hero").textContent = acc + ref === 0
     ? "This guard is live. The agent has sent no orders yet; each one it sends is checked here, on chain, against the owner's limits."
     : `The agent ${ask}. Guardrail refused ${ref} of its orders on chain and ${held}.`;
 }
@@ -61,12 +66,14 @@ function verify(decisions) {
   $("verify").replaceChildren(...parts.map((x) => (typeof x === "string" ? document.createTextNode(x) : x)));
 }
 
-function render({ guard: g, velocity, decisions, slot }) {
+function render({ guard: g, velocity, decisions, slot, takenAt }) {
   const now = Date.now() / 1000;
   const revoked = g.agent === "11111111111111111111111111111111";
   const last = decisions.find((d) => d.blockTime);
   const state = revoked ? "agent revoked" : g.paused ? "paused by the owner" : "guard active";
-  status(`Live on ${NET}, ${state}${slot ? `, slot ${Number(slot).toLocaleString("en-US")}` : ""}${last ? `, last order ${lastOrder(last.blockTime, now)}` : ", no orders yet"}`, revoked || g.paused);
+  const lastRun = last ? `, last agent run ${lastOrder(last.blockTime, now)}` : ", no agent orders yet";
+  if (takenAt) status(`Saved read of ${NET} from ${lastOrder(takenAt, now)}${lastRun}; reading live now`, false);
+  else status(`Live read of ${NET}, ${state}${slot ? `, slot ${Number(slot).toLocaleString("en-US")}` : ""}${lastRun}`, revoked || g.paused);
   heroLine(g, velocity);
   verify(decisions);
   $("c-acc").textContent = String(Number(g.acceptedCount));
@@ -87,8 +94,11 @@ function render({ guard: g, velocity, decisions, slot }) {
     document.createTextNode(`, rpc ${host}`));
 }
 
-// Show the agent's recorded words at once; the on-chain verdicts are matched in when the RPC answers.
+// First paint: the last saved read of the default guard (snapshot.json), replaced by the live read when it answers.
 if (feed) renderAgentFeed(document, $("agent-feed"), feed, null, null);
+if (snapshot && useFeed && snapshot.guardAddress === GUARD) {
+  try { render({ ...snapshot, takenAt: snapshot.takenAt }); } catch { /* the live read follows */ }
+}
 $("agent-sub").textContent = !feed ? "" : feedMatches ? `${String(feed.label)} Model: ${String(feed.model)}. Matching each order to the chain...` : `A recorded run on a different guard (${short(feed.guard)}): ${String(feed.label)}`;
 
 async function tick() {

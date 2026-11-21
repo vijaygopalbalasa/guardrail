@@ -1,0 +1,165 @@
+{
+ "takenAt": 1795288494,
+ "rpc": "https://api.devnet.solana.com",
+ "guardAddress": "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8",
+ "guard": {
+  "owner": "FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS",
+  "velocityUser": "HvburY4fpBK4BjYr4m3exS9pP5A8TnSRybAUEhio5idG",
+  "agent": "4Cxm3yCrcX1fRkHG6U2Xry4zCqjVP5YEbHMDeFqVLabF",
+  "paused": false,
+  "limits": {
+   "maxOrderBase": "4000000000",
+   "markets": [
+    {
+     "marketIndex": 0,
+     "maxExposureBase": "6000000000"
+    }
+   ],
+   "allowedOrderTypes": 18,
+   "dailyNotionalCap": "1200000000",
+   "maxLeverageBps": 20000,
+   "priceBandBps": 200,
+   "maxOracleStalenessSlots": "100000000",
+   "exitMaxStalenessSlots": "100000000",
+   "maxOrderLifetimeSecs": "0"
+  },
+  "day": "20778",
+  "dayNotional": "548364462",
+  "acceptedCount": "2",
+  "refused": {
+   "G1": "1",
+   "G2": "0",
+   "G3": "0",
+   "G4": "1",
+   "G5": "0",
+   "G6": "0",
+   "G7": "0",
+   "G10": "0"
+  },
+  "lastRefusal": {
+   "rule": 4,
+   "reason": 6005,
+   "value": "8000000000",
+   "cap": "6000000000",
+   "slot": "524663896"
+  },
+  "placedOrderIds": [
+   1,
+   2
+  ],
+  "cancelCount": "0",
+  "refusedCancels": "0",
+  "dailyLoss": {
+   "max": "50000000",
+   "day": "20778",
+   "baselineEquity": "999999999",
+   "baselineFlows": "998515000",
+   "keeper": "FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS"
+  }
+ },
+ "velocity": {
+  "positions": [
+   {
+    "marketIndex": 0,
+    "base": "0",
+    "quote": "0",
+    "openBids": "6000000000",
+    "openAsks": "0"
+   }
+  ],
+  "orders": [
+   {
+    "orderId": 1,
+    "marketIndex": 0,
+    "side": "long",
+    "price": "91000000",
+    "size": "4000000000",
+    "filled": "0"
+   },
+   {
+    "orderId": 2,
+    "marketIndex": 0,
+    "side": "long",
+    "price": "90500000",
+    "size": "2000000000",
+    "filled": "0"
+   }
+  ],
+  "spot": [
+   {
+    "scaledBalance": "999999976700",
+    "marketIndex": 0,
+    "balanceType": 0
+   }
+  ],
+  "totalDeposits": "998515000",
+  "totalWithdraws": "0",
+  "equity": {
+   "equity": "999999999",
+   "flows": "998515000"
+  }
+ },
+ "decisions": [
+  {
+   "guard": "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8",
+   "accepted": true,
+   "rule": 0,
+   "marketIndex": 0,
+   "direction": 0,
+   "size": "2000000000",
+   "reduceOnly": false,
+   "value": "5484",
+   "cap": "20000",
+   "reason": 0,
+   "signature": "ddeNxMXB5rrxSRXwPTMUtsJ5TcnmZzTugDeuNYAhCDn4yuNodEYpN2qc64QWhFtYvW1TZrGUVuVTFaewjxUP5GK",
+   "slot": 524663911,
+   "blockTime": 1795252501
+  },
+  {
+   "guard": "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8",
+   "accepted": false,
+   "rule": 4,
+   "marketIndex": 0,
+   "direction": 0,
+   "size": "4000000000",
+   "reduceOnly": false,
+   "value": "8000000000",
+   "cap": "6000000000",
+   "reason": 6005,
+   "signature": "2hrGQ3N5Va8tSjkQ3PguPeb69jGvuFxGMmGVRw4LE7nkQ7EWynpshsbLLZ7gpGhhEUWLVQCVvb18x5NGVC7xSdPi",
+   "slot": 524663896,
+   "blockTime": 1795252497
+  },
+  {
+   "guard": "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8",
+   "accepted": true,
+   "rule": 0,
+   "marketIndex": 0,
+   "direction": 0,
+   "size": "4000000000",
+   "reduceOnly": false,
+   "value": "3656",
+   "cap": "20000",
+   "reason": 0,
+   "signature": "3Aut3cc37zQGkY1ChUuPwDTBMkdB4o1cVVABrmFUt5sjdHfPvwFzdsiFNFBg3Ac6EqwQsuuehQ9Hoe5u53hdcVg8",
+   "slot": 524663880,
+   "blockTime": 1795252493
+  },
+  {
+   "guard": "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8",
+   "accepted": false,
+   "rule": 1,
+   "marketIndex": 0,
+   "direction": 0,
+   "size": "5000000000",
+   "reduceOnly": false,
+   "value": "5000000000",
+   "cap": "4000000000",
+   "reason": 6000,
+   "signature": "3bDT1mTeCPsNVeV1VcYqcZnZAiuhqzJ6H5956wvqysEGxTbVWaX3vUc3retj53YuUhWAcqFX6Lu7v2KaVyeVnF6D",
+   "slot": 524663868,
+   "blockTime": 1795252490
+  }
+ ],
+ "slot": 524813669
+}
