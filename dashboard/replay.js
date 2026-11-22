@@ -1,4 +1,4 @@
-import { renderReplayRun, renderPriceChart, renderLossChart, renderError, runCap } from "./render.js?v=30";
+import { renderReplayRun, renderPriceChart, renderLossChart, renderError, runCap } from "./render.js?v=31";
 import { themeToggle } from "./theme.js?v=4";
 
 const $ = (id) => document.getElementById(id);

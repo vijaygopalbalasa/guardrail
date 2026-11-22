@@ -11,6 +11,25 @@ and their orders rest without filling. Fills at moving prices are shown on a loc
 - migrate_guard on devnet: the quickstart guard FuoawFpm8adnPo9cU5YNTUEwH3PMHSFswmmSfjE33brG grew from 950 to 1,135 bytes [4w1Azcz2LLqqsj56...](https://explorer.solana.com/tx/4w1Azcz2LLqqsj56rneiLCc8F7xJomFDyRPgEouBXxWkdNtQzmyAhk4WvXouSkAbyYK2VW5pHCcAhwB2dNogeMux?cluster=devnet), then its owner's checkpoint loaded it [2yKH1ZdssHsqRQoK...](https://explorer.solana.com/tx/2yKH1ZdssHsqRQoKSp4mdAAtzWVmySSeb55oPojJDAFZLhPZTMNH9zqyRDSW4qH6PpsQcsPiTfgCxKSyA9Cx7fz8?cluster=devnet). The earlier demo guards' throwaway owner keys were not kept, so they stay on their old layout (history only); demo/setup.mjs now keeps the owner key in out/.
 - Keeper run (scripts/keeper.mjs --now, notes/keeper-run.txt): [2CE14aqXf6sXqv2z...](https://explorer.solana.com/tx/2CE14aqXf6sXqv2zxbYsLkQGUmaL6uktXJRtqc15kMV87vnYhfZr8iKYbY29QNzCvSakAw9nTCkZEcNFjB46m2ZH?cluster=devnet) and [33U4Ez4zHB1RZ99J...](https://explorer.solana.com/tx/33U4Ez4zHB1RZ99JyVr4ZqgszDmP9gEy2RzhkraoFYo4z2YYGHXCSfAaYqM2ZZFuGvdejjHPdK41mPXCGGeH4tgk?cluster=devnet); after the final upgrade the owner's checkpoint (an owner reset, emitting a Checkpointed event) on the language-model guard [56ToYbqv1QhaoAfx...](https://explorer.solana.com/tx/56ToYbqv1QhaoAfxqEKStiRkVTY5iEB6nCrYJ4TBxkMw9dpKzKnFDfB6h272PXiqJ4LsKqG1zsY3PV3GFRrFXw6R?cluster=devnet)
 
+## The agent tried to go around the guard
+
+`node demo/bypass-attempt.mjs` (clip: research footage `bypass-attempt.mp4`). The language-model agent's own key
+(4Cxm3yCrcX1fRkHG6U2Xry4zCqjVP5YEbHMDeFqVLabF) calls Velocity directly, skipping Guardrail, on the account guarded by
+9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8 (Velocity account HvburY4fpBK4BjYr4m3exS9pP5A8TnSRybAUEhio5idG). Each
+transaction was sent with preflight skipped, so the failure is on chain. Afterwards the account's delegate is still the
+guard and its deposits and withdrawals are unchanged. Cost: three fees, 15,000 lamports.
+
+- (a) place a 20 SOL perp order on the owner's account: [3R6bp6TxN4SuXUMG...](https://explorer.solana.com/tx/3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa?cluster=devnet)
+  `Program log: Instruction: PlacePerpOrder` / `AnchorError caused by account: user. Error Code: ConstraintRaw. Error Number: 2003.`
+  Velocity takes orders on this account only from its owner or its delegate, and the delegate is the guard.
+- (b) withdraw 100 dUSDT to its own token account: [MeqydoxZ7vN3P1RT...](https://explorer.solana.com/tx/MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3?cluster=devnet)
+  `Program log: Instruction: Withdraw` / `AnchorError caused by account: user. Error Code: ConstraintHasOne. Error Number: 2001.`
+  The account's authority is the owner; Velocity's withdraw is `has_one = authority`, and the guard has no withdraw path.
+- (c) make itself the delegate: [2MuwW1j9gLr1dJJV...](https://explorer.solana.com/tx/2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ?cluster=devnet)
+  `Program log: Instruction: UpdateUserDelegate` / `AnchorError caused by account: user. Error Code: ConstraintSeeds. Error Number: 2006.`
+  The account's address is derived from the owner's key, so the agent's key cannot name it.
+- The same three, first run: [2yBxVnshChqMSjTa...](https://explorer.solana.com/tx/2yBxVnshChqMSjTa8cVZNMwBsvjUyA9XbTjjZ6EtZPE9PHJrS55EjWQc7qyyMJ8jGotJL4zmnXdGshSoXom2Ef3Z?cluster=devnet), [51VVfay7m1zngoCJ...](https://explorer.solana.com/tx/51VVfay7m1zngoCJqUQEGo5dG1QFJTEvs7cYkZ37bzy9JWQwV9ZdWHmEwVcJAdwHjwZCh3TXdnxGjcRqPmha6m5M?cluster=devnet), [42eZQB9bHZEuSjmi...](https://explorer.solana.com/tx/42eZQB9bHZEuSjmiFq71TUgrhPbJ8aiXmne4fu95q5is9BFBSuTtTsCaxWnyVFSM957aLEq2mFX4j8XErdcQfLGr?cluster=devnet)
+
 ## Guard 9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8 (language-model agent, current program (keeper set))
 
 - Guard account: [9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8](https://explorer.solana.com/address/9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8?cluster=devnet); owner FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS

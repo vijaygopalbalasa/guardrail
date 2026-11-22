@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=30";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=30";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=31";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=31";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -60,12 +60,17 @@ function heroLine(g, velocity) {
     : `The agent ${ask}. Guardrail refused ${ref} of its orders on chain and ${held}.`;
 }
 
+/** demo/bypass-attempt.mjs on devnet: the agent's direct Velocity order, withdraw and delegate change, each failed on chain. */
+const BYPASS = { "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8": ["3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa", "MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3", "2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ"] };
+
 function verify(decisions) {
   if (!CLUSTER) { $("verify").replaceChildren(); return; }
   const refusal = decisions.find((d) => !d.accepted);
   const parts = ["Verify it yourself: guard program ", link(document, explorerUrl("address", PROGRAM, CLUSTER), short(PROGRAM)), ", guard account ", link(document, explorerUrl("address", GUARD, CLUSTER), short(GUARD))];
   if (refusal) parts.push(", a refusal ", link(document, explorerUrl("tx", refusal.signature, CLUSTER), `(slot ${refusal.slot})`));
   parts.push(".");
+  const bypass = BYPASS[GUARD];
+  if (bypass && CLUSTER === "devnet") parts.push(" The agent's own key tried to go around the guard and Velocity refused all three: a direct ", link(document, explorerUrl("tx", bypass[0], CLUSTER), "order"), ", a ", link(document, explorerUrl("tx", bypass[1], CLUSTER), "withdraw"), " and a ", link(document, explorerUrl("tx", bypass[2], CLUSTER), "delegate change"), ".");
   $("verify").replaceChildren(...parts.map((x) => (typeof x === "string" ? document.createTextNode(x) : x)));
 }
 
