@@ -4,34 +4,23 @@
 // hook); it signs with a fresh keypair funded from keys/dev.json. Afterwards the chain is checked and the downloaded
 // agent key places orders through the guard. Costs about 0.06 devnet SOL.
 //   node client/test/setup-page.e2e.mjs            (from the repo root; needs keys/dev.json with devnet SOL)
-import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { extname, join, normalize } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { chromium } from "playwright-core";
 import { GuardrailClient, toBase } from "../dist/index.js";
 import { key, fund } from "./velocity-setup.mjs";
+import { serveDashboard, injectTestWallet } from "./test-wallet.mjs";
 import { PRESETS, toLimits, dailyLossUnits } from "../../dashboard/setup-tx.js";
 import { decodeGuard as decodeGuardView } from "../../dashboard/guard-view.js";
 
 const RPC = "https://api.devnet.solana.com";
-const DASH = fileURLToPath(new URL("../../dashboard/", import.meta.url));
 const conn = new Connection(RPC, "confirmed");
 const client = new GuardrailClient(conn);
 const check = (ok, what) => { if (!ok) throw new Error(`FAILED: ${what}`); console.log(`ok  ${what}`); };
 
-// A static server for dashboard/ only.
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json" };
-const server = createServer((req, res) => {
-  const path = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname)).replace(/^(\.\.[/\\])+/, "");
-  const file = join(DASH, path === "/" ? "index.html" : path);
-  if (!file.startsWith(DASH)) { res.writeHead(403).end(); return; }
-  try { res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" }).end(readFileSync(file)); } catch { res.writeHead(404).end(); }
-});
-await new Promise((r) => server.listen(0, "127.0.0.1", r));
-const base = `http://127.0.0.1:${server.address().port}`;
+const { base, close } = await serveDashboard();
 
 const owner = Keypair.generate();
 const FUND = 0.1 * LAMPORTS_PER_SOL;
@@ -43,32 +32,7 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await (await browser.newContext({ acceptDownloads: true })).newPage();
   page.on("pageerror", (e) => console.log(`page error: ${e.message}`));
-  // The test wallet: Wallet Standard features standard:connect and solana:signTransaction, signing with the owner key.
-  await page.addInitScript(({ secret, address }) => {
-    const seed = Uint8Array.from(secret.slice(0, 32));
-    const pkcs8 = new Uint8Array([0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20, ...seed]);
-    const signingKey = crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, false, ["sign"]);
-    const account = Object.freeze({ address, publicKey: Uint8Array.from(secret.slice(32)), chains: ["solana:devnet"], features: ["solana:signTransaction"] });
-    const wallet = {
-      version: "1.0.0", name: "Test wallet", icon: "data:image/svg+xml;base64,PHN2Zy8+", chains: ["solana:devnet"], accounts: [account],
-      features: {
-        "standard:connect": { version: "1.0.0", connect: async () => ({ accounts: [account] }) },
-        "solana:signTransaction": {
-          version: "1.0.0", supportedTransactionVersions: ["legacy"],
-          signTransaction: (...inputs) => Promise.all(inputs.map(async ({ transaction }) => {
-            const tx = Uint8Array.from(transaction);
-            const n = tx[0];
-            const sig = new Uint8Array(await crypto.subtle.sign("Ed25519", await signingKey, tx.subarray(1 + 64 * n)));
-            tx.set(sig, 1); // the owner is the fee payer, so its slot is the first
-            return { signedTransaction: tx };
-          })),
-        },
-      },
-    };
-    const register = (api) => api.register(wallet);
-    window.addEventListener("wallet-standard:app-ready", (e) => register(e.detail));
-    window.dispatchEvent(new CustomEvent("wallet-standard:register-wallet", { detail: register }));
-  }, { secret: [...owner.secretKey], address: owner.publicKey.toBase58() });
+  await injectTestWallet(page, owner);
 
   await page.goto(`${base}/setup.html`);
   await page.getByRole("button", { name: "Connect Test wallet" }).click();
@@ -149,6 +113,6 @@ try {
   console.log(`dashboard ${dash}`);
 } finally {
   await browser.close();
-  server.close();
+  close();
   rmSync(downloads, { recursive: true, force: true });
 }
