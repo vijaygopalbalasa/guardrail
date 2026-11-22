@@ -35,7 +35,7 @@ try {
   await injectTestWallet(page, owner);
 
   await page.goto(`${base}/setup.html`);
-  await page.getByRole("button", { name: "Connect Test wallet" }).click();
+  await page.click("#connect");
   await page.waitForFunction(() => document.getElementById("wallet-status").textContent.includes("devnet SOL"));
   console.log(`page: ${await page.textContent("#wallet-status")}`);
 

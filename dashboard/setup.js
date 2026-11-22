@@ -1,13 +1,13 @@
 // Owner onboarding on devnet: connect a wallet (Wallet Standard: Phantom, Solflare, Backpack), open a Velocity
 // account with test dUSDT, create the guard with limits in plain units, hand the agent a key, and copy the MCP config.
 // The wallet signs; this page sends through the allowlisted devnet RPC. Rendering uses DOM APIs only.
-import { b58encode, checkedGuard, REASONS, GUARD_PROGRAM_ID } from "./guard-view.js?v=32";
+import { b58encode, checkedGuard, REASONS, GUARD_PROGRAM_ID } from "./guard-view.js?v=33";
 import { themeToggle } from "./theme.js?v=4";
 import {
   PRESETS, addressesFor, checkPlain, toLimits, dailyLossUnits, velocitySetupIxs, guardSetupIxs, checkpointIx,
   activeMarkets, perpMarketAddress, pricingAccounts, unsignedTransaction, firstSignature, newAgentKey, mcpConfig,
   parseKey, setupRpc, DEFAULT_KEY,
-} from "./setup-tx.js?v=32";
+} from "./setup-tx.js?v=33";
 
 const $ = (id) => document.getElementById(id);
 themeToggle($("theme"));
@@ -130,20 +130,34 @@ const api = Object.freeze({ register: registerWallet });
 window.addEventListener("wallet-standard:register-wallet", (e) => { try { e.detail(api); } catch { /* a broken wallet */ } });
 window.dispatchEvent(new CustomEvent("wallet-standard:app-ready", { detail: api }));
 
+/** "No Solana wallet found" with plain links to the three wallets' own sites. */
+function showNoWallet() {
+  const site = (name, href) => el("a", { href, target: "_blank", rel: "noopener noreferrer" }, name);
+  $("wallet-help").replaceChildren("No Solana wallet found. Install ", site("Phantom", "https://phantom.com"), ", ",
+    site("Solflare", "https://solflare.com"), " or ", site("Backpack", "https://backpack.app"), ", switch it to devnet, then reload.");
+  $("wallet-help").hidden = false;
+}
+
+/** Always a button: "Connect wallet" for none or one wallet, one button per wallet when there are several. */
 function renderWallets() {
   const box = $("wallets");
   if (state.owner) return;
-  if (!wallets.length) {
-    box.replaceChildren(el("p", { className: "note" }, "No Solana wallet found in this browser. Install Phantom, Solflare or Backpack, switch it to devnet, then reload this page."));
-    return;
+  if (wallets.length < 2) {
+    const b = el("button", { className: "button", type: "button", id: "connect" }, "Connect wallet");
+    b.addEventListener("click", () => (wallets.length ? connect(wallets[0]) : showNoWallet()));
+    box.replaceChildren(b);
+  } else {
+    box.replaceChildren(...wallets.map((w) => {
+      const b = el("button", { className: "button", type: "button" }, `Connect ${String(w.name).slice(0, 40)}`);
+      b.addEventListener("click", () => connect(w));
+      return b;
+    }));
   }
-  box.replaceChildren(...wallets.map((w) => {
-    const b = el("button", { className: "button", type: "button" }, `Connect ${String(w.name).slice(0, 40)}`);
-    b.addEventListener("click", () => connect(w));
-    return b;
-  }));
+  if (wallets.length) $("wallet-help").hidden = true;
 }
-setTimeout(renderWallets, 600);
+renderWallets();
+// Wallets register within a moment of page load; after that, say plainly when there is none.
+setTimeout(() => { if (!wallets.length && !state.owner) showNoWallet(); }, 1200);
 
 async function connect(w) {
   try {
@@ -156,7 +170,8 @@ async function connect(w) {
     state.owner = acct.address;
     state.addrs = await addressesFor(state.owner);
     state.startLamports = await balance();
-    $("wallets").replaceChildren(el("span", { className: "pill ok" }, `Owner ${state.owner.slice(0, 4)}...${state.owner.slice(-4)}`));
+    $("wallets").replaceChildren(el("span", { className: "pill ok" }, `Owner ${state.owner.slice(0, 4)}...${state.owner.slice(-4)}`), el("span", { className: "note" }, `connected with ${String(w.name).slice(0, 40)}`));
+    $("wallet-help").hidden = true;
     const low = state.startLamports < 70_000_000n;
     say("wallet-status", `${sol(state.startLamports)} devnet SOL.${low ? " That is under 0.07; get more at faucet.solana.com before going on." : ""}`, low ? "err" : undefined);
     await refreshChain();
