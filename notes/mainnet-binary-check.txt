@@ -30,7 +30,7 @@ admin settings such as margin ratios on markets other than SOL-PERP.
 Mainnet deploy cost (question for the owner; not deployed)
   guard.so is 358,000 bytes. Rent-exempt minimum (solana rent, mainnet-beta):
     354,000 bytes: 1.79897024 SOL
-    358,045 bytes (program data for this binary): about 1.8197 SOL
+    358,045 bytes (program data for this binary): 1.81951884 SOL
     384,045 bytes (with the same 26 KB headroom given on devnet): 1.95159884 SOL
   The deploy buffer needs the same rent while it runs and gets it back afterwards; fees are a few thousand signatures
   (about 0.01 to 0.02 SOL plus any priority fee). Each guard account (1,135 bytes) costs 0.00641604 SOL rent, paid by its owner.

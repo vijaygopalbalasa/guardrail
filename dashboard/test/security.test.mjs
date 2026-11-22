@@ -100,7 +100,7 @@ test("hostile strings render as text, never as HTML", () => {
 });
 
 test("the dashboard source never assigns innerHTML", () => {
-  for (const f of ["app.js", "render.js", "replay.js", "theme.js"]) {
+  for (const f of ["app.js", "render.js", "replay.js", "theme.js", "setup.js", "setup-tx.js"]) {
     const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
     assert.equal((src.match(/innerHTML/g) ?? []).length, 0, `${f} uses innerHTML`);
   }
@@ -174,4 +174,24 @@ test("the G10 meter's equity matches the guard's formula: deposits at cumulative
   assert.equal(e.equity, 1_000_000_000n + 180_000_000n - 182_000_000n, "998 dUSDT");
   assert.equal(e.flows, 1_000_000_000n);
   assert.equal(equityOf({ ...velocity, positions: [{ marketIndex: 1, base: 1n, quote: 0n }] }, sm, or), null, "other markets are not priced");
+});
+
+test("the setup page: no HTML parsing, no inline or outside scripts, devnet or local RPC only, keys never stored", async () => {
+  const { setupRpc } = await import("../setup-tx.js");
+  for (const f of ["setup.js", "setup-tx.js"]) {
+    const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
+    for (const bad of [/innerHTML/, /outerHTML/, /insertAdjacentHTML/, /document\.write/, /\beval\(/, /new Function/, /localStorage/, /sessionStorage/, /indexedDB/]) {
+      assert.equal(bad.test(src), false, `${f} uses ${bad}`);
+    }
+  }
+  const html = readFileSync(new URL("../setup.html", import.meta.url), "utf8");
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length, 1);
+  assert.match(scripts[0][0], /src="\.\/setup\.js\?v=\d+"/);
+  assert.equal(scripts[0][1].trim(), "", "no inline script");
+  assert.equal(/\son[a-z]+\s*=/i.test(html), false, "no inline event handlers");
+  assert.equal(setupRpc(null), "https://api.devnet.solana.com");
+  for (const bad of ["https://api.mainnet-beta.solana.com", "https://evil.example", "javascript:alert(1)", "https://u:p@api.devnet.solana.com", "https://api.devnet.solana.com:8443", "http://api.devnet.solana.com", HOSTILE]) {
+    assert.equal(setupRpc(bad), null, bad);
+  }
 });

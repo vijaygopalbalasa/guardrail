@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardrail setup</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%222%22 y=%222%22 width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%232a78d6%22/%3E%3Crect x=%222%22 y=%226%22 width=%2212%22 height=%222%22 fill=%22%23fcfcfb%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./style.css?v=30">
+</head>
+<body>
+<div class="wrap setup">
+  <div class="top">
+    <a class="brand" href="./index.html">Guardrail</a>
+    <span class="brand-sub">set up limits for your AI trading agent</span>
+    <span class="spacer"></span>
+    <button class="theme" id="theme" type="button">Dark</button>
+  </div>
+  <h1 class="hero">Give your AI agent a perps account it cannot blow up.</h1>
+  <p class="hero-note">On Solana devnet, with test dollars. Your wallet signs two transactions and keeps its keys. You set the limits; the agent gets a key that can trade only inside them and can never withdraw. About 0.06 devnet SOL in all.</p>
+  <p class="warn" id="rpc-warn" hidden></p>
+
+  <ol class="steps">
+    <li class="step" id="step-wallet">
+      <h2>Connect your wallet</h2>
+      <p class="h2-sub">Your wallet becomes the owner: the only key that can change the limits, swap the agent or trade directly. Switch it to devnet first.</p>
+      <div id="wallets" class="row"></div>
+      <p id="wallet-status" class="note" aria-live="polite"></p>
+    </li>
+
+    <li class="step" id="step-account">
+      <h2>Open a Velocity account with test dollars</h2>
+      <p class="h2-sub">Velocity is the perps exchange. This creates your account there and deposits 1,000 test dUSDT from Velocity's devnet faucet. One signature.</p>
+      <p id="account-status" class="note" aria-live="polite">Connect a wallet first.</p>
+      <button class="button" id="account-go" type="button" disabled>Open account and add 1,000 dUSDT</button>
+    </li>
+
+    <li class="step" id="step-limits">
+      <h2>Set the limits</h2>
+      <p class="h2-sub">Pick a starting point, then change any number. Every order the agent sends is checked against these on chain.</p>
+      <div class="presets" role="group" aria-label="Preset">
+        <button type="button" class="preset" data-preset="cautious" aria-pressed="false">Cautious</button>
+        <button type="button" class="preset" data-preset="balanced" aria-pressed="true">Balanced</button>
+        <button type="button" class="preset" data-preset="loose" aria-pressed="false">Loose</button>
+      </div>
+      <div class="fields">
+        <label class="field"><span class="field-name">Largest single order</span><span class="field-input"><input id="f-orderSol" type="number" inputmode="decimal" step="any" min="0"><span class="unit">SOL</span></span><span class="field-help">Bigger orders are refused.</span></label>
+        <label class="field"><span class="field-name">Most SOL at risk at once</span><span class="field-input"><input id="f-exposureSol" type="number" inputmode="decimal" step="any" min="0"><span class="unit">SOL</span></span><span class="field-help">Position plus every resting order on the same side, so orders that fill later still count.</span></label>
+        <label class="field"><span class="field-name">Daily trading volume</span><span class="field-input"><input id="f-dailyVolumeUsd" type="number" inputmode="decimal" step="any" min="0"><span class="unit">dUSDT</span></span><span class="field-help">Total order value per UTC day.</span></label>
+        <label class="field"><span class="field-name">Leverage cap</span><span class="field-input"><input id="f-leverage" type="number" inputmode="decimal" step="any" min="0"><span class="unit">x</span></span><span class="field-help">Worst-case exposure divided by your collateral.</span></label>
+        <label class="field"><span class="field-name">Price band</span><span class="field-input"><input id="f-bandPct" type="number" inputmode="decimal" step="any" min="0"><span class="unit">%</span></span><span class="field-help">Every order price must sit this close to the oracle price.</span></label>
+        <label class="field"><span class="field-name">Daily loss brake</span><span class="field-input"><input id="f-dailyLossUsd" type="number" inputmode="decimal" step="any" min="0"><span class="unit">dUSDT</span></span><span class="field-help">After this much is lost in a UTC day, only orders that shrink the position pass. 0 turns it off.</span></label>
+      </div>
+      <p class="note">Fixed on this page: market SOL-PERP only; limit and oracle orders (no market orders); the agent can always reduce its position and cancel its orders. Velocity's devnet oracle is weeks old, so the oracle-age limit is set very loose here (100,000,000 slots); on a live market you would set it tight.</p>
+      <ul id="limits-problems" class="problems" aria-live="polite"></ul>
+    </li>
+
+    <li class="step" id="step-agent">
+      <h2>Give your agent a key</h2>
+      <p class="h2-sub">This key can place and cancel orders through the guard and nothing else. It cannot withdraw or change a limit.</p>
+      <div class="choice" role="radiogroup" aria-label="Agent key">
+        <label><input type="radio" name="agent-mode" value="new" checked> Make a new key in this browser</label>
+        <label><input type="radio" name="agent-mode" value="paste"> Use my own key</label>
+      </div>
+      <div id="agent-new">
+        <p class="addr" id="agent-pub"></p>
+        <button class="button quiet-button" id="agent-download" type="button" disabled>Download the agent key</button>
+        <p class="note">The file is the agent's secret key. It never leaves this browser except as this download, and is not stored anywhere. Keep it where your agent runs.</p>
+      </div>
+      <div id="agent-paste" hidden>
+        <label class="field wide"><span class="field-name">Agent public key</span><input id="agent-input" type="text" spellcheck="false" autocomplete="off" placeholder="base58 public key"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="agent-fund" checked> Send the agent 0.02 SOL for transaction fees</label>
+      <p id="agent-status" class="note" aria-live="polite"></p>
+    </li>
+
+    <li class="step" id="step-guard">
+      <h2>Create the guard</h2>
+      <p class="h2-sub">One signature: the guard program becomes your Velocity account's trading delegate with these limits, your wallet is set as the daily loss keeper, and the agent gets its fee money.</p>
+      <button class="button" id="guard-go" type="button" disabled>Create the guard</button>
+      <p id="guard-status" class="note" aria-live="polite"></p>
+    </li>
+
+    <li class="step" id="step-done">
+      <h2>Connect your agent</h2>
+      <p class="h2-sub">Add this to your agent's MCP settings. It gets three tools: place an order, cancel, and read the limits. There is no tool to change them.</p>
+      <div id="done" class="done-box"><p class="note">Appears when the guard exists.</p></div>
+    </li>
+  </ol>
+
+  <footer class="foot">
+    <p>Devnet only. Transactions go through Solana's public devnet RPC. The owner can always trade directly, change the limits or remove the guard.</p>
+    <p>Checked: every instruction this page builds is compared with the TypeScript client in the repo's tests (client/test/setup-page.test.mjs).</p>
+  </footer>
+</div>
+<script type="module" src="./setup.js?v=30"></script>
+</body>
+</html>

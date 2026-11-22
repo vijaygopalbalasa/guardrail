@@ -1,0 +1,40 @@
+Owner onboarding page (dashboard/setup.html), end to end on Solana devnet, Nov 22 2026.
+  node client/test/setup-page.e2e.mjs
+
+What the script does: serves dashboard/, opens setup.html in headless Chromium, and injects a Wallet Standard test
+wallet (standard:connect + solana:signTransaction) that signs with a fresh throwaway keypair funded with 0.1 devnet SOL
+from keys/dev.json. The test wallet exists only in the script; setup.html has no test hook. It then clicks through the
+page as an owner would and checks the chain.
+
+Final-code run (all checks passed):
+ok  step 2 opened the Velocity account with 1,000 dUSDT
+ok  create stays disabled until the agent key is downloaded
+ok  downloaded guardrail-agent-4q5fKRDG.json holds the agent key the page shows
+ok  step 5 created the guard
+ok  the Velocity account's delegate is the guard
+ok  the guard's agent is the downloaded key
+ok  the limits are the Cautious preset as typed
+ok  the keeper is the owner
+ok  the daily loss cap is 25 dUSDT
+ok  the agent got 0.02 SOL for fees
+ok  the MCP config names this owner and devnet
+ok  the dashboard link opens this guard
+ok  a 2 SOL order is refused on chain by G1 (Cautious: 1 SOL per order)
+ok  a 0.5 SOL oracle order inside the limits is accepted and sent to Velocity
+ok  Mark today now sends the owner's checkpoint
+COST: 0.053279 SOL from the owner wallet for the whole page flow plus one mark (includes the agent's 0.02 SOL; the agent
+paid its own order fees). Without the agent's fee money: about 0.033 SOL of rent and fees.
+
+Receipts from the run just before the final UI wording fixes (same transactions, same cost 0.053279 SOL):
+  owner DMjs6ZVERRGNnys9BzNap2bjnFZGijmECfxqqQ3zFAZZ  guard GAFQwGRk3EuCAkaaBPsjHGC8DhRxnzzmD3J9nViryYvp
+  agent HspNNS4N3cNx2HBj7kJnNp4WY2DmnL3FAvsWtbaALkED
+  G1 refusal  5pKms5k8mfCM4HoeeWqC9K3rsZpMdm6UtR52jR6Yi5QupXZDZkqY1cUXLChqtyUpgJska7MpATFxb6MrDNGi1W4Q
+  accepted    24BNAL1cgmioUemZuw17SnjkGiNJWMspH7uN575CYYK2VKVAaBrLuhKJG51Z1iZbGDt9QeGaQG2qF6hUfPH1adL9
+
+Offline checks of the same page code: client/test/setup-page.test.mjs (9 tests: addresses, on-curve check, every
+instruction byte for byte against @guardrail/client, wire format read back by web3.js, presets and unit conversion,
+WebCrypto agent key loads in web3.js, RPC allowlist) and dashboard/test/security.test.mjs (no HTML parsing, no inline
+or outside scripts, no browser storage, devnet or local RPC only).
+
+Not tested: a real Phantom, Solflare or Backpack extension (none runs headless). The page talks to wallets only through
+the Wallet Standard features above, which those wallets implement.

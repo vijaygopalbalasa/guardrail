@@ -18,7 +18,8 @@ replay). Velocity's 5x margin check is liquidation protection; Guardrail is the 
 | Try it | Command | What you see |
 |---|---|---|
 | 1. The agent's recorded devnet run (no key, no SOL, no install) | `node demo/replay-llm.mjs` | each turn: the model's own words, the order it asked for, the guard's verdict and the devnet transaction |
-| 2. Your own guard on devnet (Node and about 0.2 devnet SOL) | `npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && node demo/quickstart.mjs --keypair <devnet wallet.json>` | a Velocity account with test dUSDT, a guard with demo limits, a link to it on the dashboard, and the keeper command to run |
+| 2a. Your own guard in the browser (a devnet wallet such as Phantom, about 0.06 devnet SOL) | [guardrail-perps.vercel.app/setup.html](https://guardrail-perps.vercel.app/setup.html) | connect, open a Velocity account with 1,000 test dUSDT, pick Cautious, Balanced or Loose, download the agent key, create the guard (two signatures), copy the MCP settings |
+| 2b. Your own guard on devnet from Node (about 0.2 devnet SOL) | `npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && node demo/quickstart.mjs --keypair <devnet wallet.json>` | a Velocity account with test dUSDT, a guard with demo limits, a link to it on the dashboard, and the keeper command to run |
 | 3. The live dashboard | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) and [/replay.html](https://guardrail-perps.vercel.app/replay.html) | the fills run, the devnet guard read live, and the replay |
 
 Devnet only, no real users yet. Five internal review rounds; every finding and fix is in the repo (`audits/`). The owner

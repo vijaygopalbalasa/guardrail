@@ -25,26 +25,34 @@ export async function fund(conn, from, to, lamports) {
   await sendAndConfirmTransaction(conn, new Transaction().add(SystemProgram.transfer({ fromPubkey: from.publicKey, toPubkey: to, lamports })), [from]);
 }
 
-/** Creates the owner's Velocity user (sub-account 0) and deposits `dusdt` test dollars. */
-export async function setupVelocityAccount(conn, owner, dusdt) {
-  const o = owner.publicKey;
+/** The instructions that create the owner's Velocity user (sub-account 0) and deposit `dusdt` test dollars. */
+export function velocitySetupInstructions(o, { needStats = true, needUser = true, dusdt }) {
   const user = velocityUserAddress(o);
   const stats = pda(VELOCITY_PROGRAM_ID, Buffer.from("user_stats"), o.toBuffer());
   const state = velocityStateAddress();
   const vix = (keys, data) => new TransactionInstruction({ programId: VELOCITY_PROGRAM_ID, keys, data });
   const name = Buffer.alloc(32); name.write("guardrail");
   const ata = pda(ATA, o.toBuffer(), TOKEN.toBuffer(), MINT.toBuffer());
-  const tx = new Transaction();
-  if (!(await conn.getAccountInfo(stats))) tx.add(vix([w(stats), w(state), r(o), w(o, true), r(SYSVAR_RENT_PUBKEY), r(SystemProgram.programId)], discriminator("global", "initialize_user_stats")));
-  if (!(await conn.getAccountInfo(user))) tx.add(vix([w(user), w(stats), w(state), r(o), w(o, true), r(SYSVAR_RENT_PUBKEY), r(SystemProgram.programId)], Buffer.concat([discriminator("global", "initialize_user"), u16(0), name])));
-  tx.add(new TransactionInstruction({ programId: ATA, keys: [w(o, true), w(ata), r(o), r(MINT), r(SystemProgram.programId), r(TOKEN)], data: Buffer.from([1]) }));
-  tx.add(new TransactionInstruction({
+  const ixs = [];
+  if (needStats) ixs.push(vix([w(stats), w(state), r(o), w(o, true), r(SYSVAR_RENT_PUBKEY), r(SystemProgram.programId)], discriminator("global", "initialize_user_stats")));
+  if (needUser) ixs.push(vix([w(user), w(stats), w(state), r(o), w(o, true), r(SYSVAR_RENT_PUBKEY), r(SystemProgram.programId)], Buffer.concat([discriminator("global", "initialize_user"), u16(0), name])));
+  ixs.push(new TransactionInstruction({ programId: ATA, keys: [w(o, true), w(ata), r(o), r(MINT), r(SystemProgram.programId), r(TOKEN)], data: Buffer.from([1]) }));
+  ixs.push(new TransactionInstruction({
     programId: FAUCET,
     keys: [r(pda(FAUCET, Buffer.from("faucet_config"), MINT.toBuffer())), w(MINT), w(ata), r(pda(FAUCET, Buffer.from("mint_authority"), MINT.toBuffer())), r(TOKEN)],
     data: Buffer.concat([discriminator("global", "mint_to_user"), u64(dusdt * 1_000_000)]),
   }));
-  tx.add(vix([r(state), w(user), w(stats), r(o, true), w(pda(VELOCITY_PROGRAM_ID, Buffer.from("spot_market_vault"), u16(0))), w(ata), r(TOKEN), r(USDT_ORACLE), w(spotMarketAddress(0))],
+  ixs.push(vix([r(state), w(user), w(stats), r(o, true), w(pda(VELOCITY_PROGRAM_ID, Buffer.from("spot_market_vault"), u16(0))), w(ata), r(TOKEN), r(USDT_ORACLE), w(spotMarketAddress(0))],
     Buffer.concat([discriminator("global", "deposit"), u16(0), u64(dusdt * 1_000_000), Buffer.from([0])])));
+  return ixs;
+}
+
+/** Creates the owner's Velocity user (sub-account 0) and deposits `dusdt` test dollars. */
+export async function setupVelocityAccount(conn, owner, dusdt) {
+  const o = owner.publicKey;
+  const user = velocityUserAddress(o);
+  const stats = pda(VELOCITY_PROGRAM_ID, Buffer.from("user_stats"), o.toBuffer());
+  const tx = new Transaction().add(...velocitySetupInstructions(o, { needStats: !(await conn.getAccountInfo(stats)), needUser: !(await conn.getAccountInfo(user)), dusdt }));
   await sendAndConfirmTransaction(conn, tx, [owner], { commitment: "confirmed" });
   return user;
 }
