@@ -1,0 +1,12 @@
+=== keeper-daily 2026-11-22 02:54:44 UTC ===
+--- guard 9NJpRGSq (language-model agent), owner FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS
+2026-11-22 02:54:44 UTC (chain) try 1: checkpoint FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS day 20779 baseline 999999999 tx 59XQ9HDJD7PyreYmqR6hLQGiqeihGYFP7nVgZjSXtNhSJLGnnvqFD7YpzjXzFqPTuZ6ztdjsXEWfMPrLtdrbM9ek (owner reset: the baseline is the equity now)
+--- guard HMwVJCoz (scripted runaway agent), owner 4cMEVdWkpaMWvuGznBxUWeRxYXadiR5ULVmsJ2dZSH2V
+2026-11-22 02:54:46 UTC (chain) try 1: checkpoint 4cMEVdWkpaMWvuGznBxUWeRxYXadiR5ULVmsJ2dZSH2V day 20779 baseline 999999999 tx 4nmNJ2BBmnB7gHL8BBhi9LkGDo2koeUdm6DAas4n7sahyYYe1H9281Y1LM89dtmZgjtyDoeizaQazmy2LsoM1EKe (owner reset: the baseline is the equity now)
+--- guard 9yVPGMcC (runaway agent, earlier run), owner W7ntzEnkuoDQJDRdH3sPLqWeav3HLKK9D3aC5n6pdj5
+2026-11-22 02:54:48 UTC (chain) try 1: checkpoint W7ntzEnkuoDQJDRdH3sPLqWeav3HLKK9D3aC5n6pdj5 day 20779 baseline 999999999 tx 2P2kLymusVoW4Xwee7W79E9X8JAb1zMKp3CQaPRt3Jfvq9i3r5Ctvmz9Vm9UPmVZsopUZGHp3eX4VzwcxEfdUEdG (owner reset: the baseline is the equity now)
+--- guard FuoawFpm (quickstart), owner AFnLPrDAyncqNLtgeLGuPjAFvkkHc4ifk6LbSDP8KHWQ
+Server responded with 429 Too Many Requests.  Retrying after 500ms delay...
+Server responded with 429 Too Many Requests.  Retrying after 1000ms delay...
+Server responded with 429 Too Many Requests.  Retrying after 2000ms delay...
+2026-11-22 02:54:51 UTC (chain) try 1: checkpoint AFnLPrDAyncqNLtgeLGuPjAFvkkHc4ifk6LbSDP8KHWQ day 20779 baseline 999999999 tx 4kFWptKqt1WJw1KLTpYYgj6AwGJAPmtuhTQzQoULeePTXynT6kXsWmTmBzTN6Xp3iK6HXLDR2dGXLGUSr1fZXHyk (owner reset: the baseline is the equity now)
