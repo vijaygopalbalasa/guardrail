@@ -1,4 +1,4 @@
-//! Guardrail: limits your AI trading agent cannot break.
+//! Guardrail: limits your AI trading agent cannot trade past.
 //!
 //! The guard PDA is the delegate of a user's Velocity perps account. The agent key can trade only by calling this
 //! program; every order is checked against limits the owner froze on chain, and an order that breaks one is refused

@@ -1,6 +1,6 @@
 # Devnet receipts
 
-Guardrail's guard program on Solana devnet, built from commit 494359f (program sources unchanged since b779468), after five review rounds (audits/).
+Guardrail's guard program on Solana devnet, built from commit 494359f (program code unchanged since b779468; on Nov 22 only the crate's one-line description and doc comment changed, and a rebuild gives the same bytes, sha256 05eecf83..., MATCH), after five review rounds (audits/).
 Freshness check relaxed on devnet: Velocity's devnet oracle is weeks old, so the demo guards set oracle staleness to 100,000,000 slots
 and their orders rest without filling. Fills at moving prices are shown on a local surfpool fork (docs/build-and-test.md).
 

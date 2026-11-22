@@ -5,7 +5,9 @@
 ![REPLAY: equity lost by the same runaway agent on a falling SOL price, 41.2% unguarded and 9.4% through Guardrail](docs/replay.png)
 
 - **41.2% vs 9.4%**: the same runaway agent on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
-  limit breaches (a replay on Velocity's real program).
+  limit breaches (a replay on Velocity's real program). Guarded caps: 4 SOL per order, 10 SOL worst-case exposure,
+  1,500 dUSDT a day, 2x leverage, 2% band, 50 dUSDT daily loss. Unguarded, only Velocity's margin rules applied and the
+  agent reached 6.98x leverage.
 - **54 orders refused**: on a local fork of devnet with real fills, the agent was held at its 6 SOL cap while SOL fell.
   On public devnet, where orders rest without fills, a fresh guard refused the same agent's orders 31 times
   ([guard](https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg); every transaction in `notes/devnet-receipts.md`).
@@ -14,7 +16,8 @@
 - **1.1% median loss either way**: a normal grid bot on 30 random price paths is barely touched by the guard; its worst
   path loses 22.6% guarded vs 26.6% unguarded.
 
-Guardrail is a Solana program that becomes the delegate of a Velocity perps account. The agent trades only through it,
+Guardrail is a Solana program that becomes the delegate of a Velocity perps account (Velocity is a perps exchange on
+Solana, Drift's successor). The agent trades only through it,
 every order is checked on chain against limits the owner sets, and the agent can never place an order past them or
 withdraw. Leverage can still drift with price after an order is placed (2.17x against a 2.0x cap in the leverage-only
 replay). Velocity's 5x margin check is liquidation protection; Guardrail is the owner's risk budget.

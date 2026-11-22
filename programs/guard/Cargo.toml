@@ -1,7 +1,7 @@
 [package]
 name = "guard"
 version = "0.1.0"
-description = "Guardrail: limits your AI trading agent cannot break, as the delegate of a Velocity perps account."
+description = "Guardrail: limits your AI trading agent cannot trade past, as the delegate of a Velocity perps account."
 edition = "2021"
 
 [lib]

@@ -1,6 +1,6 @@
 # Guardrail: spec v1 (Solana Perps and Prediction Markets; deadline 2026-12-05 21:00 UTC)
 
-One line: limits your AI trading agent cannot break.
+One line: limits your AI trading agent cannot trade past.
 The fear: "My AI trading bot blew up my account overnight."
 Headline number (to measure): the same agent and the same market replay, unguarded vs guarded: worst loss, orders refused,
 limit breaches (target: zero breaches guarded).

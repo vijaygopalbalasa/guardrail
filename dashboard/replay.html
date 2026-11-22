@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guardrail Replay</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%222%22 y=%222%22 width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%232a78d6%22/%3E%3Crect x=%222%22 y=%226%22 width=%2212%22 height=%222%22 fill=%22%23fcfcfb%22/%3E%3C/svg%3E">
-<link rel="stylesheet" href="./style.css?v=31">
+<link rel="stylesheet" href="./style.css?v=32">
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <span class="brand">Guardrail</span>
-    <span class="brand-sub">limits your AI trading agent cannot break</span>
+    <span class="brand-sub">limits your AI trading agent cannot trade past</span>
     <span class="spacer"></span>
     <a class="nav-link" href="./setup.html">Set up your own guard</a>
     <a href="./index.html" class="brand-sub">Live dashboard</a>
@@ -19,6 +19,7 @@
   </div>
   <h1 class="hero" id="hero">The agent tried to double a losing long.</h1>
   <p class="hero-note"><span class="replay-tag">Replay</span><span id="label"></span></p>
+  <p class="hero-note">The guarded run's caps: 4 SOL per order, 10 SOL worst-case exposure, 1,500 dUSDT of orders a day, 2x leverage, a 2% price band and a 50 dUSDT daily loss brake. The unguarded run had only Velocity's own margin rules and reached 6.98x leverage. Velocity is a perps exchange on Solana, Drift's successor.</p>
   <div class="sticky-bar">
     <div class="final-strip" id="final"></div>
     <div class="controls">
@@ -54,6 +55,6 @@
   <p class="note final-note" id="final-note"></p>
   <p class="note" id="agent" style="margin-top:12px"></p>
 </div>
-<script type="module" src="./replay.js?v=31"></script>
+<script type="module" src="./replay.js?v=32"></script>
 </body>
 </html>
