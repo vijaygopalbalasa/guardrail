@@ -57,6 +57,8 @@ can always trade directly or remove the delegate. The guard wraps Velocity's `pl
   receipts: `notes/devnet-receipts.md` (old-layout guards are labelled "history (old layout, not migrated)"; the freshness
   check is relaxed on devnet, whose oracle is weeks old).
 - Review rounds: `audits/`; the fixes round by round: `notes/RED.md`.
+- [Mainnet readiness](docs/mainnet.md): not deployed; the cost (about 1.82 to 1.95 SOL of recoverable rent), the steps,
+  `scripts/deploy-mainnet.sh` (a dry run unless given a mainnet key, an upgrade-authority plan and `--yes`) and the risks.
 
 ## The limits
 
