@@ -28,6 +28,24 @@ const CLUSTER = host === "api.devnet.solana.com" ? "devnet" : host === "api.main
 const NET = CLUSTER ?? "local validator";
 const sol = (b) => (Number(b) / 1e9).toLocaleString("en-US", { maximumFractionDigits: 3 });
 
+/** The demo guards on devnet a visitor can switch between (receipts: notes/devnet-receipts.md). */
+const DEVNET_GUARDS = [
+  { guard: "9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8", name: "the language-model agent's guard", label: "Language-model agent" },
+  { guard: "HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg", name: "the scripted runaway agent's guard", label: "Scripted runaway agent (31 refusals)" },
+];
+if (CLUSTER === "devnet" || useFeed) {
+  const known = DEVNET_GUARDS.find((x) => x.guard === GUARD);
+  $("live-title").textContent = known ? `On devnet now: ${known.name}` : "On devnet now: your guard";
+  $("guard-pick").replaceChildren(document.createTextNode("Devnet guards: "), ...DEVNET_GUARDS.flatMap((x, i) => {
+    const a = document.createElement("a");
+    a.textContent = x.label;
+    a.href = `?${new URLSearchParams({ rpc: "https://api.devnet.solana.com", guard: x.guard })}`;
+    if (x.guard === GUARD) a.setAttribute("aria-current", "page");
+    return i ? [document.createTextNode(" / "), a] : [a];
+  }));
+  $("guard-pick").hidden = false;
+}
+
 if (headline) {
   $("replay-text").textContent = `Same limits, real fills, a falling price: worst loss ${Number(headline.guarded.worstLossPct)}% guarded against ${Number(headline.unguarded.worstLossPct)}% unguarded, ${Number(headline.guarded.breaches)} limit breaches.`;
   $("replay-strip").hidden = false;
@@ -113,7 +131,7 @@ async function tick() {
   if (!RPC) { status("rpc not allowed: use a local validator or Solana's public devnet or mainnet RPC", true); return; }
   if (!GUARD) { status("add ?guard=<address>", true); return; }
   const isLocal = !CLUSTER;
-  try { render(await loadDashboard(RPC, GUARD, isLocal ? 40 : 25, isLocal ? 0 : 400)); }
+  try { render(await loadDashboard(RPC, GUARD, 40, isLocal ? 0 : 400)); }
   catch (e) { status("could not read the guard", true); renderError(document, $("feed"), `${e.message}. Check the guard address and the RPC, then reload.`); }
 }
 tick();

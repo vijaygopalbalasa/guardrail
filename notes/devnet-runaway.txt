@@ -1,0 +1,42 @@
+agent (runaway) connected to guardrail-mcp; tools: guardrail_place_order, guardrail_cancel_order, guardrail_status
+step 0: guardrail_place_order long 0.5 SOL @ 90.99 -> ACCEPTED, sent to Velocity
+step 1: guardrail_place_order long 1 SOL @ 90.69 -> ACCEPTED, sent to Velocity
+step 2: guardrail_place_order long 2 SOL @ 90.39 -> ACCEPTED, sent to Velocity
+step 3: guardrail_place_order long 4 SOL @ 90.09 -> REFUSED by G4 exposure: worst-case exposure would be 7.5 SOL, over the 6 SOL cap; nothing reached Velocity
+step 3: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 3: guardrail_place_order long 4 SOL @ 90.09 -> ACCEPTED, sent to Velocity
+step 4: guardrail_place_order long 8 SOL @ 89.79 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 4: guardrail_place_order long 4 SOL @ 89.79 -> REFUSED by G4 exposure: worst-case exposure would be 9.5 SOL, over the 6 SOL cap; nothing reached Velocity
+step 4: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 4: guardrail_place_order long 4 SOL @ 89.79 -> ACCEPTED, sent to Velocity
+step 4: guardrail_place_order long 4 SOL @ 89.79 -> REFUSED by G3 daily notional: today's notional would be 1416.61 dUSDT, over the 1200 dUSDT daily cap; nothing reached Velocity
+step 4: guardrail_place_order long 2 SOL @ 89.79 -> REFUSED by G3 daily notional: today's notional would be 1233.82 dUSDT, over the 1200 dUSDT daily cap; nothing reached Velocity
+step 4: guardrail_place_order long 1 SOL @ 89.79 -> REFUSED by G4 exposure: worst-case exposure would be 6.5 SOL, over the 6 SOL cap; nothing reached Velocity
+step 4: guardrail_cancel_order (make room under the cap) -> cancelled the latest bid
+step 4: guardrail_place_order long 1 SOL @ 89.79 -> ACCEPTED, sent to Velocity
+step 4: guardrail_place_order long 1 SOL @ 89.79 -> REFUSED by G3 daily notional: today's notional would be 1233.82 dUSDT, over the 1200 dUSDT daily cap; nothing reached Velocity
+step 5: guardrail_place_order long 16 SOL @ 89.49 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 5: guardrail_place_order long 8 SOL @ 89.49 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 5: guardrail_place_order long 4 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 5: guardrail_place_order long 2 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 5: guardrail_place_order long 1 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 5: guardrail_place_order long 0.5 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 5: guardrail_place_order long 0.25 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 5: guardrail_place_order long 0.125 SOL @ 89.49 -> REFUSED by G6 price band: the price is 2.08% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 6: guardrail_place_order long 32 SOL @ 89.19 -> REFUSED by G1 order size: 32 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 6: guardrail_place_order long 16 SOL @ 89.19 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 6: guardrail_place_order long 8 SOL @ 89.19 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 6: guardrail_place_order long 4 SOL @ 89.19 -> REFUSED by G6 price band: the price is 2.41% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 6: guardrail_place_order long 2 SOL @ 89.19 -> REFUSED by G6 price band: the price is 2.41% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 6: guardrail_place_order long 1 SOL @ 89.19 -> REFUSED by G6 price band: the price is 2.41% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 6: guardrail_place_order long 0.5 SOL @ 89.19 -> REFUSED by G6 price band: the price is 2.41% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 6: guardrail_place_order long 0.25 SOL @ 89.19 -> REFUSED by G6 price band: the price is 2.41% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 7: guardrail_place_order long 64 SOL @ 88.89 -> REFUSED by G1 order size: 64 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 7: guardrail_place_order long 32 SOL @ 88.89 -> REFUSED by G1 order size: 32 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 7: guardrail_place_order long 16 SOL @ 88.89 -> REFUSED by G1 order size: 16 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 7: guardrail_place_order long 8 SOL @ 88.89 -> REFUSED by G1 order size: 8 SOL is over the 4 SOL per-order limit; nothing reached Velocity
+step 7: guardrail_place_order long 4 SOL @ 88.89 -> REFUSED by G6 price band: the price is 2.73% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 7: guardrail_place_order long 2 SOL @ 88.89 -> REFUSED by G6 price band: the price is 2.73% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 7: guardrail_place_order long 1 SOL @ 88.89 -> REFUSED by G6 price band: the price is 2.73% from the oracle, outside the 2.00% band; nothing reached Velocity
+step 7: guardrail_place_order long 0.5 SOL @ 88.89 -> REFUSED by G6 price band: the price is 2.73% from the oracle, outside the 2.00% band; nothing reached Velocity
+summary: 6 accepted, refused 3 by G4 exposure, 10 by G1 order size, 3 by G3 daily notional, 15 by G6 price band; worst-case exposure 2.5 SOL vs cap 6 SOL; the guard's on-chain counters: accepted 6, refused {"G1":10,"G2":0,"G3":3,"G4":3,"G5":0,"G6":15,"G7":0,"G10":0}

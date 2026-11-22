@@ -247,3 +247,5 @@ table.fills td:first-child { color: var(--ink-2); }
 .setup [hidden] { display: none !important; }
 .setup .note { overflow-wrap: anywhere; }
 .nav-link { font-size: 14px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; padding: 0 6px; }
+.guard-pick { font-size: 14px; color: var(--ink-2); margin: -4px 0 12px; }
+.guard-pick a[aria-current="page"] { color: var(--ink); font-weight: 650; text-decoration: none; }

@@ -30,6 +30,50 @@ guard and its deposits and withdrawals are unchanged. Cost: three fees, 15,000 l
   The account's address is derived from the owner's key, so the agent's key cannot name it.
 - The same three, first run: [2yBxVnshChqMSjTa...](https://explorer.solana.com/tx/2yBxVnshChqMSjTa8cVZNMwBsvjUyA9XbTjjZ6EtZPE9PHJrS55EjWQc7qyyMJ8jGotJL4zmnXdGshSoXom2Ef3Z?cluster=devnet), [51VVfay7m1zngoCJ...](https://explorer.solana.com/tx/51VVfay7m1zngoCJqUQEGo5dG1QFJTEvs7cYkZ37bzy9JWQwV9ZdWHmEwVcJAdwHjwZCh3TXdnxGjcRqPmha6m5M?cluster=devnet), [42eZQB9bHZEuSjmi...](https://explorer.solana.com/tx/42eZQB9bHZEuSjmiFq71TUgrhPbJ8aiXmne4fu95q5is9BFBSuTtTsCaxWnyVFSM957aLEq2mFX4j8XErdcQfLGr?cluster=devnet)
 
+## Guard HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg (scripted runaway agent, fresh guard, Nov 22; current program, keeper set)
+
+- Guard account: [HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg](https://explorer.solana.com/address/HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg?cluster=devnet); owner 4cMEVdWkpaMWvuGznBxUWeRxYXadiR5ULVmsJ2dZSH2V
+- `node demo/devnet-runaway.mjs`: the runaway agent of the replay (doubling a losing long, bidding lower each step) through guardrail-mcp, with the demo limits (G1 4 SOL, G3 1,200 dUSDT a day, G4 6 SOL, G5 2x, G6 2%, G10 50 dUSDT). Orders rest; devnet's oracle is stale, so nothing fills.
+- 37 orders: 6 accepted, 31 refused on chain (G1 10, G3 3, G4 3, G6 15). Dashboard: [this guard](https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg). Log: `notes/devnet-runaway.txt`.
+
+- accepted: [9Fcpeaczi8ag8G3u...](https://explorer.solana.com/tx/9Fcpeaczi8ag8G3uRE6WRRCBN7Te5zT5Ggjs84pzDbbr6KcY19BEM5r9Dw1XTPvBEMHSUMXZHDCMxgAa7cJCguc?cluster=devnet)
+- accepted: [2HSt7wRQNB13pQwT...](https://explorer.solana.com/tx/2HSt7wRQNB13pQwTq3ZavwW8agKhW5oh9qA3XMdcps8bhj2cJM78BSZ19MunPiWWtmnE5wonbpdMavUtBB7FUiXf?cluster=devnet)
+- accepted: [32yb3cLw4CQQayQ9...](https://explorer.solana.com/tx/32yb3cLw4CQQayQ97qTddwZoQSCUsrZpbizv73FoXi296jiz1WcWUeYY4KXmRMJaZKKHnRhECbQWtEtCmRME6rv6?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded), 7.5 SOL vs 6: [DMrTFFL9Htop5WQm...](https://explorer.solana.com/tx/DMrTFFL9Htop5WQm9YvDDXo8GBZ5HdtXh52FHRNjYwXcR4DyfhyzzFcJyUBuyhWhKA1ygaQtdBuf2E4cDmeLiuv?cluster=devnet)
+- accepted: [4mxKS9DhFqyaYRBB...](https://explorer.solana.com/tx/4mxKS9DhFqyaYRBBhxFdPpr3DqNurVyhxKh2HRCsPXkv3BW8xgnV3deHiiACUcR59ZxqG9mejJoTWnXc7h6qR8UC?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 8 SOL vs 4: [3WQ6eg9zGG63nyGv...](https://explorer.solana.com/tx/3WQ6eg9zGG63nyGvQB7zVDnEQQvRbxgRsVn5F8RsWznzqoohZvkDr2Sm63Q6Xo3kzibSfPPuSMVnqX91BiDCeS2Q?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded), 9.5 SOL vs 6: [3SBobpzPmB2bbeKe...](https://explorer.solana.com/tx/3SBobpzPmB2bbeKeU9V4t9vhXhUHvwKifhqmbLYrbW43qnUFzkkAbqoih1Cff5NM6dvBBwm3z3EzdQFMVSr8yaiE?cluster=devnet)
+- accepted: [65LNQQbZKTgKjfC1...](https://explorer.solana.com/tx/65LNQQbZKTgKjfC14F1y5Pq2UwAtmkKZSVQrJAUmgbhgatrT1SYdhCRAsrXpLXkNRmSgkVrrS8YKCgw46eZ1GfaP?cluster=devnet)
+- refused by G3 daily notional (DailyNotionalExceeded), 1416.61 vs 1200 dUSDT: [25VUr6V5t1iRabyo...](https://explorer.solana.com/tx/25VUr6V5t1iRabyoCkaTFqAaVBakE9dzfk2pQXaR4MxacxnAidkUTpJv6TYMUR3FWB3eE7FHf4axesABcJFa56vc?cluster=devnet)
+- refused by G3 daily notional (DailyNotionalExceeded), 1233.82 vs 1200 dUSDT: [4W7uasqmghHiW4P4...](https://explorer.solana.com/tx/4W7uasqmghHiW4P4cqPQByBVaHAxggeXboCpQ3pBnT3u5Nq9maBsvn3P2CVTRM6DcbWEv6ETJFSKRtSaacap8WPJ?cluster=devnet)
+- refused by G4 exposure (ExposureExceeded), 6.5 SOL vs 6: [3kEBXpkzaM7vwRx4...](https://explorer.solana.com/tx/3kEBXpkzaM7vwRx4jmBKa58rEdauUs3VbmeDih6zJEUptvBUXtquSuTb61acezVUEtxbZopj6JE3D62twVAkQ6o8?cluster=devnet)
+- accepted: [5CJ1BdhPwpzK7kYV...](https://explorer.solana.com/tx/5CJ1BdhPwpzK7kYVNHmnxYSLTVP7rCowP59JvJYD7PQVramZgbuC3VtuCuZt2xTjJQT1z3y9a11j33iWK4KLFAZf?cluster=devnet)
+- refused by G3 daily notional (DailyNotionalExceeded), 1233.82 vs 1200 dUSDT: [4dfyCN5hp4FmDnX2...](https://explorer.solana.com/tx/4dfyCN5hp4FmDnX2wWsCVWawFVZchd2BHvRCJWtJbu5yZLCpfAgr8wmZChaNkEvNGe48coeCiHxad4eT9fNeud9K?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 16 SOL vs 4: [25PFVetrwEnQb65m...](https://explorer.solana.com/tx/25PFVetrwEnQb65mpu7WpH1ehjfdN3ZYyEfYYmS2EKN7CkM78jV215zUyvTicjLwbW1xDNDPBfd8HwEPh4REEq8N?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 8 SOL vs 4: [3ko2zk6xbT5oJHK9...](https://explorer.solana.com/tx/3ko2zk6xbT5oJHK994L83dhXkX76RPKTK2b3GR7wdyCShHLmUuGvQNLXGKXcz6LYwBKcoE9ArP1ZJ4nyLFQbYZf?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [UmqdHjDWP2594kgh...](https://explorer.solana.com/tx/UmqdHjDWP2594kghkHLE36EFsekqB7P4BgNJ4DSKJyhJfaQCXL8WjTonpzzn6zzSK6KR8FYziebXWtri1RhELry?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [Uei8Jcw14z1CZrrj...](https://explorer.solana.com/tx/Uei8Jcw14z1CZrrjh6kZgvWrSNyGxnECpqLBe4otHbdVBzZU374Ucw3pHUut8b1RN8PLd65E36BmbwAMuRpeQEa?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [5fuW4R8yfwymVXWd...](https://explorer.solana.com/tx/5fuW4R8yfwymVXWdkt8TnYauWRA7aZhwPqxhHBBRyHy8DiUK7y9XAR6W6ude6xWE9wsuyh9auJs85sAwRokDHsiV?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [2ffsmuTd7m8c6NhC...](https://explorer.solana.com/tx/2ffsmuTd7m8c6NhCUG5f89pDTLE5uLU8wepV5MJCEiaaYhiAHVPLJmCCRXKx8oVN6kqjWGfUUYwncFtDRA2TbaGv?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [2EBZQvfJkcMx5YEt...](https://explorer.solana.com/tx/2EBZQvfJkcMx5YEtiUZezhTLsuRmEa7rXNYW5EbF7sbqVTezNZ5oDcgfa9g3qfkhuaT2DBpC3wbvZU3Eexk9M7sM?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.08% vs 2.00%: [5nn7ZEzzzhGn3tXD...](https://explorer.solana.com/tx/5nn7ZEzzzhGn3tXDiwXicEC8ndrpSt5igP7mM6eCeMMZ5jTxbUUaXS99jENunnw8mcgY1iRu6pNJjBnscxx2HBwt?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 32 SOL vs 4: [3qjuXzEfvSy4MEXJ...](https://explorer.solana.com/tx/3qjuXzEfvSy4MEXJnoXjiCvxe6jrz2SGubPxuRoJ6fnoruHQPsDBMLtiEUwcvvSAtX4W8GE2GkzM8hSYKcv9ZXVN?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 16 SOL vs 4: [3mc8562mdsijmP7g...](https://explorer.solana.com/tx/3mc8562mdsijmP7gPij8PqZqggpmEVjqjyro3upiggwhEDn8jrcFm5jbPXKZNjZkFqSdNtz42FbLjpMqhr2zNtcz?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 8 SOL vs 4: [4h2FQNrDDnAMhoX8...](https://explorer.solana.com/tx/4h2FQNrDDnAMhoX8XKLsfvXz2h9dw3JSqWBGVMzV4QNnJrxMCUsdbjQwSwsVi1cB8UnDzGNzxiTR9pusXpXo9b3g?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.41% vs 2.00%: [3QbStYUrPdexgdAA...](https://explorer.solana.com/tx/3QbStYUrPdexgdAA1xKHPQjqbBuYjrrvyWvWsxboV7E5gRGwYWUyeGhBp91MRRPSABN2Bm3vFcRycCvC9EVPWijS?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.41% vs 2.00%: [2weATqeQDYAQPWUJ...](https://explorer.solana.com/tx/2weATqeQDYAQPWUJLj2hnCogAYum7iwEoUeDCo2b4mZBzVLFEyS8aFeE6MrcXiETw1ixPLSQdjxtUadaQf7rxXVJ?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.41% vs 2.00%: [HXrysJopirVr3dTp...](https://explorer.solana.com/tx/HXrysJopirVr3dTpodZ2HDXKrY47a57ab4RmZCUKdQGDbMiq2tJRr4VSMCp7By5KHkwKGHVe7WCitGk7Lu9WW8K?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.41% vs 2.00%: [217EUpxuBagGy8ef...](https://explorer.solana.com/tx/217EUpxuBagGy8efFSy3xyNqozWC5MZy2iu4cJErSXiTzoFzzGW7J6ftqVeXvGbWsUVyc1iNKtphmZpKaGev7c36?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.41% vs 2.00%: [4fig7YBLHRxmFxLj...](https://explorer.solana.com/tx/4fig7YBLHRxmFxLjnwt15H5M2YEeBdENVL6TCP1bPRnR1TEL5N4vbetxWPRYfgoEw2XLU4j2U8jh2cW87JSyUHvt?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 64 SOL vs 4: [3FnqSUdkHdwa3rpi...](https://explorer.solana.com/tx/3FnqSUdkHdwa3rpiMGmcVbpGvwujhznjgKMSn2vBwqu9WMaQxv2fH5iMKrgfpP4KtNTczGVh8frhorG6REabTBM1?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 32 SOL vs 4: [mc39FYDTEKduHxSN...](https://explorer.solana.com/tx/mc39FYDTEKduHxSNLWQ4qRvN3YNzKTXmcs4t3YMoKSYfGG8enPKAPocVozHWUn2pyaFwi84SSoprbrsWQAhS8Wr?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 16 SOL vs 4: [5ec8FTauCMU5Ej7Q...](https://explorer.solana.com/tx/5ec8FTauCMU5Ej7QGs4dUaXzDgUFxfpReBCxLqAbTdXAGfhUtcVzrG6epGwKPCWYdwipVy8MzEjJDdAt2s6Fp4dS?cluster=devnet)
+- refused by G1 order size (OrderTooLarge), 8 SOL vs 4: [4ZEXYpjGqT3kjxJN...](https://explorer.solana.com/tx/4ZEXYpjGqT3kjxJNU8JfMbSCrZ4yFHUMyPCSsm6u6vMUD1bZqDM9SesfXD6jgP4D149KA2VZL8SsCGF7rNQ45T2o?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.73% vs 2.00%: [4Kxuz3ytSdebjv7d...](https://explorer.solana.com/tx/4Kxuz3ytSdebjv7dTtTQMw1v4RxqrUwHFAzwy1jUNduGTaDiccgs7A76V92sCadnCnCCjhtYrL547NiKDB8D3hT?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.73% vs 2.00%: [48m5v22SbUVKYWa7...](https://explorer.solana.com/tx/48m5v22SbUVKYWa77peNKbFhvh7z5g7ynE5pv3VnxWPkYx8xZCcygWtgfegLEGMzbMB9MP1RQQnuR7cg92xWZYdR?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.73% vs 2.00%: [36kvNPq36udosFBA...](https://explorer.solana.com/tx/36kvNPq36udosFBA7Jdahbf72PqzDQgQWGo7frjwNxMoQE5caMEpob9CiaSHmuuq6REKZJ8bizhpghkP1u4CWB3U?cluster=devnet)
+- refused by G6 price band (PriceOutsideBand), 2.73% vs 2.00%: [kvHhP1yzuauc1bh2...](https://explorer.solana.com/tx/kvHhP1yzuauc1bh2UqkgQMcYDPWFZkWbPMnQSVUTJ1kLFQGtfRb2RX6RztywQ1nmfQ6mbP3dqaVg4MGZmNc1F8g?cluster=devnet)
+
 ## Guard 9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8 (language-model agent, current program (keeper set))
 
 - Guard account: [9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8](https://explorer.solana.com/address/9NJpRGSqi7eKz6jSPTmcW5fZc4z8aNipSQDvWuViS9E8?cluster=devnet); owner FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS

@@ -7,6 +7,8 @@
 - **41.2% vs 9.4%**: the same runaway agent on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
   limit breaches (a replay on Velocity's real program).
 - **54 orders refused**: on a local fork of devnet with real fills, the agent was held at its 6 SOL cap while SOL fell.
+  On public devnet, where orders rest without fills, a fresh guard refused the same agent's orders 31 times
+  ([guard](https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg); every transaction in `notes/devnet-receipts.md`).
 - **3 of 3 bypass attempts fail on public devnet**: with its own key, the agent's direct Velocity
   [order](https://explorer.solana.com/tx/3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa?cluster=devnet), [withdraw](https://explorer.solana.com/tx/MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3?cluster=devnet) and [delegate change](https://explorer.solana.com/tx/2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ?cluster=devnet) are refused by Velocity (`demo/bypass-attempt.mjs`).
 - **1.1% median loss either way**: a normal grid bot on 30 random price paths is barely touched by the guard; its worst
