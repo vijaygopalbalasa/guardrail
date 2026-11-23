@@ -36,7 +36,8 @@ as the unguarded run did at 6.98x) is liquidation protection; Guardrail is the o
 
 Devnet only, no real users yet. Five internal review rounds; every finding and fix is in the repo (`audits/`). The owner
 can always trade directly or remove the delegate. The guard wraps Velocity's `place_perp_order` and `cancel_order`, not
-`place_and_take`, so the agent cannot take liquidity immediately; that is a missing feature, not a bypass.
+`place_and_take`, so the agent cannot take liquidity immediately; that is a missing feature, not a bypass, and wrapping
+it is next.
 
 ## What the guard cannot do
 
