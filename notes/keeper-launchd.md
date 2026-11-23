@@ -17,6 +17,7 @@ output goes to `out/keeper-launchd.log`. If the Mac is asleep at 05:30 IST, laun
 
 Installed Nov 22 2026:
 
+    # edit the /path/to/ parts in the plist first (repo location and node binary), then:
     cp scripts/launchd/com.guardrail.keeper.plist ~/Library/LaunchAgents/
     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.guardrail.keeper.plist
 

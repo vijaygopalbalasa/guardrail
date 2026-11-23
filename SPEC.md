@@ -46,7 +46,6 @@ market (market table = G2 allowlist); G5 whole account, collateral = spot0 only;
   G3 to G6 are exercised with fills.
 - Demo agent: a small AI trading agent (LLM decides orders from prices) with a planted runaway loop; run unguarded and
   guarded on the same replay; record losses and refusals.
-- Devnet deploy of the guard (resting orders on Velocity devnet; its oracle is stale, so fills are shown on the mainnet fork).
+- Devnet deploy of the guard (resting orders on Velocity devnet; its oracle is stale, so fills are shown on a local fork of devnet).
 - Dashboard: limits, live orders, every refusal with its reason, the headline number.
 - Drop-in wrapper: a small TypeScript client (`guardrail.placeOrder(...)`) so any agent framework can route orders through it.
-
