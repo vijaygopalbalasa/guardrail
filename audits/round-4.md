@@ -2,7 +2,7 @@
 
 ## Scope and method
 
-**What I reviewed.** The program delta a013bd2..HEAD 3eb0e52 (program commit 58d9b40), plus `scripts/keeper.mjs` and the
+**What I reviewed.** The program delta 543add8..HEAD 089fb1c (program commit e205a31), plus `scripts/keeper.mjs` and the
 client's `migrateGuard`, `closeGuard` and `checkpoint`. The delta covers:
 - `migrate_guard` and `close_guard`
 - the 128 reserved bytes
@@ -13,9 +13,9 @@ client's `migrateGuard`, `closeGuard` and `checkpoint`. The delta covers:
 - I exported HEAD into a temporary directory with copy-on-write build caches.
 - I built HEAD's `guard.so`. It is byte-identical to the repo's and to `notes/devnet-guard-so.sha256` (1ad503ee...3f4b).
 - I also built three REAL older binaries:
-  - 31afb12: 967-byte guard
-  - 75ece0f: 865-byte guard, the last layout before G10
-  - dfa815f: 352-byte guard; this is the round-1 binary, sha256 1d8b3d2c..., the one I audited in round 1
+  - 3ca9666: 967-byte guard
+  - fb307bc: 865-byte guard, the last layout before G10
+  - daed8a1: 352-byte guard; this is the round-1 binary, sha256 1d8b3d2c..., the one I audited in round 1
 - In each probe, the old binary creates the guard and uses it (an accepted order, a G1 refusal, a pause). Then the program
   account is replaced by HEAD and the guard is migrated.
 - All repo suites pass. 6 REPLAY probes (`r4probe.rs`) ran on Velocity's real devnet binary.
@@ -39,7 +39,7 @@ Line references are to HEAD `programs/guard/src/lib.rs`.
   `max_order_lifetime_secs` was added inside `Limits`, so everything after it shifts by 8.
 
 **What the probe showed.**
-- The real dfa815f guard (352 bytes) "migrates" with OK.
+- The real daed8a1 guard (352 bytes) "migrates" with OK.
 - The agent then fails every call with ConstraintSeeds 2006, because `bump` is read from a shifted byte.
 - The owner's `set_paused` succeeds and writes into misaligned fields.
 - `limits.max_order_lifetime_secs` now holds the old `day` number.
@@ -110,7 +110,7 @@ the owners of migrated capped guards to name a keeper.
 
 ## Verified sound
 
-**`migrate_guard` on real old guards (31afb12, 967 bytes; 75ece0f, 865 bytes).**
+**`migrate_guard` on real old guards (3ca9666, 967 bytes; fb307bc, 865 bytes).**
 - Before migration, agent calls fail with 3003.
 - The agent or a stranger calling migrate or close is refused with NotOwner (6010).
 - The owner's migrate succeeds:

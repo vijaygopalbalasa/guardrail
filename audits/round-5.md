@@ -2,7 +2,7 @@
 
 ## Scope and method
 
-**What I reviewed.** The diff 3eb0e52..HEAD 0e2f077 (commits 1cf7a38, 183a1d7 and 0e2f077), in `programs/guard/src/lib.rs`
+**What I reviewed.** The diff 089fb1c..HEAD 85d80ac (commits a2796fe, 5a3c00e and 85d80ac), in `programs/guard/src/lib.rs`
 and `scripts/keeper.mjs`.
 
 **Where I worked.** A fresh `git clone` at a temporary directory, with build caches cloned copy-on-write.
@@ -11,10 +11,10 @@ The original was never written to, and the clone is deleted.
 **Binaries.**
 - HEAD's `guard.so` (sha256 9da5be27...6e7a).
 - Three real older binaries:
-  - 58d9b40: 1135 bytes, no day high. Its hash 1ad503ee equals the current devnet hash in `notes/devnet-guard-so.sha256`,
+  - e205a31: 1135 bytes, no day high. Its hash 1ad503ee equals the current devnet hash in `notes/devnet-guard-so.sha256`,
     so devnet does not run HEAD yet.
-  - 31afb12: 967 bytes.
-  - dfa815f: 352 bytes.
+  - 3ca9666: 967 bytes.
+  - daed8a1: 352 bytes.
 
 **Tests.** All repo suites pass in the clone. I ran 4 REPLAY probe tests (`r5probe.rs`) on Velocity's real devnet
 binary.
@@ -54,19 +54,19 @@ mark. That only hurts the agent.
 **Migrate mid-day.** Migrated guards start with `day_high_day = 0`, and the seeding uses that day's baseline and last
 equity seen. A 967-byte guard migrated mid-day seeds the day high at 999.99 on its first observation.
 
-### Finding 1 (Low, CONFIRMED, one time): the day the program is upgraded from 58d9b40, a pre-midnight dip seen by the old binary becomes the next day's baseline
+### Finding 1 (Low, CONFIRMED, one time): the day the program is upgraded from e205a31, a pre-midnight dip seen by the old binary becomes the next day's baseline
 
-**Why it happens.** Guards made by 58d9b40 are already 1135 bytes, so they get no migrate. Their day high bytes come from
+**Why it happens.** Guards made by e205a31 are already 1135 bytes, so they get no migrate. Their day high bytes come from
 the zero reserved area, so `day_high_of` returns None.
 
-**Probe `q2_upgrade_mid_day_from_58d9b40`.**
+**Probe `q2_upgrade_mid_day_from_e205a31`.**
 1. Under the old binary: a morning baseline of 1,000.54, then a refused cancel at a 22:59 dip, so `last_seen` = 977.69.
 2. The program is upgraded at 23:30. No HEAD call happens before midnight, and there is no mark.
 3. The 02:00 dip bid is **accepted**, with baseline 977.69.
 4. Twin: one HEAD call at 23:30 seeds the day high from that day's baseline (1,000.54), and the same bid is refused.
 
 **Bound.** This is round-4 item 2 surviving for the single night of the upgrade, and only when the keeper misses that
-night's mark. Devnet guards will cross this window when devnet moves from 58d9b40 to HEAD.
+night's mark. Devnet guards will cross this window when devnet moves from e205a31 to HEAD.
 
 **Fix (optional).** When `day_high_of` is None, include the stored day's baseline (`adj(baseline_equity, baseline_flows)`)
 in `new_day_baseline`. Or simply run the keeper on the night of the upgrade, which is already required.
@@ -130,9 +130,9 @@ refuse `keeper == agent` in both setters.
 ## Appendix: probe code (r5probe.rs, uses the repo's tests-litesvm harness at HEAD)
 
 ```rust
-fn q2_upgrade_mid_day_from_58d9b40() {
+fn q2_upgrade_mid_day_from_e205a31() {
     for upgrade_then_call in [false, true] {
-        let (mut env, g) = g10_with(Some("58d9b40"));
+        let (mut env, g) = g10_with(Some("e205a31"));
         goto(&mut env, 1, 3_000, P0); // next day 00:50: first call takes that day's baseline (max rule)
         let r = env.gplace("old binary: morning bid (baseline)", &g, bid(P0));
         env.note(format!("[upgrade, call after={upgrade_then_call}] morning {} baseline {}", ev(&r), env.guard_state(&g).baseline_equity));

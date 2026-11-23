@@ -204,7 +204,7 @@ Same agent loop and price path, unguarded vs guarded; headline lines at the end 
 ## Round 15 (Nov 22): audit round 5 and the final review panel (tests in tests-litesvm/tests/audit_r5.rs)
 
 - The keeper and the agent must be different keys (set_keeper and set_agent refuse KeeperIsAgent, 6037).
-- With no day high (a guard upgraded from 58d9b40), the stored previous day's baseline also counts, closing the
+- With no day high (a guard upgraded from e205a31), the stored previous day's baseline also counts, closing the
   upgrade-night case.
 - The keeper trap: the owner's checkpoint resets the baseline (and the day's high) to the equity now at any time and
   emits a Checkpointed event; every checkpoint emits it (kind 0 max rule, 1 the keeper's midnight mark, 2 the owner's

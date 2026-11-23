@@ -74,4 +74,4 @@ CAUGHT === R15 with no day high the stored baseline is ignored
 CAUGHT === R15 the owner can reset only in the first hour
 CAUGHT === R15 values from older days still carry after a gap
 
-Final run: 74 of 75 caught, in a copy-on-write copy at b779468 (program code unchanged after it). The one not caught removes the post-CPI stored-order check, a backup the pre-CPI checks make unreachable (see notes/RED.md, round 4).
+Final run: 74 of 75 caught, in a copy-on-write copy at 3c4a50d (program code unchanged after it). The one not caught removes the post-CPI stored-order check, a backup the pre-CPI checks make unreachable (see notes/RED.md, round 4).

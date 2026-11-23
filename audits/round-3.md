@@ -2,8 +2,8 @@
 
 ## Scope and method
 
-**What I reviewed.** The program delta from the R8 commit (round-2 HEAD, now rewritten as 57dbb79) to HEAD a013bd2.
-Program code there is identical to 41fb984, which already includes the owner/keeper-only midnight mark and the
+**What I reviewed.** The program delta from the R8 commit (round-2 HEAD, now rewritten as 3220d36) to HEAD 543add8.
+Program code there is identical to 59a98f8, which already includes the owner/keeper-only midnight mark and the
 "state errors skip the observation" change. The delta covers:
 - the true-exit rule (N1)
 - `last_seen_equity` with the max baseline, and the checkpoint (N2)
@@ -17,7 +17,7 @@ Program code there is identical to 41fb984, which already includes the owner/kee
 - I exported HEAD into a temporary directory with build caches cloned copy-on-write.
 - `guard.so` rebuilt byte-identical to the repo's, and to the devnet hash in `notes/devnet-guard-so.sha256` (064ea026...1191).
 - Every repo suite passes on it.
-- I also rebuilt the 31afb12 and 57dbb79 binaries; their hashes match the ones from round 2.
+- I also rebuilt the 3ca9666 and 3220d36 binaries; their hashes match the ones from round 2.
 - 7 REPLAY probes (`r3probe.rs`) ran on Velocity's real devnet binary.
 - Two read-only `simulateTransaction` calls ran against devnet. No transaction was sent.
 - The repo was never written to, and the temporary copy is deleted.
@@ -37,7 +37,7 @@ Line numbers are HEAD `programs/guard/src/lib.rs`.
   "account already in use".
 
 **Proof (LiteSVM, `q4_old_layout_guard_under_head`)**
-- A guard created by the 31afb12 binary is 967 bytes.
+- A guard created by the 3ca9666 binary is 967 bytes.
 - After the program is upgraded to HEAD, all of these fail with 3003: the agent's cancel, the owner's
   `set_agent(default)` revoke, and the owner's checkpoint.
 - `init_guard` again fails (system error 0, account in use).
@@ -101,7 +101,7 @@ refused cancel.
 
 ## Q3: can an honest cancel or exit now be blocked?
 
-At 41fb984 and HEAD, only a missing account fails the observation (`:565`, `:571`). State errors skip it.
+At 59a98f8 and HEAD, only a missing account fails the observation (`:565`, `:571`). State errors skip it.
 
 | Case | Result | Status |
 |---|---|---|
@@ -119,7 +119,7 @@ Lazer oracle (Velocity error 6022). The guard side had already skipped.
 **Exit on a market whose own oracle is unsupported.** It still fails with 6021 (`check_order`). This is pre-existing,
 and Velocity could not price that market either.
 
-**At 31afb12.** All of the state-error cases above would have failed every call. 41fb984 fixed this.
+**At 3ca9666.** All of the state-error cases above would have failed every call. 59a98f8 fixed this.
 
 ## Q1: round-2 findings rerun
 
@@ -181,7 +181,7 @@ fn n2_residual_dips_around_midnight() {
 
 fn q4_old_layout_guard_under_head() {
     let mut env = Env::new();
-    env.svm.add_program_from_file(GUARD, "guard-31afb12.so").unwrap();
+    env.svm.add_program_from_file(GUARD, "guard-3ca9666.so").unwrap();
     env.step(1, P0);
     let g = env.guarded(1_000, tight());
     env.step(2, P0);
