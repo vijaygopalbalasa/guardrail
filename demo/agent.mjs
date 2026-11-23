@@ -72,19 +72,19 @@ const sol = (x) => Number(x) / 1e9;
 const PACE_MS = Number(process.env.DEMO_PACE_MS ?? 0);
 
 /** The guard's verdict in plain words. */
-export function plain(v) {
+export function plain(v, unit = "dUSDT") {
   if (!v) return "no verdict";
   if (v.accepted) return v.rule === 9 ? "ACCEPTED as an exit, sent to Velocity" : "ACCEPTED, sent to Velocity";
   const val = Number(v.value), cap = Number(v.cap);
   const why = {
     1: () => `${val / 1e9} SOL is over the ${cap / 1e9} SOL per-order limit`,
     2: () => (v.reason === 6034 ? "a reduce-only order beyond the position" : v.reason === 6030 ? `the order's max_ts must be in the future and at most ${cap} s away` : v.reason === 6031 ? `${cap} orders the guard placed are already open; cancel one first` : `${v.reasonName} (not on the owner's allowlist)`),
-    3: () => `today's notional would be ${(val / 1e6).toFixed(2)} dUSDT, over the ${(cap / 1e6).toFixed(0)} dUSDT daily cap`,
+    3: () => `today's notional would be ${(val / 1e6).toFixed(2)} ${unit}, over the ${(cap / 1e6).toFixed(0)} ${unit} daily cap`,
     4: () => `worst-case exposure would be ${val / 1e9} SOL, over the ${cap / 1e9} SOL cap`,
     5: () => `worst-case leverage would be ${(val / 1e4).toFixed(2)}x, over the ${(cap / 1e4).toFixed(2)}x cap`,
     6: () => (v.reason === 6028 ? "a stale-oracle exit priced against the owner" : `the price is ${(val / 100).toFixed(2)}% from the oracle, outside the ${(cap / 100).toFixed(2)}% band`),
     7: () => "the owner paused the guard",
-    10: () => `today's loss is ${(val / 1e6).toFixed(2)} dUSDT, over the ${(cap / 1e6).toFixed(0)} dUSDT daily loss cap`,
+    10: () => `today's loss is ${(val / 1e6).toFixed(2)} ${unit}, over the ${(cap / 1e6).toFixed(0)} ${unit} daily loss cap`,
   }[v.rule];
   return `REFUSED by ${v.ruleName}: ${why ? why() : v.reasonName}; nothing reached Velocity`;
 }

@@ -8,6 +8,10 @@
   limit breaches (a replay on Velocity's real program). Guarded caps: 4 SOL per order, 10 SOL worst-case exposure,
   1,500 dUSDT a day, 2x leverage, 2% band, 50 dUSDT daily loss. Unguarded, only Velocity's margin rules applied and the
   agent reached 6.98x leverage.
+- **Exactly the 6 SOL cap on a local fork of Solana mainnet**: Velocity's real mainnet program, the live SOL oracle and
+  real resting orders (nothing is sent to mainnet). The language-model agent told to build a 25 SOL long filled 2.75 SOL,
+  was refused on chain at 22.25 SOL (order size) and at 4 SOL (exposure), filled 3.25 SOL against a real mainnet maker's
+  order and Velocity's AMM, then stopped: "I won't try to route around it" (`notes/mainnet-fork-live.md`).
 - **54 orders refused**: on a local fork of devnet with real fills, the agent was held at its 6 SOL cap while SOL fell.
   On public devnet, where orders rest without fills, a fresh guard refused the same agent's orders 31 times
   ([guard](https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg); every transaction in `notes/devnet-receipts.md`).
@@ -52,7 +56,7 @@ can always trade directly or remove the delegate. The guard wraps Velocity's `pl
   what is not claimed.
 - [The limits in full](docs/limits.md): G0 to G10, the daily loss brake in detail, upgrades and migration.
 - [Build and test](docs/build-and-test.md): every step from a fresh clone (about 6 minutes cold), the local validator,
-  the surfpool fork with live fills and the CI job.
+  the surfpool forks with live fills (devnet with a moved price, and mainnet with the live price) and the CI job.
 - Devnet program [BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy](https://explorer.solana.com/address/BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy?cluster=devnet)
   (built from commit 494359f; the deployed bytes match the build, `scripts/verify-devnet-program.sh`) and its
   receipts: `notes/devnet-receipts.md` (old-layout guards are labelled "history (old layout, not migrated)"; the freshness

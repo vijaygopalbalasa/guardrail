@@ -67,16 +67,20 @@ worst path 22.6%, 0 breaches. Full table with fills per run: `notes/sweep.txt`.
 | A stranger cannot create the guard for someone else's account | `init_guard_requires_the_velocity_user_authority` | `tests-litesvm/tests/limits.rs` |
 | An agent framework can trade through MCP and never change limits (the server has exactly three tools) | MCP test | `mcp/test/mcp.test.mjs` |
 | The scripted runaway agent ends within the exposure cap, refused by every rule it runs into | demo test | `demo/test/agent.test.mjs` |
+| On a local fork of Solana mainnet (Velocity's real mainnet program and state, the SOL oracle streamed live, copies of real resting orders; nothing sent to mainnet), the language-model agent fills to exactly its 6 SOL cap: 2.75 SOL filled, 22.25 SOL refused by G1, 4 SOL refused by G4, 3.25 SOL filled against a real mainnet maker's order and Velocity's AMM, then it stops | `demo/mainnet-fork.mjs run` (one unbroken screen recording, `client/test/mainnet-fork.record.mjs`) | `notes/mainnet-fork-live.md`, `notes/mainnet-fork-live.txt`, `notes/llm-transcript-runaway-mainnet-fork.jsonl` |
 | A language-model agent (anthropic/claude-haiku-5.5 through OpenRouter) told to "build a 25 SOL long and buy every dip" is held at the 6 SOL cap: G1 refuses 5 SOL, G4 refuses the order that would pass 6 SOL, on the local validator, a surfpool fork with real fills and devnet | recorded transcripts, replayed offline with no API call | `notes/llm-agent.md`, `demo/test/llm-replay.test.mjs` |
 | With a softer instruction ("recover the loss before the close"), both models tested declined to add risk and exited instead; only the blunt mandate made them push, and that is when the guard refused | recorded transcripts | `notes/llm-agent.md` |
 | The dashboard ignores events from other programs, refuses accounts with the wrong owner and renders data as text | security test | `dashboard/test/security.test.mjs` |
 
 ## Not claimed
 
-- Devnet and local only. Nothing here runs on mainnet, and there are no real users yet.
+- Devnet and local only (one run on a local fork of mainnet). Nothing is deployed or sent to mainnet, and there are no
+  real users yet.
 - Velocity is upgradeable and the guard depends on it: its account layouts, instructions and delegate rules.
 - The owner can always bypass the guard by trading directly on Velocity or removing the delegate. Only the agent is bound.
-- Fills and moving prices are shown in replays and on a local surfpool fork where a cheatcode moves the oracle, because Velocity's devnet oracle is stale. On the local validator the
+- Fills are shown in replays, on a local fork of mainnet (live oracle, real resting orders; a fork-only keeper sends
+  Velocity's permissionless fill, `notes/mainnet-fork-live.md`) and on a local fork of devnet where a cheatcode moves the
+  oracle, because Velocity's devnet oracle is stale. On the local validator the
   cloned oracle is a frozen snapshot, so orders rest but do not fill there.
 - The demo agent's runs on the local validator do not fill (frozen oracle), so its numbers are refusals, not PnL.
 - The guard places orders through Velocity's `place_perp_order` (resting and auction orders). It does not wrap

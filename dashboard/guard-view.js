@@ -152,13 +152,25 @@ export function decodeVelocityUser(u8) {
   return { positions, orders, spot, totalDeposits, totalWithdraws };
 }
 
-// Velocity's spot market 0 (dUSDT) and perp market 0 (SOL-PERP): the same PDAs on devnet and mainnet.
+// Velocity's spot market 0 (the quote asset) and perp market 0 (SOL-PERP): the same PDAs on devnet and mainnet.
 export const SPOT0 = "2QpHj5vzgCdWaGM2KSoGtYJWeSkx24cMyzUDHDrucvRc";
 export const PERP0 = "FDejXbUrSy6zayBCL5xuk2SXLHZgr8ppfFTLcHbyJorY";
 
+/** The quote asset's name from spot market 0's mint: USDT on mainnet (and forks of it), dUSDT (Velocity's devnet faucet token) otherwise. */
+export const MAINNET_USDT_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
+export const quoteUnitOf = (mint) => (mint === MAINNET_USDT_MINT ? "USDT" : "dUSDT");
+const quoteCache = new Map();
+async function loadQuoteUnit(url) {
+  if (!quoteCache.has(url)) {
+    const sm = await accountInfo(url, SPOT0);
+    quoteCache.set(url, quoteUnitOf(sm && sm.owner === VELOCITY_PROGRAM_ID && sm.data.length >= 104 ? b58encode(sm.data.subarray(72, 104)) : null));
+  }
+  return quoteCache.get(url);
+}
+
 /**
  * Equity (collateral + unrealized PnL, quote units 1e6) and net deposits, computed the way the guard does it:
- * dUSDT deposits at the spot market's cumulative interest, plus base x oracle price + quote on SOL-PERP.
+ * Quote deposits at the spot market's cumulative interest, plus base x oracle price + quote on SOL-PERP.
  * Returns null for anything the page cannot price (other markets, other spot balances, a bad oracle).
  */
 export function equityOf(velocity, spotMarketU8, oracleU8) {
@@ -240,5 +252,7 @@ export async function loadDashboard(url, guardAddress, limit = 40, paceMs = 0) {
   velocity.equity = equity;
   let slot = null;
   try { slot = await rpc(url, "getSlot", [{ commitment: "confirmed" }]); } catch { /* shown without a slot */ }
-  return { guard, velocity, decisions, slot, checkpoints };
+  let quote = "dUSDT";
+  try { quote = await loadQuoteUnit(url); } catch { /* the devnet unit */ }
+  return { guard, velocity, decisions, slot, checkpoints, quote };
 }

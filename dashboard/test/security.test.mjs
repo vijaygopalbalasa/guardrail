@@ -4,8 +4,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, equityOf, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
-import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed, explorerUrl, link } from "../render.js";
+import { decodeEvents, checkedGuard, checkedVelocityUser, allowedRpc, b58decode, equityOf, quoteUnitOf, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "../guard-view.js";
+import { renderFeed, renderLastRefusal, renderError, renderReplayRun, renderAgentFeed, joinAgentFeed, explorerUrl, link, setQuoteUnit } from "../render.js";
 
 const GUARD = "ihYBqnzinaqysQcbmYetzXkVAVDXM7wWkYr1xWRGZVU";
 const OTHER_GUARD = "DsDm2DK29TXgaDMmj8ZdmZ6qGeTmNRnn9V567LvaHyCt";
@@ -194,4 +194,27 @@ test("the setup page: no HTML parsing, no inline or outside scripts, devnet or l
   for (const bad of ["https://api.mainnet-beta.solana.com", "https://evil.example", "javascript:alert(1)", "https://u:p@api.devnet.solana.com", "https://api.devnet.solana.com:8443", "http://api.devnet.solana.com", HOSTILE]) {
     assert.equal(setupRpc(bad), null, bad);
   }
+});
+
+test("the quote unit follows spot market 0's mint: USDT for mainnet's USDT mint, dUSDT otherwise", () => {
+  assert.equal(quoteUnitOf("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"), "USDT");
+  assert.equal(quoteUnitOf("GqmEqYsy8EyvofDpmtFxK8zhYrgWgNokAtYoduQdL7v6"), "dUSDT", "devnet faucet mint");
+  for (const other of [EVIL, null, undefined, "", HOSTILE]) assert.equal(quoteUnitOf(other), "dUSDT");
+  const refusal = { rule: 3, reason: 6007, value: 1_300_000_000n, cap: 1_200_000_000n, slot: 1n };
+  try {
+    setQuoteUnit("USDT");
+    const last = new El("div");
+    renderLastRefusal(doc, last, refusal);
+    assert.ok(last.textContent.includes(" USDT traded today"), last.textContent);
+    assert.ok(!last.textContent.includes("dUSDT"));
+    setQuoteUnit(HOSTILE); // anything but the two known units is ignored
+    const again = new El("div");
+    renderLastRefusal(doc, again, refusal);
+    assert.ok(again.textContent.includes(" USDT traded today") && !again.textContent.includes("<img"));
+  } finally {
+    setQuoteUnit("dUSDT");
+  }
+  const devnet = new El("div");
+  renderLastRefusal(doc, devnet, refusal);
+  assert.ok(devnet.textContent.includes(" dUSDT traded today"));
 });

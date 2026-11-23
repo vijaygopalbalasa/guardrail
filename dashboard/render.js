@@ -52,14 +52,18 @@ export function measure(rule, v, cap, reason) {
   switch (rule) {
     case 1: return `${sol(v)} SOL in one order, limit ${sol(cap)} SOL`;
     case 4: return `${sol(v)} SOL at risk on this market, cap ${sol(cap)} SOL`;
-    case 3: return `${usd(v)} dUSDT traded today, cap ${usd(cap)}`;
+    case 3: return `${usd(v)} ${QUOTE} traded today, cap ${usd(cap)}`;
     case 5: return `worst-case leverage ${(num(v) / 1e4).toFixed(2)}x, cap ${(num(cap) / 1e4).toFixed(2)}x`;
     case 6: return `${(num(v) / 100).toFixed(2)}% from the oracle, band ${(num(cap) / 100).toFixed(2)}%`;
     case 7: return "the owner paused the guard";
-    case 10: return `${usd(v)} dUSDT lost today, cap ${usd(cap)}`;
+    case 10: return `${usd(v)} ${QUOTE} lost today, cap ${usd(cap)}`;
     default: return "";
   }
 }
+
+let QUOTE = "dUSDT";
+/** The quote unit shown with notional and loss amounts: "USDT" on mainnet (and forks of it), "dUSDT" on devnet. */
+export function setQuoteUnit(unit) { if (unit === "USDT" || unit === "dUSDT") QUOTE = unit; }
 
 const chip = (doc, kind, text) => h(doc, "span", { className: `chip ${kind}` }, text);
 const MARKETS = { 0: "SOL-PERP" };
@@ -115,7 +119,7 @@ export function renderHeadroom(doc, box, g, velocity, decisions, nowSec, checkpo
   };
   const today = Math.floor(num(nowSec) / 86400);
   const used = num(g.day) === today ? num(g.dayNotional) : 0;
-  meter("G3 traded today", used, num(l.dailyNotionalCap), `${usd(used)} of ${usd(l.dailyNotionalCap)} dUSDT`);
+  meter("G3 traded today", used, num(l.dailyNotionalCap), `${usd(used)} of ${usd(l.dailyNotionalCap)} ${QUOTE}`);
   for (const m of l.markets.filter((x) => num(x.maxExposureBase) > 0)) {
     const p = velocity.positions.find((x) => num(x.marketIndex) === num(m.marketIndex));
     const w = p ? Math.max(Math.abs(num(p.base) + num(p.openBids)), Math.abs(num(p.base) - Math.abs(num(p.openAsks)))) : 0;
@@ -138,9 +142,9 @@ export function renderHeadroom(doc, box, g, velocity, decisions, nowSec, checkpo
     const dl = g.dailyLoss, eq = velocity.equity;
     if (eq && num(dl.day) === today && num(dl.baselineEquity) !== 0) {
       const lost = Math.max(0, num(dl.baselineEquity) + (num(eq.flows) - num(dl.baselineFlows)) - num(eq.equity));
-      meter("G10 lost today", lost, num(dl.max), `${usd(lost)} of ${usd(dl.max)} dUSDT`);
+      meter("G10 lost today", lost, num(dl.max), `${usd(lost)} of ${usd(dl.max)} ${QUOTE}`);
     } else {
-      rows.push(h(doc, "p", { className: "note" }, `G10 daily loss cap ${usd(dl.max)} dUSDT. ${num(dl.day) === today ? "" : "No guard call yet today: "}the day's baseline is taken at the guard's first call that UTC day.`));
+      rows.push(h(doc, "p", { className: "note" }, `G10 daily loss cap ${usd(dl.max)} ${QUOTE}. ${num(dl.day) === today ? "" : "No guard call yet today: "}the day's baseline is taken at the guard's first call that UTC day.`));
     }
   }
   box.replaceChildren(...rows);
@@ -201,12 +205,12 @@ export function renderLimits(doc, box, g) {
     ["G1 per order", `${sol(l.maxOrderBase)} SOL`],
     ["G2 markets", markets.map((m) => marketName(m.marketIndex)).join(", ") || "none"],
     ["G2 order types", types],
-    ["G3 per UTC day", `${usd(l.dailyNotionalCap)} dUSDT, ${usd(g.dayNotional)} used`],
+    ["G3 per UTC day", `${usd(l.dailyNotionalCap)} ${QUOTE}, ${usd(g.dayNotional)} used`],
     ...markets.map((m) => [`G4 ${marketName(m.marketIndex)}`, `${sol(m.maxExposureBase)} SOL worst case`]),
     ["G5 leverage", `${(num(l.maxLeverageBps) / 1e4).toFixed(2)}x worst case`],
     ["G6 price band", `${(num(l.priceBandBps) / 100).toFixed(2)}% of the oracle`],
     ["G6 oracle freshness", num(l.maxOracleStalenessSlots) > 1_000_000 ? `${num(l.maxOracleStalenessSlots).toLocaleString("en-US")} slots: relaxed on devnet, where the oracle is weeks old` : `${num(l.maxOracleStalenessSlots).toLocaleString("en-US")} slots`],
-    ...(g.dailyLoss ? [["G10 daily loss brake", num(g.dailyLoss.max) ? `${usd(g.dailyLoss.max)} dUSDT a UTC day; stops new risk, does not close positions` : "off"]] : []),
+    ...(g.dailyLoss ? [["G10 daily loss brake", num(g.dailyLoss.max) ? `${usd(g.dailyLoss.max)} ${QUOTE} a UTC day; stops new risk, does not close positions` : "off"]] : []),
     ["G9 exits", "always allowed inside the band"],
     ["Withdraw", "impossible for the agent"],
   ];
@@ -273,8 +277,8 @@ export function runCap(run) {
 function bindingNote(run) {
   for (const st of run.steps) for (const d of st.decisions ?? []) {
     if (d.rule === 5) return `Binding limit: G5 leverage cap ${(num(d.cap) / 1e4).toFixed(1)}x.`;
-    if (d.rule === 3) return `Binding limit: G3 daily notional cap ${usd(d.cap)} dUSDT.`;
-    if (d.rule === 10) return `Binding limit: G10 daily loss cap ${usd(d.cap)} dUSDT.`;
+    if (d.rule === 3) return `Binding limit: G3 daily notional cap ${usd(d.cap)} ${QUOTE}.`;
+    if (d.rule === 10) return `Binding limit: G10 daily loss cap ${usd(d.cap)} ${QUOTE}.`;
   }
   return run.id === "unguarded" ? "No cap: only Velocity's own 5x margin check." : "No position cap.";
 }
@@ -289,11 +293,11 @@ export function plainDecision(d) {
   const rule = num(d.rule);
   const why = {
     1: () => `more than ${sol(d.cap)} SOL in one order`,
-    3: () => `would take today's traded amount to ${usd(d.value)} dUSDT, cap ${usd(d.cap)}`,
+    3: () => `would take today's traded amount to ${usd(d.value)} ${QUOTE}, cap ${usd(d.cap)}`,
     4: () => `would put ${sol(d.value)} SOL at risk, cap ${sol(d.cap)} SOL`,
     5: () => `would lift worst-case leverage to ${(num(d.value) / 1e4).toFixed(2)}x, cap ${(num(d.cap) / 1e4).toFixed(2)}x`,
     6: () => `price too far from the oracle`,
-    10: () => `today's loss is ${usd(d.value)} dUSDT, over the ${usd(d.cap)} daily loss cap`,
+    10: () => `today's loss is ${usd(d.value)} ${QUOTE}, over the ${usd(d.cap)} daily loss cap`,
   }[rule];
   return { kind: "no", tag: `Refused by ${String(d.by ?? `G${rule}`)}`, text: `buy ${size}: ${why ? why() : "over a limit"}` };
 }

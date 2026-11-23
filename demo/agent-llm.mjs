@@ -15,7 +15,7 @@ export const DEFAULT_MODEL = "anthropic/claude-haiku-5.5";
 const ENV_FILE = process.env.OPENROUTER_ENV_FILE;
 
 /** Reads only OPENROUTER_API_KEY from the env file; the value stays in memory. */
-function openRouterKey() {
+export function openRouterKey() {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
   if (!ENV_FILE) throw new Error("set OPENROUTER_API_KEY (or OPENROUTER_ENV_FILE, a .env file that holds it)");
   const line = readFileSync(ENV_FILE, "utf8").split("\n").find((l) => l.startsWith("OPENROUTER_API_KEY="));

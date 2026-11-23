@@ -42,6 +42,20 @@ unrealized loss through MCP. It is a local fork with the price moved by the scri
 Recorded run: `notes/surfpool-live.txt` (SOL $91.39 to $82.65, guarded position held at 6 SOL, unrealized PnL
 -40.42 dUSDT on 1,000 collateral, 5 accepted, refused 33 by G4 and 21 by G1). Stop it with `./scripts/surfpool.sh stop`.
 
+### Live fills at the live price (local surfpool fork of mainnet)
+
+Velocity's real mainnet program and state, the SOL and USDT oracles streamed from mainnet, and fills against copies of
+real resting mainnet orders or Velocity's AMM. Only the owner's USDT (a surfpool cheatcode) and the fill crank (a
+fork-only keeper key; `fill_perp_order` is permissionless) are the fork's own; nothing is sent to mainnet.
+
+| Step | Command | What you should see |
+|---|---|---|
+| A. Fork mainnet and deploy the guard | `SURFPOOL=/path/to/surfpool ./scripts/surfpool-mainnet.sh start` (stop the devnet fork first: same ports) | "guard deployed, SOL and USDT oracles streamed from mainnet, clock following mainnet's slot" |
+| B. A fork-only owner and guard | `node demo/mainnet-fork.mjs setup` | the owner, guard, agent and keeper keys (in `out/`) and their transactions |
+| C. The language-model agent, live | `OPENROUTER_API_KEY=... node demo/mainnet-fork.mjs run --turns 8` | the program hash check, then each turn: the live price and oracle age, the best asks, the model's reason, the guard's verdict and any fill |
+
+Recorded run: `notes/mainnet-fork-live.md`. Stop it with `./scripts/surfpool-mainnet.sh stop`.
+
 ## Dependencies
 
 Install with `npm ci` (the lockfiles are committed and stay clean). `npm audit` reports 4 moderate findings in

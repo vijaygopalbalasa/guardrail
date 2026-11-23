@@ -1,5 +1,5 @@
 import { loadDashboard, allowedRpc } from "./guard-view.js?v=33";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity } from "./render.js?v=33";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity, setQuoteUnit } from "./render.js?v=33";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -44,7 +44,12 @@ if (CLUSTER === "devnet" || useFeed) {
     return i ? [document.createTextNode(" / "), a] : [a];
   }));
   $("guard-pick").hidden = false;
+} else if (RPC && GUARD) {
+  $("live-title").textContent = CLUSTER === "mainnet" ? `On mainnet now: guard ${short(GUARD)}` : `On a local RPC now (${new URL(RPC).host}): guard ${short(GUARD)}`;
 }
+// The recorded language-model run (agent-feed.json) belongs to a devnet guard: elsewhere it is not shown.
+const showFeed = Boolean(feed) && (feedMatches || CLUSTER === "devnet");
+if (feed && !showFeed) $("agent-feed").closest("section").hidden = true;
 
 if (headline) {
   $("replay-text").textContent = `Same limits, real fills, a falling price: worst loss ${Number(headline.guarded.worstLossPct)}% guarded against ${Number(headline.unguarded.worstLossPct)}% unguarded, ${Number(headline.guarded.breaches)} limit breaches.`;
@@ -92,8 +97,12 @@ function verify(decisions) {
   $("verify").replaceChildren(...parts.map((x) => (typeof x === "string" ? document.createTextNode(x) : x)));
 }
 
-function render({ guard: g, velocity, decisions, slot, takenAt, checkpoints }) {
+function render({ guard: g, velocity, decisions, slot, takenAt, checkpoints, quote }) {
   const now = Date.now() / 1000;
+  if (quote) {
+    setQuoteUnit(quote);
+    $("units").textContent = `Reads the Guard account and its transactions straight from the RPC. Sizes in SOL, notional in ${quote === "USDT" ? "USDT" : "dUSDT"}.`;
+  }
   const revoked = g.agent === "11111111111111111111111111111111";
   const last = decisions.find((d) => d.blockTime);
   const state = revoked ? "agent revoked" : g.paused ? "paused by the owner" : "guard active";
@@ -121,7 +130,7 @@ function render({ guard: g, velocity, decisions, slot, takenAt, checkpoints }) {
 }
 
 // First paint: the last saved read of the default guard (snapshot.json), replaced by the live read when it answers.
-if (feed) renderAgentFeed(document, $("agent-feed"), feed, null, null);
+if (showFeed) renderAgentFeed(document, $("agent-feed"), feed, null, null);
 if (snapshot && useFeed && snapshot.guardAddress === GUARD) {
   try { render({ ...snapshot, takenAt: snapshot.takenAt }); } catch { /* the live read follows */ }
 }
