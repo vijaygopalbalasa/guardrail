@@ -6,7 +6,8 @@ Back to the [README](../README.md).
 
 The same runaway agent, the same falling market, run twice. The agent doubles a losing long every step and retries
 with smaller orders when refused. SOL falls from $91.39 by 1% a step for 14 steps, plus a final mark 1% lower ($79.39, a 13% fall), where the worst loss is measured. Collateral: 1,000 dUSDT. The
-unguarded run was stopped only by Velocity's own 5x margin check, after it had already reached 55 SOL.
+unguarded run was stopped only by Velocity's own margin check, which refuses new orders above 5x, after it had already
+reached 55 SOL; the held position then drifted to 6.98x as the price fell.
 
 | | Worst loss | Largest position | Leverage reached | Stopped by | Limit breaches |
 |---|---|---|---|---|---|

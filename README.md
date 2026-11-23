@@ -20,7 +20,8 @@ Guardrail is a Solana program that becomes the delegate of a Velocity perps acco
 Solana, Drift's successor). The agent trades only through it,
 every order is checked on chain against limits the owner sets, and the agent can never place an order past them or
 withdraw. Leverage can still drift with price after an order is placed (2.17x against a 2.0x cap in the leverage-only
-replay). Velocity's 5x margin check is liquidation protection; Guardrail is the owner's risk budget.
+replay). Velocity's margin check (it refuses new orders above 5x; a held position can drift past that as the price falls,
+as the unguarded run did at 6.98x) is liquidation protection; Guardrail is the owner's risk budget.
 
 | Try it | Command | What you see |
 |---|---|---|
