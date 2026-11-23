@@ -1,7 +1,7 @@
-# DRAFT (the repository is local; nothing is pushed). Runs the README's "Try it in two minutes" on Ubuntu from a
-# fresh checkout, with the toolchain fetched from official sources.
+# Runs the build-and-test steps on Ubuntu from a fresh checkout, with the toolchain fetched from official sources.
+# Started by hand (Actions tab, "Run workflow") until its first green run on Linux; then it runs on every push.
 name: linux-try-it
-on: [push, pull_request, workflow_dispatch]
+on: [workflow_dispatch]
 jobs:
   try-it:
     runs-on: ubuntu-24.04
