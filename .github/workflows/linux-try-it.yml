@@ -1,7 +1,7 @@
 # Runs the build-and-test steps on Ubuntu from a fresh checkout, with the toolchain fetched from official sources.
-# Started by hand (Actions tab, "Run workflow") until its first green run on Linux, then on every push.
+# First green run on Linux: Nov 23 2026. Runs on every push and by hand.
 name: linux-try-it
-on: [workflow_dispatch]
+on: [push, workflow_dispatch]
 jobs:
   try-it:
     runs-on: ubuntu-24.04
