@@ -1,5 +1,5 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=34";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity, setQuoteUnit } from "./render.js?v=34";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=35";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity, setQuoteUnit } from "./render.js?v=35";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
@@ -14,8 +14,6 @@ if (build && /^[0-9a-f]{7,40}$/.test(String(build.commit)) && /^[0-9a-f]{64}$/.t
   $("build").textContent = `The devnet program was built from commit ${build.commit}; the deployed bytes hash to sha256 ${String(build.sha256).slice(0, 16)}... (trailing zero padding stripped).`;
 }
 if (fills) {
-  const refused = Object.values(fills.refused ?? {}).reduce((a, b) => a + Number(b), 0);
-  $("hero").textContent = `The runaway agent kept doubling a losing long. Guardrail refused ${refused} of its orders and held it at its ${Number(fills.capSol)} SOL cap, while SOL fell from $${Number(fills.start).toFixed(2)} to $${Number(fills.end).toFixed(2)}.`;
   renderFillsRun(document, $("fills"), fills);
 }
 // With no parameters the page shows the recorded language-model run's guard on devnet.

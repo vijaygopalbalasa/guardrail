@@ -2,21 +2,21 @@
 
 **"My AI trading bot blew up my account overnight."**
 
-![REPLAY: equity lost by the same runaway agent on a falling SOL price, 41.2% unguarded and 9.4% through Guardrail](docs/replay.png)
+![LOCAL FORK OF SOLANA MAINNET: the language-model agent asks for 22.25 SOL (refused, order size), then 4 SOL (refused, exposure), then fills 3.25 SOL to sit at exactly its 6 SOL cap; the dashboard shows 2 refused on chain](docs/mainnet-fork.png)
 
-- **41.2% vs 9.4%**: the same runaway agent on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
-  limit breaches (a replay on Velocity's real program). Guarded caps: 4 SOL per order, 10 SOL worst-case exposure,
-  1,500 dUSDT a day, 2x leverage, 2% band, 50 dUSDT daily loss. Unguarded, only Velocity's margin rules applied and the
-  agent reached 6.98x leverage.
 - **Exactly the 6 SOL cap on a local fork of Solana mainnet**: Velocity's real mainnet program, the live SOL oracle and
   real resting orders (nothing is sent to mainnet). The language-model agent told to build a 25 SOL long filled 2.75 SOL,
   was refused on chain at 22.25 SOL (order size) and at 4 SOL (exposure), filled 3.25 SOL against a real mainnet maker's
   order and Velocity's AMM, then stopped: "I won't try to route around it" (`notes/mainnet-fork-live.md`).
+- **3 of 3 bypass attempts fail on public devnet**: with its own key, the agent's direct Velocity
+  [order](https://explorer.solana.com/tx/3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa?cluster=devnet), [withdraw](https://explorer.solana.com/tx/MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3?cluster=devnet) and [delegate change](https://explorer.solana.com/tx/2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ?cluster=devnet) are refused by Velocity (`demo/bypass-attempt.mjs`).
+- **41.2% vs 9.4%** ([chart](docs/replay.png)): a scripted runaway bot that doubles a losing long on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
+  limit breaches (a replay on Velocity's real program). Guarded caps: 4 SOL per order, 10 SOL worst-case exposure,
+  1,500 dUSDT a day, 2x leverage, 2% band, 50 dUSDT daily loss. Unguarded, only Velocity's margin rules applied and the
+  agent reached 6.98x leverage.
 - **54 orders refused**: on a local fork of devnet with real fills, the agent was held at its 6 SOL cap while SOL fell.
   On public devnet, where orders rest without fills, a fresh guard refused the same agent's orders 31 times
   ([guard](https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=HMwVJCozmVJ2qL992oFnWTKetXNgtSYbbRqyExEMC3qg); every transaction in `notes/devnet-receipts.md`).
-- **3 of 3 bypass attempts fail on public devnet**: with its own key, the agent's direct Velocity
-  [order](https://explorer.solana.com/tx/3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa?cluster=devnet), [withdraw](https://explorer.solana.com/tx/MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3?cluster=devnet) and [delegate change](https://explorer.solana.com/tx/2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ?cluster=devnet) are refused by Velocity (`demo/bypass-attempt.mjs`).
 - **1.1% median loss either way**: a normal grid bot on 30 random price paths is barely touched by the guard; its worst
   path loses 22.6% guarded vs 26.6% unguarded.
 

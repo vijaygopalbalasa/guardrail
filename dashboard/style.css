@@ -249,3 +249,9 @@ table.fills td:first-child { color: var(--ink-2); }
 .nav-link { font-size: 14px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; padding: 0 6px; }
 .guard-pick { font-size: 14px; color: var(--ink-2); margin: -4px 0 12px; }
 .guard-pick a[aria-current="page"] { color: var(--ink); font-weight: 650; text-decoration: none; }
+
+.runtable { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 14px; }
+.runtable td { padding: 7px 8px; border-top: 1px solid var(--border); vertical-align: top; }
+.runtable td:first-child { color: var(--muted); width: 1.5em; }
+.runtable td.ok { color: #1a7f37; font-weight: 600; white-space: nowrap; }
+.runtable td.no { color: #cf222e; font-weight: 600; white-space: nowrap; }

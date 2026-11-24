@@ -1,7 +1,7 @@
 // Owner onboarding, pure parts: addresses, instruction bytes, the legacy transaction format, presets and plain-unit
 // conversions. No dependencies; runs in the browser and in Node (client/test/setup-page.test.mjs checks every
 // instruction against @guardrail/client and @solana/web3.js).
-import { b58encode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "./guard-view.js?v=34";
+import { b58encode, GUARD_PROGRAM_ID, VELOCITY_PROGRAM_ID } from "./guard-view.js?v=35";
 
 export const SYSTEM_PROGRAM = "11111111111111111111111111111111";
 export const TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
