@@ -13,7 +13,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
-import { GuardrailClient, GuardrailError, velocityUserAddress, RULE_NAMES } from "@guardrail/client";
+import { GuardrailClient, GuardrailError, velocityUserAddress, perpMarketAddress, RULE_NAMES } from "@guardrail/client";
 
 // Plain next steps for refusals a model cannot read from the numbers alone.
 const HINTS = {
@@ -132,10 +132,33 @@ async function status() {
       const o = 1064 + i * 104;
       if (d[o + 86] === 1) orders.push({ order_id: d.readUInt32LE(o + 80), market_index: d.readUInt16LE(o + 84), side: d[o + 91] === 0 ? "long" : "short", price: d.readBigUInt64LE(o + 8), size: d.readBigUInt64LE(o + 16), filled: d.readBigUInt64LE(o + 24) });
     }
+    // The SOL-PERP oracle the guard prices against (the market's own oracle account, the same layout on devnet and mainnet),
+    // so an agent can price a limit order inside the band without another tool.
+    let oracle = null;
+    try {
+      const pm = await connection.getAccountInfo(perpMarketAddress(0), "confirmed");
+      const od = pm ? (await connection.getAccountInfo(new PublicKey(pm.data.subarray(312, 344)), "confirmed"))?.data : null;
+      if (od) {
+        const raw = od.readBigInt64LE(8), exp = od.readInt32LE(32), shift = exp + 6;
+        const p6 = shift >= 0 ? raw * 10n ** BigInt(shift) : raw / 10n ** BigInt(-shift);
+        const slot = BigInt(await connection.getSlot("confirmed")), posted = od.readBigUInt64LE(24);
+        oracle = { market_index: 0, price_usd: (Number(p6) / 1e6).toFixed(2), posted_slot: posted, age_slots: slot > posted ? slot - posted : 0n };
+      }
+    } catch { oracle = null; }
+    const markets = g.limits.markets.filter((m) => m.maxExposureBase > 0n);
     const status = {
       agent_is_this_server: g.agent.equals(agent.publicKey),
       paused: g.paused,
-      limits: g.limits,
+      oracle,
+      limits_plain: {
+        max_order_sol: Number(g.limits.maxOrderBase) / 1e9,
+        markets: markets.map((m) => ({ market_index: m.marketIndex, max_exposure_sol: Number(m.maxExposureBase) / 1e9 })),
+        daily_notional_usd: Number(g.limits.dailyNotionalCap) / 1e6,
+        max_leverage_x: g.limits.maxLeverageBps / 1e4,
+        price_band_pct: g.limits.priceBandBps / 100,
+        how_to_price: "a limit order's price must sit within price_band_pct of oracle.price_usd",
+      },
+      limits: { ...g.limits, markets },
       accepted: g.acceptedCount,
       refused: { ...g.refused, ...(g.dailyLoss ? { G10: g.dailyLoss.refused } : {}) },
       daily_loss: g.dailyLoss ? { cap: g.dailyLoss.max, baseline_equity: g.dailyLoss.baselineEquity, utc_day: g.dailyLoss.day } : null,

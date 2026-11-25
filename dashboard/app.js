@@ -1,10 +1,12 @@
-import { loadDashboard, allowedRpc } from "./guard-view.js?v=35";
-import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity, setQuoteUnit } from "./render.js?v=35";
+import { loadDashboard, allowedRpc } from "./guard-view.js?v=36";
+import { ago, explorerUrl, link, renderAgentFeed, renderError, renderFeed, renderFillsRun, renderHeadroom, renderLastRefusal, renderLimits, renderRefusals, renderVelocity, setQuoteUnit } from "./render.js?v=36";
 import { themeToggle } from "./theme.js?v=4";
 
 const q = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
 const short = (a) => `${String(a).slice(0, 4)}...${String(a).slice(-4)}`;
+// A link to someone's own guard (?guard=...) opens on that guard: the recorded runs stay on the default page.
+if (q.get("guard")) for (const el of document.querySelectorAll(".fills-card, #hero")) el.style.display = "none";
 const fetchJson = async (p) => { try { const r = await fetch(p); return r.ok ? await r.json() : null; } catch { return null; } };
 const PROGRAM = "BZGivcKVE8x2YwboZ8HAUB1hu73jQLd5izigkJYVBxPy";
 

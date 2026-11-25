@@ -1,13 +1,13 @@
 // Owner onboarding on devnet: connect a wallet (Wallet Standard: Phantom, Solflare, Backpack), open a Velocity
 // account with test dUSDT, create the guard with limits in plain units, hand the agent a key, and copy the MCP config.
 // The wallet signs; this page sends through the allowlisted devnet RPC. Rendering uses DOM APIs only.
-import { b58encode, checkedGuard, REASONS, GUARD_PROGRAM_ID } from "./guard-view.js?v=35";
+import { b58encode, checkedGuard, REASONS, GUARD_PROGRAM_ID } from "./guard-view.js?v=36";
 import { themeToggle } from "./theme.js?v=4";
 import {
   PRESETS, addressesFor, checkPlain, toLimits, dailyLossUnits, velocitySetupIxs, guardSetupIxs, checkpointIx,
   activeMarkets, perpMarketAddress, pricingAccounts, unsignedTransaction, firstSignature, newAgentKey, mcpConfig,
   parseKey, setupRpc, DEFAULT_KEY,
-} from "./setup-tx.js?v=35";
+} from "./setup-tx.js?v=36";
 
 const $ = (id) => document.getElementById(id);
 themeToggle($("theme"));

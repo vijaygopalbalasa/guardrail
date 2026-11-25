@@ -49,7 +49,10 @@ if (await conn.getAccountInfo(guard)) {
   await client.setDailyLoss(owner, 50_000_000n);
   writeFileSync(`${dir}quickstart.json`, JSON.stringify({ rpc: RPC, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath }, null, 2));
   console.log(`agent key: ${agentPath}`);
-  console.log(`try the agent: GUARDRAIL_RPC_URL=${RPC} GUARDRAIL_AGENT_KEYPAIR=${agentPath} GUARDRAIL_OWNER=${owner.publicKey.toBase58()} node mcp/server.mjs (an MCP server with 3 tools)`);
+  console.log("");
+  console.log("try it as the agent (one refused order, one accepted, with explorer links):  node demo/try-mcp.mjs");
+  console.log("connect your own agent: add this to its MCP settings (any MCP client):");
+  console.log(JSON.stringify({ mcpServers: { guardrail: { command: "node", args: [fileURLToPath(new URL("../mcp/server.mjs", import.meta.url))], env: { GUARDRAIL_RPC_URL: RPC, GUARDRAIL_AGENT_KEYPAIR: agentPath, GUARDRAIL_OWNER: owner.publicKey.toBase58() } } } }, null, 2));
 }
 const end = await conn.getBalance(owner.publicKey);
 console.log(`velocity account ${velocityUser.toBase58()}`);
@@ -57,8 +60,8 @@ console.log(`guard ${guard.toBase58()}`);
 console.log(`cost: ${sol(start - end)} SOL (rent for the accounts plus fees and the agent's 0.02 SOL)`);
 console.log(`dashboard: https://guardrail-perps.vercel.app/?rpc=${RPC}&guard=${guard.toBase58()}`);
 console.log("");
-console.log("REQUIRED for the daily loss brake (G10): a keeper marks each UTC day at midnight. Without marks the brake acts as a");
+console.log("For the daily loss brake (G10; optional while you try it on devnet): a keeper marks each UTC day at midnight. Without marks the brake acts as a");
 console.log("drawdown cap from the last high seen until you reset it (your own checkpoint resets it at any time). Either:");
-console.log(`  keep it running:  node scripts/keeper.mjs --keypair ${path} --owners ${owner.publicKey.toBase58()} --at-midnight`);
+console.log(`  keep it running:  node scripts/keeper.mjs --keypair "${path}" --owners ${owner.publicKey.toBase58()} --at-midnight`);
 console.log(`  or from cron:     CRON_TZ=UTC`);
-console.log(`                    1 0 * * * cd ${process.cwd()} && node scripts/keeper.mjs --keypair ${path} --owners ${owner.publicKey.toBase58()} --now`);
+console.log(`                    1 0 * * * cd "${process.cwd()}" && node scripts/keeper.mjs --keypair "${path}" --owners ${owner.publicKey.toBase58()} --now`);
