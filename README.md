@@ -31,8 +31,12 @@ as the unguarded run did at 6.98x) is liquidation protection; Guardrail is the o
 |---|---|---|
 | 1. The agent's recorded devnet run (no key, no SOL, no install) | `node demo/replay-llm.mjs` | each turn: the model's own words, the order it asked for, the guard's verdict and the devnet transaction |
 | 2a. Your own guard in the browser (a devnet wallet such as Phantom, about 0.06 devnet SOL) | [guardrail-perps.vercel.app/setup.html](https://guardrail-perps.vercel.app/setup.html) | connect, open a Velocity account with 1,000 test dUSDT, pick Cautious, Balanced or Loose, download the agent key, create the guard (two signatures), copy the MCP settings |
-| 2b. Your own guard on devnet from Node (about 0.2 devnet SOL) | `npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && node demo/quickstart.mjs --keypair <devnet wallet.json>`, then `node demo/try-mcp.mjs` | a Velocity account with test dUSDT, a guard with demo limits, the MCP settings to paste into your agent, then your agent key's over-limit order refused on chain and an in-limit order accepted, each with its explorer link |
+| 2b. Your own guard on devnet from Node (about 0.1 devnet SOL; a run uses about 0.05) | `npm --prefix client ci && npm --prefix client run build && npm --prefix mcp ci && npm --prefix demo ci && node demo/quickstart.mjs --keypair <devnet wallet.json>`, then `node demo/try-mcp.mjs` | a Velocity account with test dUSDT, a guard with demo limits, the MCP settings to paste into your agent, then your agent key's over-limit order refused on chain and an in-limit order accepted, each with its explorer link |
 | 3. The live dashboard | [guardrail-perps.vercel.app](https://guardrail-perps.vercel.app) and [/replay.html](https://guardrail-perps.vercel.app/replay.html) | the fills run, the devnet guard read live, and the replay |
+
+No devnet wallet yet? `solana-keygen new --no-bip39-passphrase -o devnet-wallet.json` (Solana CLI), then paste its
+address into [faucet.solana.com](https://faucet.solana.com). `solana airdrop` no longer works on devnet (the RPC faucet is
+closed), so the web faucet is the way in.
 
 Devnet only, no real users yet. Five internal review rounds; every finding and fix is in the repo (`audits/`). The owner
 can always trade directly or remove the delegate. The guard wraps Velocity's `place_perp_order` and `cancel_order`, not

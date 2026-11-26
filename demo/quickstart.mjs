@@ -24,8 +24,8 @@ const client = new GuardrailClient(conn);
 const sol = (l) => (l / LAMPORTS_PER_SOL).toFixed(4);
 const start = await conn.getBalance(owner.publicKey);
 console.log(`owner ${owner.publicKey.toBase58()} has ${sol(start)} SOL on ${new URL(RPC).hostname}`);
-if (start < 0.15 * LAMPORTS_PER_SOL) {
-  console.error("needs about 0.2 devnet SOL: https://faucet.solana.com");
+if (start < 0.1 * LAMPORTS_PER_SOL) {
+  console.error("needs about 0.1 devnet SOL (a run uses about 0.05). `solana airdrop` is closed on devnet; use https://faucet.solana.com");
   process.exit(1);
 }
 
