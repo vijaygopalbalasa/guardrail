@@ -8,6 +8,12 @@
   real resting orders (nothing is sent to mainnet). The language-model agent told to build a 25 SOL long filled 2.75 SOL,
   was refused on chain at 22.25 SOL (order size) and at 4 SOL (exposure), filled 3.25 SOL against a real mainnet maker's
   order and Velocity's AMM, then stopped: "I won't try to route around it" (`notes/mainnet-fork-live.md`).
+- **A stranger's first run, on public devnet**: a brand-new wallet funded only from faucet.solana.com, then a fresh clone and
+  two commands (`demo/quickstart.mjs`, `demo/try-mcp.mjs`). In about 6 seconds and 0.05 devnet SOL the wallet had its own
+  guard, and its agent's 10 SOL order was
+  [refused on chain](https://explorer.solana.com/tx/3Nejq2iEaLGW5yPmuq7UTcs6J41Ch3wqrseUYxAVgFjcsXau4cM8HrEx4vYu2HXwahyH1W1yJ3qz9vsYiWbs3vvh?cluster=devnet)
+  (over the 4 SOL limit) while a 1 SOL order was
+  [accepted](https://explorer.solana.com/tx/2H1jZWreV9x8qpk98k6C9poHyK8iePP5RP3Q4coAuj3742JhnKCi3xLN4N7B6id19eLAENiq3p3d4LLjF54WDkZf?cluster=devnet).
 - **3 of 3 bypass attempts fail on public devnet**: with its own key, the agent's direct Velocity
   [order](https://explorer.solana.com/tx/3R6bp6TxN4SuXUMGkrMPf5mk36EDsZr5oR5pzREVtjM9QCbWtdU5mCQYEoDxDZbHdp12qc3YYfF9yMM36D5zeKAa?cluster=devnet), [withdraw](https://explorer.solana.com/tx/MeqydoxZ7vN3P1RTP7RRvWGSCjSmnfUos2jF3HVgungvWp7ZqfFzgTeT4hHjoKEk4v3GkC3VTW2itHCKoQyf6P3?cluster=devnet) and [delegate change](https://explorer.solana.com/tx/2MuwW1j9gLr1dJJVsxizxWCGfW2AuVYV9WwhbXTXPiuBLTd34X3hJe7WqNUjtoszCDGhK8X7hkpCnJxhTSm6ugiQ?cluster=devnet) are refused by Velocity (`demo/bypass-attempt.mjs`).
 - **41.2% vs 9.4%** ([chart](docs/replay.png)): a scripted runaway bot that doubles a losing long on a 13% fall ($91.39 to $79.39), unguarded vs through Guardrail, with 0
