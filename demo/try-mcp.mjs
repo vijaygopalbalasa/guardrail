@@ -70,7 +70,13 @@ try {
   const big = Math.max(L.max_order_sol * 2.5, L.max_order_sol + 1);
   await order(`1) buy ${big} SOL at $${price} (over the ${L.max_order_sol} SOL per-order limit)`, "G1", { size: big, price });
   const small = Math.min(1, L.max_order_sol);
-  await order(`2) buy ${small} SOL at $${price} (inside every limit)`, "ACCEPTED", { size: small, price });
+  // G1, G2 and G6 are checked before G3, so only the orders meant to be accepted can meet today's notional cap.
+  const usedToday = Number(st.today_notional) / 1e6;
+  if (usedToday + small * price > L.daily_notional_usd) {
+    console.log(`2) skipped: ${usedToday.toFixed(0)} of today's ${L.daily_notional_usd} dUSDT are used (G3 would answer first); run it again after 00:00 UTC`);
+  } else {
+    await order(`2) buy ${small} SOL at $${price} (inside every limit)`, "ACCEPTED", { size: small, price });
+  }
   const off = L.price_band_pct * 2.5;
   const far = Math.floor(oracle * (1 - off / 100) * 100) / 100;
   await order(`3) buy ${small} SOL at $${far} (${off}% below the oracle, outside the ${L.price_band_pct}% band)`, "G6", { size: small, price: far });
