@@ -33,6 +33,8 @@ withdraw. Leverage can still drift with price after an order is placed (2.17x ag
 replay). Velocity's margin check (it refuses new orders above 5x; a held position can drift past that as the price falls,
 as the unguarded run did at 6.98x) is liquidation protection; Guardrail is the owner's risk budget.
 
+Judges: a five-minute path with every limit and where it is proven is in [JUDGES.md](JUDGES.md).
+
 | Try it | Command | What you see |
 |---|---|---|
 | 1. The agent's recorded devnet run (no key, no SOL, no install) | `node demo/replay-llm.mjs` | each turn: the model's own words, the order it asked for, the guard's verdict and the devnet transaction |
