@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 ## Build and test everything (the first build takes about 6 minutes cold)
 
-Row Q needs only Node 22 or newer and a devnet wallet keypair file with about 0.2 devnet SOL (faucet.solana.com).
+Row Q needs only Node 22 or newer and a devnet wallet keypair file with about 0.1 devnet SOL (faucet.solana.com; a run uses about 0.05).
 Steps 0 to 8 need Rust (step 7 also needs an OpenRouter key; CI skips it), solana-cli 4.2.x with cargo-build-sbf (platform-tools v1.54), Node 22 or newer, Python 3 and
 network access to Solana devnet. Run every command from the repository root.
 

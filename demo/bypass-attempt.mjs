@@ -4,20 +4,31 @@
 // itself the account's delegate. Each transaction is sent with preflight skipped, so the refusal lands on chain with a
 // signature anyone can open. Costs the agent three transaction fees (15,000 lamports); the token account it tries to
 // create as the withdraw destination is rolled back with the failed withdraw.
-//   node demo/bypass-attempt.mjs [--agent out/demo-agent-XXXX.json] [--owner <owner pubkey>]
+//   node demo/bypass-attempt.mjs        your own guard: the agent key and owner from out/quickstart.json (demo/quickstart.mjs)
+//   node demo/bypass-attempt.mjs --agent <agent key file> --owner <owner pubkey>
+//   (the README's recorded run: --agent out/demo-agent-4Cxm3yCr.json --owner FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS)
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   GuardrailClient, discriminator, encodeOrderParams, toBase, VELOCITY_PROGRAM_ID, velocityStateAddress, velocityUserAddress, spotMarketAddress,
 } from "@guardrail/client";
 
-const RPC = process.env.RPC_URL ?? "https://api.devnet.solana.com";
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : d; };
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
-// Default: the language-model agent's guard on devnet (guard 9NJpRGSq..., owner FkQfmTpR...).
-const agent = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(arg("--agent", `${ROOT}out/demo-agent-4Cxm3yCr.json`), "utf8"))));
-const owner = new PublicKey(arg("--owner", "FkQfmTpReWXHHCoAc7vUmesKBDMSAwmx1GobETVeUMeS"));
+// Default: your own guard from demo/quickstart.mjs (out/quickstart.json holds its agent key file and owner).
+const qsPath = `${ROOT}out/quickstart.json`;
+const qs = existsSync(qsPath) ? JSON.parse(readFileSync(qsPath, "utf8")) : {};
+const agentPath = arg("--agent", qs.agentPath);
+const ownerKey = arg("--owner", qs.owner);
+if (!agentPath || !ownerKey || !existsSync(agentPath)) {
+  console.error("run node demo/quickstart.mjs --keypair <devnet wallet.json> first (it writes your agent key and out/quickstart.json),");
+  console.error("or pass --agent <agent key file> --owner <owner pubkey>");
+  process.exit(2);
+}
+const agent = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(agentPath, "utf8"))));
+const owner = new PublicKey(ownerKey);
+const RPC = process.env.RPC_URL ?? qs.rpc ?? "https://api.devnet.solana.com";
 const conn = new Connection(RPC, "confirmed");
 const client = new GuardrailClient(conn);
 const user = velocityUserAddress(owner);

@@ -2,7 +2,7 @@
 // Quickstart on Solana devnet with Node only (no Rust): your devnet wallet becomes the owner of a Velocity account
 // funded with 1,000 test dUSDT from Velocity's devnet faucet, a guard with the demo limits becomes its delegate, and a
 // fresh agent key is written to out/. It prints the live dashboard link for your guard.
-//   node demo/quickstart.mjs --keypair ~/devnet-wallet.json      (the wallet needs about 0.2 devnet SOL)
+//   node demo/quickstart.mjs --keypair ~/devnet-wallet.json      (the wallet needs about 0.1 devnet SOL; a run uses about 0.05)
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -15,7 +15,7 @@ const RPC = process.env.RPC_URL ?? "https://api.devnet.solana.com";
 const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
 const path = arg("--keypair");
 if (!path) {
-  console.error("usage: node demo/quickstart.mjs --keypair <devnet wallet keypair file with about 0.2 devnet SOL>");
+  console.error("usage: node demo/quickstart.mjs --keypair <devnet wallet keypair file with about 0.1 devnet SOL>");
   process.exit(2);
 }
 const owner = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(path.replace(/^~(?=\/)/, homedir()), "utf8"))));
@@ -26,6 +26,7 @@ const start = await conn.getBalance(owner.publicKey);
 console.log(`owner ${owner.publicKey.toBase58()} has ${sol(start)} SOL on ${new URL(RPC).hostname}`);
 if (start < 0.1 * LAMPORTS_PER_SOL) {
   console.error("needs about 0.1 devnet SOL (a run uses about 0.05). `solana airdrop` is closed on devnet; use https://faucet.solana.com");
+  console.error(`faucet empty? open an issue at github.com/vijaygopalbalasa/guardrail/issues with this address and I will send 0.1 devnet SOL: ${owner.publicKey.toBase58()}`);
   process.exit(1);
 }
 
@@ -50,7 +51,8 @@ if (await conn.getAccountInfo(guard)) {
   writeFileSync(`${dir}quickstart.json`, JSON.stringify({ rpc: RPC, owner: owner.publicKey.toBase58(), guard: guard.toBase58(), agentPath }, null, 2));
   console.log(`agent key: ${agentPath}`);
   console.log("");
-  console.log("try it as the agent (one refused order, one accepted, with explorer links):  node demo/try-mcp.mjs");
+  console.log("try it as the agent (refusals for size, price band, order type and exposure, accepted orders and cancels, with explorer links):  node demo/try-mcp.mjs");
+  console.log("then watch the agent's own key fail to trade around the guard, withdraw or take over the account:  node demo/bypass-attempt.mjs");
   console.log("connect your own agent: add this to its MCP settings (any MCP client):");
   console.log(JSON.stringify({ mcpServers: { guardrail: { command: "node", args: [fileURLToPath(new URL("../mcp/server.mjs", import.meta.url))], env: { GUARDRAIL_RPC_URL: RPC, GUARDRAIL_AGENT_KEYPAIR: agentPath, GUARDRAIL_OWNER: owner.publicKey.toBase58() } } } }, null, 2));
 }
