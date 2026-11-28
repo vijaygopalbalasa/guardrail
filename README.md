@@ -26,6 +26,12 @@
 - **1.1% median loss either way**: a normal grid bot on 30 random price paths is barely touched by the guard; its worst
   path loses 22.6% guarded vs 26.6% unguarded.
 
+Velocity's own docs say the worst a compromised delegate can do is ["trade the position badly"](https://docs.velocity.exchange/protocol/getting-started/delegated-accounts).
+Guardrail bounds what "badly" can mean, on chain: order size, worst-case exposure with resting orders counted, daily notional,
+price band and daily loss. (Velocity already lets the owner set a margin cap that a delegate cannot change; Guardrail adds the rest.)
+It is the Solana Foundation's October picture of an AI trader with ["position caps, drawdown limits"](https://solana.com/news/solana-ai-the-democratization-layer)
+the operator cannot override, applied to one owner's own account.
+
 Guardrail is a Solana program that becomes the delegate of a Velocity perps account (Velocity is a perps exchange on
 Solana, Drift's successor). The agent trades only through it,
 every order is checked on chain against limits the owner sets, and the agent can never place an order past them or

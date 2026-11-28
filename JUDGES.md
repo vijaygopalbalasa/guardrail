@@ -4,6 +4,10 @@ Guardrail is a Solana program that sits between an AI trading agent and its Velo
 trade only through it; every order is checked on chain against the owner's limits, and the agent has no way to withdraw.
 Everything below is on public devnet or in this repository. Testnet only; no outside users have run the live path yet.
 
+Why it matters: Velocity's docs say a compromised delegate can at worst ["trade the position badly"](https://docs.velocity.exchange/protocol/getting-started/delegated-accounts);
+Guardrail is the delegate that bounds "badly". Velocity's own margin cap covers leverage; Guardrail adds order size, worst-case exposure,
+daily notional, price band and daily loss.
+
 ## 1. One minute, nothing to install
 
 `node demo/replay-llm.mjs` (no key, no SOL, no `npm install`): the language-model agent's recorded devnet run, turn by
