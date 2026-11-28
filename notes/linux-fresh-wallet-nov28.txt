@@ -1,0 +1,71 @@
+# Fresh clone (663c9a3) on Linux (node:22-bookworm container), a brand-new wallet, Nov 28 2026
+# The wallet was funded with 0.12 devnet SOL from our own faucet-funded wallet (tx 3AkT3WWBBWPeDdnZHudb3AHTLPy3bf6SPBabCthkVMqER9a4HTfLhEjmMK2hd7K2xCDVnXY7hpMqotajYBwUghbk), standing in for the web faucet; this is our run, not a stranger's.
+
+== quickstart
+owner 8cTFm8XKfk7EfiM2SgKY8ZzR4L5UVe9ZN71VwWJ1VuDt has 0.1200 SOL on api.devnet.solana.com
+1/3 Velocity account (sub-account 0) with 1,000 test dUSDT from Velocity's devnet faucet
+2/3 a fresh agent key, funded with 0.02 SOL for fees
+3/3 the guard, with the demo limits, as the account's delegate; daily loss cap 50 dUSDT
+agent key: ./out/quickstart-agent-HtbKWVau.json
+
+try it as the agent (refusals for size, price band, order type and exposure, accepted orders and cancels, with explorer links):  node demo/try-mcp.mjs
+then watch the agent's own key fail to trade around the guard, withdraw or take over the account:  node demo/bypass-attempt.mjs
+connect your own agent: add this to its MCP settings (any MCP client):
+      ],
+velocity account HuFVhAxLhfL9pagfYezW1rpGgkjmSAdSEDoaYxFpDSXh
+guard BKteEAyKd8zj8GefZGHkBVWMzNw92oRsppZNk4Pyxa3x
+cost: 0.0533 SOL (rent for the accounts plus fees and the agent's 0.02 SOL)
+dashboard: https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=BKteEAyKd8zj8GefZGHkBVWMzNw92oRsppZNk4Pyxa3x
+
+For the daily loss brake (G10; optional while you try it on devnet): a keeper marks each UTC day at midnight. Without marks the brake acts as a
+drawdown cap from the last high seen until you reset it (your own checkpoint resets it at any time). Either:
+  keep it running:  node scripts/keeper.mjs --keypair "<your wallet.json>" --owners 8cTFm8XKfk7EfiM2SgKY8ZzR4L5UVe9ZN71VwWJ1VuDt --at-midnight
+  or from cron:     CRON_TZ=UTC
+                    1 0 * * * cd "/work/repo" && node scripts/keeper.mjs --keypair "<your wallet.json>" --owners 8cTFm8XKfk7EfiM2SgKY8ZzR4L5UVe9ZN71VwWJ1VuDt --now
+== try-mcp
+tools: guardrail_place_order, guardrail_cancel_order, guardrail_status (none can withdraw or change a limit)
+guard: 4 SOL per order, 6 SOL worst case on SOL-PERP, band 2% of the oracle ($91.39), 1200 dUSDT of orders a day, 2x
+1) buy 10 SOL at $90.93 (over the 4 SOL per-order limit)
+  REFUSED by G1 order size: OrderTooLarge (value 10000000000, cap 4000000000). Nothing was sent to Velocity.
+  https://explorer.solana.com/tx/7VHAdH8uQY4Rdaea5gjU4sj6LdJaz57y9GMtT6oTucyidQ2keV6HsUZvu7zP8JLARaxPuxpDUNsKuGozhdk1689?cluster=devnet
+2) buy 1 SOL at $90.93 (inside every limit)
+  ACCEPTED (accepted): long 1 on SOL-PERP sent to Velocity.
+  https://explorer.solana.com/tx/2v9ha1eKdokERGaVg77qqMLZwnDfNNKwqAEKpSfgy5LCKEEAETKa75BKAFUhg9srBJgAS8VXruycRwHvnhBoPaBA?cluster=devnet
+3) buy 1 SOL at $86.82 (5% below the oracle, outside the 2% band)
+  REFUSED by G6 price band: PriceOutsideBand (value 500, cap 200). Nothing was sent to Velocity.
+  https://explorer.solana.com/tx/4KseRw6Vn7zt15nnU5nGoH1MvcriZfgPJxBnnxoCKePg9BzfvsWtYpMPh8KhBP5RaAPgXkimpnZnczn5o4thAHB1?cluster=devnet
+4) a market order for 1 SOL (this guard allows limit and oracle orders only)
+  REFUSED by G2 allowlist: OrderTypeNotAllowed (value 0, cap 18). Nothing was sent to Velocity.
+  https://explorer.solana.com/tx/2f3tSkeQw7Pwf2was5zYZEqZau2mR54aNW2hHZVBnw9y3LtYkeBHEdZ2Vgkrc4dv8eYGdQJA1oFkSBGEyGSbNjiJ?cluster=devnet
+5a) buy 4 SOL at $90.93 (worst case on SOL-PERP 1 -> 5.00 of 6 SOL)
+  ACCEPTED (accepted): long 4 on SOL-PERP sent to Velocity.
+  https://explorer.solana.com/tx/Fem1MVNKQqFN5DmvJZ1K6exaT4namn4xuy2xA9MoRrVpp7n4ay2guuPKkEZVsbbxBrdqesuTujkjxZH5Afk1ATt?cluster=devnet
+5b) buy 1.5 SOL more (worst case would be 6.50 SOL, over the 6 SOL cap; resting orders count)
+  REFUSED by G4 exposure: ExposureExceeded (value 6500000000, cap 6000000000). Nothing was sent to Velocity.
+  https://explorer.solana.com/tx/SrAjLHrooSNJmER6USe3bcKRNmWfYn2bHJrLmRVKhEYc1z1jniqHtvCm4fbo9aDQq2izCCEb9FKM2o8DJxFAWv5?cluster=devnet
+6) cancel an order this run placed (1 of 2; cancels are always allowed)
+  CANCELLED 2
+  https://explorer.solana.com/tx/5MJ3LnxnG166L4bkZTkGcjVtx2UthZKNigJjBh2NJTw7tSJrfez6fejWqwUyhVGvnQ1JgNErt1T7bPAzb3sHyomK?cluster=devnet
+6) cancel an order this run placed (2 of 2; cancels are always allowed)
+  CANCELLED 1
+  https://explorer.solana.com/tx/4wpjcaE65dx8ykZCRnPz5AcJrxSNshB5cuBkrrho2ouAthTWGGSxNg9746dHq5GFLQ84mx3nmmPx2ZyYH1nUu3kK?cluster=devnet
+
+not shown here: G5 leverage and G10 daily loss need fills, and devnet orders never fill; they bind in notes/g5-replay.txt and notes/runaway-replay.txt (Velocity's real program); G9 exits are in the tests, notes/RED.md
+the agent has no tool that withdraws or changes a limit; its own key fails at both on chain:  node demo/bypass-attempt.mjs
+dashboard: https://guardrail-perps.vercel.app/?rpc=https://api.devnet.solana.com&guard=BKteEAyKd8zj8GefZGHkBVWMzNw92oRsppZNk4Pyxa3x
+8 of 8 answers as expected
+== bypass-attempt
+(a) place a 20 SOL perp order on the owner's account
+   REFUSED by Velocity: ConstraintRaw (2003): Velocity takes orders on this account only from its owner or its delegate, and the delegate is the guard
+   failed transaction on chain: https://explorer.solana.com/tx/bmt8sPwoyjVWJZkJaPsFmcuTvFEEM3cHZFgY2vKBf2ULGx9VL9eoCVx9Ne7wbVk5e12Gwb4XDyMiS6acgScMMgq?cluster=devnet
+
+(b) withdraw 100 dUSDT from the owner's account to itself
+   REFUSED by Velocity: ConstraintHasOne (2001): the account's authority is the owner's key, not the agent's
+   failed transaction on chain: https://explorer.solana.com/tx/3YV86QG36R5L1dErw5gDW9bwGsThZXbD6w2ezkXwBJDWgLqspKYQoDYjmrnVCKfJHFk5A6vi9tHNiPRLbVnsbLkE?cluster=devnet
+
+(c) make itself the delegate instead of the guard
+   REFUSED by Velocity: ConstraintSeeds (2006): the account's address is derived from the owner's key, so the agent's key cannot name it
+   failed transaction on chain: https://explorer.solana.com/tx/3Pe1aHYPTjnqDyznfX9ga1rJbkcf2ZhuyVxD1QHK7tgWmMh3w4dM9XUpJA1rthvTsJEY6gZK541RRt3JhUiZdP9c?cluster=devnet
+
+after: delegate still BKte...xa3x (the guard), deposits unchanged: true, withdrawals unchanged: true
+the agent's only way to trade is through Guardrail; it has no way to withdraw.
